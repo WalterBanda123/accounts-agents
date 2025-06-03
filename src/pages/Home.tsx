@@ -113,7 +113,7 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow class='ion-text-center'>
               <IonCol>
-                <IonButton mode='ios' fill='outline' color="dark" routerLink='/transactions' routerDirection='forward'>
+                <IonButton mode='ios' fill='outline' color="primary" routerLink='/receipts' routerDirection='forward'>
                   View All Transactions
                 </IonButton>
               </IonCol>
@@ -121,7 +121,7 @@ const Home: React.FC = () => {
           </IonGrid>
           <IonFab vertical='bottom' horizontal='end' slot='fixed'>
             <IonFabButton
-              color={'dark'}
+              color={'primary'}
               routerLink='/my_assistant'
               routerDirection='forward'>
               <IonIcon icon={chatbubblesOutline} />
