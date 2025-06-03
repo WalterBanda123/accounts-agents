@@ -34,6 +34,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 import Chat from './pages/Chat';
 import Transactions from './pages/Transactions';
+import Stocks from './pages/Stocks';
 
 setupIonicReact();
 
@@ -49,6 +50,9 @@ const App: React.FC = () => (
         </Route>
         <Route exact path="/receipts">
           <Transactions />
+        </Route>
+        <Route exact path="/stock-overview">
+          <Stocks />
         </Route>
         <Route exact path="/">
           <Redirect to="/home" />

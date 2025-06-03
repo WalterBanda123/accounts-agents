@@ -1,0 +1,288 @@
+/* Stock Card - Gmail Style with Inventory Focus */
+.stock-card {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    background-color: white;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid transparent;
+}
+
+.stock-card:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+.stock-card:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.stock-card.compact {
+    padding: 12px 16px;
+    margin-bottom: 6px;
+}
+
+/* Status-based border colors */
+.stock-card.in-stock {
+    border-left-color: var(--ion-color-success);
+}
+
+.stock-card.low-stock {
+    border-left-color: var(--ion-color-warning);
+}
+
+.stock-card.out-of-stock {
+    border-left-color: var(--ion-color-danger);
+    opacity: 0.7;
+}
+
+.stock-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+}
+
+/* Brand & Category Section */
+.stock-brand-section {
+    flex: 0 0 120px;
+    text-align: left;
+}
+
+.stock-brand {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--ion-color-primary);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stock-category {
+    font-size: 0.8rem;
+    color: var(--ion-color-medium);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Product Details Section */
+.stock-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.stock-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--ion-color-dark);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-size-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.stock-description {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stock-classification {
+    font-size: 0.75rem;
+    color: var(--ion-color-medium-shade);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Pricing Section */
+.stock-pricing {
+    flex: 0 0 150px;
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+.stock-unit-price {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--ion-color-primary);
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.price-label {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--ion-color-medium);
+    margin-top: 1px;
+}
+
+.stock-total-value {
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+}
+
+.stock-last-restocked {
+    color: var(--ion-color-medium);
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+/* Status Indicator */
+.stock-status {
+    flex: 0 0 12px;
+    margin-left: 12px;
+}
+
+.stock-status.in-stock ion-icon {
+    color: var(--ion-color-success);
+}
+
+.stock-status.low-stock ion-icon {
+    color: var(--ion-color-warning);
+    animation: pulse 2s infinite;
+}
+
+.stock-status.out-of-stock ion-icon {
+    color: var(--ion-color-danger);
+}
+
+/* Hover effects */
+.stock-card:hover .stock-brand {
+    color: var(--ion-color-primary-shade);
+    transform: scale(1.02);
+}
+
+.stock-card:hover .stock-unit-price {
+    color: var(--ion-color-primary-shade);
+}
+
+/* Compact version adjustments */
+.stock-card.compact .stock-brand-section {
+    flex: 0 0 100px;
+}
+
+.stock-card.compact .stock-pricing {
+    flex: 0 0 130px;
+}
+
+.stock-card.compact .stock-brand {
+    font-size: 0.9rem;
+}
+
+.stock-card.compact .stock-name {
+    font-size: 0.9rem;
+}
+
+.stock-card.compact .stock-unit-price {
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stock-card {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .stock-content {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .stock-brand-section,
+    .stock-details,
+    .stock-pricing {
+        flex: none;
+        width: 100%;
+        text-align: left;
+    }
+
+    .stock-pricing {
+        text-align: right;
+    }
+
+    .stock-status {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        margin-left: 0;
+    }
+
+    .stock-name {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stock-card {
+        padding: 10px 12px;
+    }
+
+    .stock-brand {
+        font-size: 0.85rem;
+    }
+
+    .stock-name {
+        font-size: 0.85rem;
+    }
+
+    .stock-description {
+        font-size: 0.8rem;
+    }
+
+    .stock-classification {
+        font-size: 0.7rem;
+    }
+
+    .stock-unit-price {
+        font-size: 0.95rem;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
