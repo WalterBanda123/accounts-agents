@@ -1,4 +1,4 @@
-import { IonBackButton, IonButton, IonButtons, IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonLabel, IonPage, IonRow, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButton, IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonLabel, IonPage, IonRow, IonTitle, IonToolbar } from '@ionic/react';
 import { cameraOutline, chatbubblesOutline, cubeOutline, documentAttachOutline } from "ionicons/icons"
 import './Home.css';
 import ReceiptComponent, { ReceiptComponentInterface } from '../components/Receipt';
