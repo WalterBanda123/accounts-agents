@@ -1,0 +1,123 @@
+/* Search Section */
+.search-section {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+
+/* Header Section */
+.transactions-header {
+    padding: 20px 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    border: 1px solid var(--ion-color-dark);
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(var(--ion-color-medium-rgb), 0.3);
+}
+
+.header-text h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+}
+
+.header-text p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--ion-color-medium);
+    font-weight: 500;
+}
+
+/* Receipts Placeholder */
+.receipts-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ion-color-medium);
+    font-style: italic;
+}
+
+.receipts-placeholder p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Filter Section (for future use) */
+.filter-section {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background-color: white;
+}
+
+.filter-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background-color: #f1f3f4;
+    color: var(--ion-color-dark);
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+    background-color: var(--ion-color-light);
+}
+
+.filter-chip.active {
+    background-color: var(--ion-color-primary);
+    color: white;
+}
+
+/* Receipt List Styling */
+.receipts-list {
+    padding: 8px 16px;
+}
+
+.receipt-item {
+    margin-bottom: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .transactions-header {
+        margin: 12px;
+        padding: 16px;
+    }
+    
+    .header-content {
+        gap: 12px;
+    }
+    
+    .header-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+    
+    .header-text h2 {
+        font-size: 1.2rem;
+    }
+}

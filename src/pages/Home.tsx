@@ -4,8 +4,22 @@ import './Home.css';
 import ReceiptComponent, { ReceiptComponentInterface } from '../components/Receipt';
 import { RECENT_RECEIPTS } from '../mock/receipts';
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 
 const Home: React.FC = () => {
+  const history = useHistory();
+
+  const navigateToReceipts = () => {
+    history.push('/receipts');
+  };
+
+  const navigateToScanCart = () => {
+    history.push('/scan-cart');
+  };
+
+  const navigateToStockOverview = () => {
+    history.push('/stock-overview');
+  };
 
   return (
     <React.Fragment>
@@ -24,7 +38,7 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow>
               <IonCol>
-                <div className="container">
+                <div className="container" onClick={navigateToScanCart}>
                   <IonCol size='2'>
                     <IonIcon icon={cameraOutline} size='large' />
                   </IonCol>
@@ -38,7 +52,7 @@ const Home: React.FC = () => {
             </IonRow>
             <IonRow>
               <IonCol>
-                <div className="container">
+                <div className="container" onClick={navigateToReceipts}>
                   <IonCol size='2'>
                     <IonIcon icon={documentAttachOutline} size='large' />
                   </IonCol>
@@ -52,7 +66,7 @@ const Home: React.FC = () => {
             </IonRow>
             <IonRow>
               <IonCol>
-                <div className="container">
+                <div className="container" onClick={navigateToStockOverview}>
                   <IonCol size='2'>
                     <IonIcon icon={cubeOutline} size='large' />
                   </IonCol>
@@ -89,7 +103,7 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow class='ion-text-center'>
               <IonCol>
-                <IonButton mode='ios' fill='clear' color="dark">
+                <IonButton mode='ios' fill='clear' color="dark" routerLink='/receipts' routerDirection='forward'>
                   View More
                 </IonButton>
               </IonCol>
