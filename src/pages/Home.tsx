@@ -1,13 +1,19 @@
 import { IonButton, IonCol, IonContent, IonFab, IonFabButton, IonGrid, IonHeader, IonIcon, IonLabel, IonPage, IonRow, IonTitle, IonToolbar } from '@ionic/react';
 import { cameraOutline, chatbubblesOutline, cubeOutline, documentAttachOutline } from "ionicons/icons"
 import './Home.css';
-import ReceiptComponent, { ReceiptComponentInterface } from '../components/Receipt';
-import { RECENT_RECEIPTS } from '../mock/receipts';
+import RecentTransactionCard from '../components/RecentTransactionCard';
+import '../components/RecentTransactionCard.css';
+import { ALL_TRANSACTIONS } from '../mock/transactions';
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 
 const Home: React.FC = () => {
   const history = useHistory();
+
+  // Get the most recent 5 transactions
+  const recentTransactions = ALL_TRANSACTIONS
+    .sort((a, b) => new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime())
+    .slice(0, 5);
 
   const navigateToReceipts = () => {
     history.push('/receipts');
@@ -84,19 +90,23 @@ const Home: React.FC = () => {
               <IonCol>
                 <div className="section-header">
                   <IonLabel>
-                    <h2>Recent Receipts</h2>
-                    <p>Your latest transactions</p>
+                    <h2>Recent Transactions</h2>
+                    <p>Your latest financial activity</p>
                   </IonLabel>
                 </div>
               </IonCol>
             </IonRow>
             <IonRow>
               <IonCol>
-                {
-                  RECENT_RECEIPTS.map(({ amount, date, invoice, status }: ReceiptComponentInterface, index: number) => (
-                    <ReceiptComponent key={index} amount={amount} date={date} invoice={invoice} status={status} />
-                  ))
-                }
+                <div className="recent-transactions-container">
+                  {recentTransactions.map((transaction) => (
+                    <RecentTransactionCard
+                      key={transaction.id}
+                      transaction={transaction}
+                      compact={true}
+                    />
+                  ))}
+                </div>
               </IonCol>
             </IonRow>
           </IonGrid>
@@ -104,7 +114,7 @@ const Home: React.FC = () => {
             <IonRow class='ion-text-center'>
               <IonCol>
                 <IonButton mode='ios' fill='clear' color="dark" routerLink='/receipts' routerDirection='forward'>
-                  View More
+                  View All Transactions
                 </IonButton>
               </IonCol>
             </IonRow>

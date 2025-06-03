@@ -1,11 +1,12 @@
 import { IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
-import { receiptOutline } from "ionicons/icons";
+import { receiptOutline, checkmarkCircle, timeOutline, closeCircle } from "ionicons/icons";
 import React, { useState } from "react";
 import { ALL_TRANSACTIONS, TransactionReceiptInterface } from "../mock/transactions";
 import './Transactions.css'
 
 const Transactions: React.FC = () => {
     const [searchText, setSearchText] = useState<string>('');
+    const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
     const totalReceipts = ALL_TRANSACTIONS.length;
 
     const filteredTransactions = ALL_TRANSACTIONS.filter(transaction =>
@@ -24,6 +25,42 @@ const Transactions: React.FC = () => {
         return description.length > maxLength
             ? description.substring(0, maxLength) + '...'
             : description;
+    };
+
+    const handleTransactionClick = (transactionId: string) => {
+        const newSelected = new Set(selectedTransactions);
+        if (newSelected.has(transactionId)) {
+            newSelected.delete(transactionId);
+        } else {
+            newSelected.add(transactionId);
+        }
+        setSelectedTransactions(newSelected);
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'completed':
+                return checkmarkCircle;
+            case 'pending':
+                return timeOutline;
+            case 'failed':
+                return closeCircle;
+            default:
+                return checkmarkCircle;
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'completed':
+                return 'success';
+            case 'pending':
+                return 'warning';
+            case 'failed':
+                return 'danger';
+            default:
+                return 'medium';
+        }
     };
 
 
@@ -71,11 +108,14 @@ const Transactions: React.FC = () => {
                             </div>
                         </IonCol>
                     </IonRow>
-                </IonGrid>
-                {/* Transaction List - Gmail Style */}
+                </IonGrid>                {/* Transaction List - Gmail Style */}
                 <div className="transaction-list">
                     {filteredTransactions.map((transaction: TransactionReceiptInterface) => (
-                        <div key={transaction.id} className="transaction-item">
+                        <div
+                            key={transaction.id}
+                            className={`transaction-item ${selectedTransactions.has(transaction.id) ? 'selected' : ''}`}
+                            onClick={() => handleTransactionClick(transaction.id)}
+                        >
                             <div className="transaction-content">
                                 {/* Amount - Left side like email sender */}
                                 <div className="transaction-amount">
@@ -103,9 +143,13 @@ const Transactions: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Status indicator */}
+                            {/* Status indicator with icon */}
                             <div className={`transaction-status ${transaction.status}`}>
-                                <span className="status-dot"></span>
+                                <IonIcon
+                                    icon={getStatusIcon(transaction.status)}
+                                    color={getStatusColor(transaction.status)}
+                                    size="small"
+                                />
                             </div>
                         </div>
                     ))}

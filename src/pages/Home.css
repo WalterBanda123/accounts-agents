@@ -1,34 +1,74 @@
-.container{
-   border: 1px solid gray;
-   border-radius: 20px;
-   padding-left: 20px;
+/* Main Navigation Cards - Minimal Style */
+.container {
+   border: 1px solid #e0e0e0;
+   border-radius: 16px;
+   padding: 16px 20px;
    display: flex;
    flex-direction: row;
-   justify-content: center;
+   justify-content: flex-start;
    align-items: center;
-   font-size: 2rem;
-   margin-top: 4px;
-   margin-bottom: 4px;
-   font-weight: 600;
-   font-size: 2.5rem;
-   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+   font-size: 1.1rem;
+   margin: 8px 0;
+   font-weight: 500;
+   background-color: white;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+   transition: all 0.2s ease;
+   min-height: 60px;
 }
 
 .container:hover {
-   background-color: rgba(0, 0, 0, 0.05);
+   background-color: #f8f9fa;
    cursor: pointer;
-   transition: background-color 0.2s ease;
+   transform: translateY(-1px);
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+   border-color: var(--ion-color-primary);
 }
 
+.container ion-col[size='2'] {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   margin-right: 8px;
+}
+
+.container ion-icon {
+   color: var(--ion-color-primary);
+   transition: transform 0.2s ease;
+}
+
+.container:hover ion-icon {
+   transform: scale(1.1);
+}
+
+.container ion-col[size='10'] h2 {
+   margin: 0;
+   font-size: 1.1rem;
+   font-weight: 600;
+   color: var(--ion-color-dark);
+}
+
+/* Recent Transactions Container */
+.recent-transactions-container {
+   background: white;
+   border-radius: 12px;
+   padding: 8px;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+   margin-top: 8px;
+}
+
+/* Section Headers */
 .section-header {
-    margin: 20px 0 16px 0;
-    padding-left: 16px;
-    border-left: 4px solid var(--ion-color-medium);
+    margin: 24px 16px 16px 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border-left: 4px solid var(--ion-color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .section-header h2 {
     margin: 0 0 4px 0;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: var(--ion-color-dark);
 }
@@ -38,4 +78,31 @@
     font-size: 0.9rem;
     color: var(--ion-color-medium);
     font-weight: 400;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        margin: 6px 0;
+        padding: 14px 18px;
+        min-height: 55px;
+    }
+    
+    .container ion-col[size='10'] h2 {
+        font-size: 1rem;
+    }
+    
+    .section-header {
+        margin: 20px 12px 12px 12px;
+        padding: 12px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .recent-transactions-container {
+        margin: 8px 12px;
+        padding: 6px;
+    }
 }
