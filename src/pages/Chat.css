@@ -1,0 +1,108 @@
+.messages_container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.bot_message, .client_message {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    word-wrap: break-word;
+    background-color: whitesmoke;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.bot_message {
+    align-self: flex-start;
+    background-color: whitesmoke;
+    margin-right: auto;
+}
+
+.client_message {
+    align-self: flex-end;
+    background-color: var(--ion-color-dark);
+    color: white;
+    margin-left: auto;
+    border-color: var(--ion-color-dark);
+}
+
+.chat_input_container {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: white;
+    align-items: center;
+    width: 100%;
+}
+
+.chat_input {
+    flex: 1;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    --border-radius: 20px;
+    --border-width: 1px;
+    --border-color: #ccc;
+    --background: #f8f9fa;
+    font-size: 14px;
+    resize: none;
+    overflow-y: hidden;
+    min-height: 40px;
+    max-height: 120px;
+}
+
+.chat_input textarea {
+    resize: none !important;
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+    min-height: 40px !important;
+    max-height: 120px !important;
+    line-height: 1.4 !important;
+}
+.chat_input {
+    --min-height: 40px;
+    --max-height: 120px;
+}
+
+.chat_input.ion-focused {
+    --border-color: var(--ion-color-primary);
+    --box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.25);
+}
+
+.add_media_button {
+    --color: var(--ion-color-medium);
+    --border-radius: 50%;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.add_media_button:hover {
+    --color: var(--ion-color-primary);
+}
+
+.send_button {
+    --border-radius: 50%;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.send_button.button-disabled {
+    --opacity: 0.5;
+}

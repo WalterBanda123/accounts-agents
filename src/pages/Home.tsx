@@ -92,7 +92,7 @@ const Home: React.FC = () => {
               </IonCol>
             </IonRow>
           </IonGrid>
-          <IonFab vertical='bottom' horizontal='end'>
+          <IonFab vertical='bottom' horizontal='end' slot='fixed'>
             <IonFabButton
               color={'dark'}
               routerLink='/my_assistant'
