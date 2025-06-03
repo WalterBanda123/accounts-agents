@@ -54,6 +54,18 @@ const Chat: React.FC = () => {
                                 <div className="bot_message">
                                     Of course! I can help you review your recent transactions. Let me pull up that information for you.
                                 </div>
+                                <div className="client_message">
+                                    Can you help me check my recent transactions?
+                                </div>
+                                <div className="bot_message">
+                                    Of course! I can help you review your recent transactions. Let me pull up that information for you.
+                                </div>
+                                <div className="client_message">
+                                    Can you help me check my recent transactions?
+                                </div>
+                                <div className="bot_message">
+                                    Of course! I can help you review your recent transactions. Let me pull up that information for you.
+                                </div>
                             </div>
                         </IonCol>
                     </IonRow>
@@ -86,6 +98,7 @@ const Chat: React.FC = () => {
                             onClick={handleSendMessage}
                             disabled={!message.trim()}
                             className="send_button"
+                            color={'dark'}
                         >
                             <IonIcon icon={send} />
                         </IonButton>

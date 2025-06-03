@@ -83,7 +83,7 @@
 }
 
 .add_media_button {
-    --color: var(--ion-color-medium);
+    --color: var(--ion-color-dark);
     --border-radius: 50%;
     --padding-start: 8px;
     --padding-end: 8px;
@@ -95,7 +95,7 @@
 }
 
 .add_media_button:hover {
-    --color: var(--ion-color-primary);
+    --color: var(--ion-color-dark);
 }
 
 .send_button {
