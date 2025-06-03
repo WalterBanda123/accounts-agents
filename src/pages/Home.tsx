@@ -68,9 +68,12 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow>
               <IonCol>
-                <IonLabel>
-                  <h2>Recent Receipts</h2>
-                </IonLabel>
+                <div className="section-header">
+                  <IonLabel>
+                    <h2>Recent Receipts</h2>
+                    <p>Your latest transactions</p>
+                  </IonLabel>
+                </div>
               </IonCol>
             </IonRow>
             <IonRow>

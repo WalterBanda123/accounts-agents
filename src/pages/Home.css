@@ -11,6 +11,25 @@
    margin-bottom: 4px;
    font-weight: 600;
    font-size: 2.5rem;
-   background-color: whitesmoke;
    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    margin: 20px 0 16px 0;
+    padding-left: 16px;
+    border-left: 4px solid var(--ion-color-medium);
+}
+
+.section-header h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+}
+
+.section-header p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--ion-color-medium);
+    font-weight: 400;
 }
