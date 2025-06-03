@@ -1,4 +1,4 @@
-import { IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonModal, IonItem, IonTextarea } from "@ionic/react";
+import { IonBackButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonModal, IonItem, IonTextarea, IonSearchbar } from "@ionic/react";
 import { cubeOutline, chatbubbleEllipsesOutline, add, send } from "ionicons/icons";
 import React, { useState, useRef } from "react";
 import { ALL_STOCK_ITEMS, StockItem } from "../mock/stocks";
@@ -10,11 +10,25 @@ const Stocks: React.FC = () => {
     const [chatOpen, setChatOpen] = useState(false);
     const [chatMessage, setChatMessage] = useState('');
     const [selectedStock, setSelectedStock] = useState<StockItem | null>(null);
+    const [searchText, setSearchText] = useState<string>('');
     const modal = useRef<HTMLIonModalElement>(null);
 
     const getTotalValue = () => {
         return ALL_STOCK_ITEMS.reduce((total, item) => total + (item.unitPrice * item.quantity), 0);
     };
+
+    const filteredStocks = ALL_STOCK_ITEMS.filter(stock => {
+        if (!searchText) return true;
+
+        const searchLower = searchText.toLowerCase();
+        return (
+            stock.name.toLowerCase().includes(searchLower) ||
+            stock.brand.toLowerCase().includes(searchLower) ||
+            stock.category.toLowerCase().includes(searchLower) ||
+            stock.description.toLowerCase().includes(searchLower) ||
+            stock.subcategory.toLowerCase().includes(searchLower)
+        );
+    });
 
     const handleStockClick = (stock: StockItem) => {
         setSelectedStock(stock);
@@ -57,28 +71,42 @@ const Stocks: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
 
-                {/* Simple Header */}
-                <IonGrid>
-                    <IonRow>
-                        <IonCol>
-                            <div className="stocks-simple-header">
-                                <div className="header-content">
-                                    <div className="header-icon">
-                                        <IonIcon icon={cubeOutline} />
-                                    </div>
-                                    <div className="header-text">
-                                        <h2>Inventory</h2>
-                                        <p>{ALL_STOCK_ITEMS.length} items • ${totalInventoryValue.toLocaleString()} total value</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </IonCol>
-                    </IonRow>
-                </IonGrid>
+                {/* Search Section */}
+                <div className="search-section">
+                    <IonSearchbar
+                        value={searchText}
+                        debounce={300}
+                        onIonInput={(e) => setSearchText(e.detail.value!)}
+                        placeholder="Search inventory..."
+                        mode="md"
+                        className="search-bar"
+                    />
+                </div>
+
+                {/* Condensed Header */}
+                <div className="stocks-condensed-header">
+                    <div className="header-content">
+                        <div className="header-icon">
+                            <IonIcon icon={cubeOutline} />
+                        </div>
+                        <div className="header-text">
+                            <h2>Inventory</h2>
+                            <p>{filteredStocks.length} of {ALL_STOCK_ITEMS.length} items • ${totalInventoryValue.toLocaleString()} total value</p>
+                        </div>
+                        <IonButton
+                            fill="clear"
+                            color="primary"
+                            onClick={() => setChatOpen(true)}
+                            className="chat-button"
+                        >
+                            <IonIcon icon={chatbubbleEllipsesOutline} size="large" />
+                        </IonButton>
+                    </div>
+                </div>
 
                 {/* Stock List */}
                 <div className="simple-stock-list">
-                    {ALL_STOCK_ITEMS.map((stock: StockItem) => (
+                    {filteredStocks.map((stock: StockItem) => (
                         <div key={stock.id} onClick={() => handleStockClick(stock)}>
                             <StockCard
                                 stock={stock}
@@ -86,6 +114,12 @@ const Stocks: React.FC = () => {
                             />
                         </div>
                     ))}
+
+                    {filteredStocks.length === 0 && (
+                        <div className="no-stocks">
+                            <p>No items found matching "{searchText}"</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Chat Interface */}
