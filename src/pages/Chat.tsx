@@ -76,6 +76,7 @@ const Chat: React.FC = () => {
                             placeholder="Type a message..."
                             onIonInput={(e) => setMessage(e.detail.value!)}
                             className="chat_input"
+                            rows={1}
                             autoGrow={true}
                             wrap="soft"
                         />
