@@ -1,0 +1,11 @@
+.receipt{
+   display: flex;
+   flex-direction: column;
+   border: 1px solid gray;
+   border-radius: 20px;
+   padding: 10px;
+   background-color: whitesmoke;
+   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+   margin-top: 10px;
+   margin-bottom: 4px;
+}
