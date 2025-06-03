@@ -25,22 +25,22 @@ export const RECENT_RECEIPTS: ReceiptComponentInterface[] = [
       date: 'Apr 24, 2024',
       status: 'Unpaid',
     },
-    {
-      invoice: 'INV005',
-      amount: 450.00,
-      date: 'Apr 25, 2024',
-      status: 'Paid',
-    },
-    {
-      invoice: 'INV006',
-      amount: 75.25,
-      date: 'Apr 26, 2024',
-      status: 'Unpaid',
-    },
-    {
-      invoice: 'INV007',
-      amount: 199.99,
-      date: 'Apr 27, 2024',
-      status: 'Paid',
-    },
+    // {
+    //   invoice: 'INV005',
+    //   amount: 450.00,
+    //   date: 'Apr 25, 2024',
+    //   status: 'Paid',
+    // },
+    // {
+    //   invoice: 'INV006',
+    //   amount: 75.25,
+    //   date: 'Apr 26, 2024',
+    //   status: 'Unpaid',
+    // },
+    // {
+    //   invoice: 'INV007',
+    //   amount: 199.99,
+    //   date: 'Apr 27, 2024',
+    //   status: 'Paid',
+    // },
 ];

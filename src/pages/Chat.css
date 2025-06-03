@@ -3,7 +3,6 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    max-height: 60vh;
     overflow-y: auto;
     border-radius: 8px;
     margin-bottom: 16px;
