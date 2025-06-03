@@ -36,44 +36,72 @@ const Chat: React.FC = () => {
                     </IonToolbar>
                 </IonHeader>
                 <div className="messages_container">
-                    <div className="bot_message">
-                        Hello! I'm your AI Store Assistant. How can I help you today?
+                    <div className="message-group">
+                        <div className="bot_message">
+                            Hello! I'm your AI Store Assistant. How can I help you today?
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="client_message">
-                        Hi! I'm looking for some help with my account
+
+                    <div className="message-group client">
+                        <div className="client_message">
+                            Hi! I'm looking for some help with my account
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="bot_message">
-                        I'd be happy to help you with your account! What specific information do you need assistance with?
+
+                    <div className="message-group">
+                        <div className="bot_message">
+                            I'd be happy to help you with your account! What specific information do you need assistance with?
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="client_message">
-                        Can you help me check my recent transactions?
+
+                    <div className="message-group client">
+                        <div className="client_message">
+                            Can you help me check my recent transactions?
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="bot_message">
-                        Of course! I can help you review your recent transactions. Let me pull up that information for you.
+
+                    <div className="message-group">
+                        <div className="bot_message">
+                            Of course! I can help you review your recent transactions. I can see you have several recent purchases including groceries and electronics. Would you like me to show you the details?
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="client_message">
-                        Can you help me check my recent transactions?
+
+                    <div className="message-group client">
+                        <div className="client_message">
+                            Yes, please show me the last 5 transactions
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="bot_message">
-                        Of course! I can help you review your recent transactions. Let me pull up that information for you.
+
+                    <div className="message-group">
+                        <div className="bot_message">
+                            Here are your last 5 transactions:<br />
+                            • Whole Foods Market - $89.99 (Dec 15)<br />
+                            • City Apartments LLC - $1,250.00 (Dec 14)<br />
+                            • Starbucks Coffee - $45.67 (Dec 14)<br />
+                            • Best Buy Electronics - $299.99 (Dec 13)<br />
+                            • Target Store - $78.34 (Dec 12)
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="client_message">
-                        Can you help me check my recent transactions?
+
+                    <div className="message-group client">
+                        <div className="client_message">
+                            That's perfect! Thank you for the summary
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
-                    <div className="bot_message">
-                        Of course! I can help you review your recent transactions. Let me pull up that information for you.
-                    </div>
-                    <div className="client_message">
-                        Can you help me check my recent transactions?
-                    </div>
-                    <div className="bot_message">
-                        Of course! I can help you review your recent transactions. Let me pull up that information for you.
-                    </div>
-                    <div className="client_message">
-                        Can you help me check my recent transactions?
-                    </div>
-                    <div className="bot_message">
-                        Of course! I can help you review your recent transactions. Let me pull up that information for you.
+
+                    <div className="message-group">
+                        <div className="bot_message">
+                            You're welcome! Is there anything else you'd like to know about your transactions or account?
+                        </div>
+                        <div className="message-timestamp">Just now</div>
                     </div>
                 </div>
 

@@ -113,7 +113,7 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow class='ion-text-center'>
               <IonCol>
-                <IonButton mode='ios' fill='clear' color="dark" routerLink='/receipts' routerDirection='forward'>
+                <IonButton mode='ios' fill='outline' color="dark" routerLink='/transactions' routerDirection='forward'>
                   View All Transactions
                 </IonButton>
               </IonCol>
