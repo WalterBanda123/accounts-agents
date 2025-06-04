@@ -10,6 +10,16 @@ import { useHistory } from 'react-router-dom';
 const Home: React.FC = () => {
   const history = useHistory();
 
+  // Calculate today's sales metrics
+  const todaysTransactions = ALL_TRANSACTIONS.filter(transaction => {
+    const transactionDate = new Date(transaction.date);
+    const todayDate = new Date();
+    return transactionDate.toDateString() === todayDate.toDateString();
+  });
+
+  const todaysRevenue = todaysTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  const itemsSoldToday = todaysTransactions.reduce((sum, transaction) => sum + transaction.cartItems.length, 0);
+
   // Get the most recent 5 transactions
   const recentTransactions = ALL_TRANSACTIONS
     .sort((a, b) => new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime())
@@ -38,13 +48,14 @@ const Home: React.FC = () => {
         <IonContent fullscreen>
           <IonHeader collapse="condense" mode='ios'>
             <IonToolbar>
-              <IonTitle size="large">Welcome </IonTitle>
+              <IonTitle size="large">Welcome</IonTitle>
             </IonToolbar>
           </IonHeader>
+
           <IonGrid>
             <IonRow>
               <IonCol>
-                <div className="container" onClick={navigateToScanCart}>
+                <div className="container scan-cart-highlighted" onClick={navigateToScanCart}>
                   <IonCol size='2'>
                     <IonIcon icon={cameraOutline} size='large' />
                   </IonCol>
@@ -79,6 +90,7 @@ const Home: React.FC = () => {
                   <IonCol size='10'>
                     <IonLabel>
                       <h2>Stock Overview</h2>
+                      <p className="sales-info">{todaysTransactions.length} sales today • {itemsSoldToday} items sold</p>
                     </IonLabel>
                   </IonCol>
                 </div>
@@ -114,7 +126,7 @@ const Home: React.FC = () => {
             <IonRow class='ion-text-center'>
               <IonCol>
                 <IonButton mode='ios' fill='outline' color="primary" routerLink='/receipts' routerDirection='forward'>
-                  View All Transactions
+                  View All Transactions • ${todaysRevenue.toFixed(2)} today
                 </IonButton>
               </IonCol>
             </IonRow>
