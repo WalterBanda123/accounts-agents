@@ -1,0 +1,288 @@
+.profile-content {
+  background: #fafafa;
+  --background: #fafafa;
+}
+
+.profile-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Profile Image Section */
+.profile-image-section {
+  text-align: center;
+  margin-bottom: 30px;
+  background: white;
+  border-radius: 8px;
+  padding: 30px 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.avatar-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+
+.profile-avatar-large {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+.camera-button {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  background: var(--ion-color-primary);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.camera-button ion-icon {
+  color: white;
+  font-size: 18px;
+}
+
+.profile-name h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.profile-name p {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Profile Information Section */
+.profile-info-section {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* Edit Form */
+.edit-form {
+  padding: 16px;
+}
+
+.profile-item {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  --background: #f8f9fa;
+  --border-radius: 8px;
+  --border-width: 1px;
+  --border-color: #e0e0e0;
+  --inner-padding-start: 16px;
+  --inner-padding-end: 16px;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.profile-item:last-child {
+  margin-bottom: 0;
+}
+
+.profile-item ion-input {
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+}
+
+/* View Info */
+.view-info {
+  padding: 0;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-icon {
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.info-icon ion-icon {
+  font-size: 20px;
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-content label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.info-content p {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Stats Section */
+.stats-section {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.stats-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.2;
+}
+
+/* Actions Section */
+.actions-section {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+}
+
+.actions-section ion-button {
+  margin-bottom: 12px;
+  --border-radius: 8px;
+  height: 44px;
+  font-weight: 500;
+}
+
+.actions-section ion-button:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 16px;
+  }
+
+  .profile-image-section {
+    padding: 24px 16px;
+  }
+
+  .profile-avatar-large {
+    width: 80px;
+    height: 80px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-item {
+    padding: 12px;
+  }
+
+  .stat-number {
+    font-size: 1.3rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .profile-content {
+    background: #1a1a1a;
+    --background: #1a1a1a;
+  }
+
+  .profile-image-section,
+  .profile-info-section,
+  .stats-section,
+  .actions-section {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+  }
+
+  .profile-name h2 {
+    color: #fff;
+  }
+
+  .profile-name p {
+    color: #ccc;
+  }
+
+  .info-content label {
+    color: #ccc;
+  }
+
+  .info-content p {
+    color: #fff;
+  }
+
+  .stats-section h3 {
+    color: #fff;
+  }
+
+  .stat-item {
+    background: #333;
+    border-color: #444;
+  }
+
+  .stat-label {
+    color: #ccc;
+  }
+
+  .info-item {
+    border-bottom-color: #333;
+  }
+
+  .profile-item {
+    --background: #333;
+    --color: #fff;
+    --border-color: #444;
+  }
+}
