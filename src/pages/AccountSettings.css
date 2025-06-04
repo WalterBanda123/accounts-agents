@@ -1,0 +1,292 @@
+/* Account Settings Page Styles */
+
+.account-settings-content {
+  --background: var(--ion-color-light);
+}
+
+.settings-container {
+  padding: 16px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.settings-card {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card ion-card-header {
+  padding-bottom: 8px;
+}
+
+.settings-card ion-card-title {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.section-icon {
+  margin-right: 12px;
+  color: var(--ion-color-primary);
+  font-size: 20px;
+}
+
+.settings-card ion-card-content {
+  padding-top: 8px;
+}
+
+.settings-card ion-list {
+  padding: 0;
+}
+
+.settings-card ion-item {
+  --background: transparent;
+  --border-color: var(--ion-color-light-shade);
+  --min-height: 56px;
+  margin-bottom: 8px;
+}
+
+.settings-card ion-item:last-child {
+  --border-style: none;
+  margin-bottom: 0;
+}
+
+.settings-card ion-label {
+  color: var(--ion-color-dark);
+  font-weight: 500;
+}
+
+.settings-card ion-label[position="stacked"] {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--ion-color-medium);
+}
+
+.settings-card ion-input,
+.settings-card ion-textarea,
+.settings-card ion-select,
+.settings-card ion-datetime {
+  --color: var(--ion-color-dark);
+  --placeholder-color: var(--ion-color-medium);
+}
+
+.settings-card ion-toggle {
+  --background: var(--ion-color-light-shade);
+  --background-checked: var(--ion-color-primary);
+  --handle-background: var(--ion-color-light);
+  --handle-background-checked: var(--ion-color-light);
+}
+
+.settings-card ion-radio {
+  --color: var(--ion-color-primary);
+  --color-checked: var(--ion-color-primary);
+}
+
+.settings-card ion-checkbox {
+  --background: var(--ion-color-light);
+  --background-checked: var(--ion-color-primary);
+  --border-color: var(--ion-color-medium);
+  --border-color-checked: var(--ion-color-primary);
+  --checkmark-color: var(--ion-color-light);
+}
+
+/* Business Hours Specific Styles */
+.hours-day {
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.hours-day:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.day-label {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  min-width: 100px;
+}
+
+.hours-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+  padding-left: 16px;
+}
+
+.hours-inputs ion-item {
+  margin-bottom: 0;
+  --border-style: none;
+}
+
+/* Currency Display */
+.currency-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--ion-color-light-shade);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.currency-symbol {
+  font-weight: 600;
+  color: var(--ion-color-primary);
+  font-size: 16px;
+}
+
+.currency-name {
+  color: var(--ion-color-medium);
+  font-size: 14px;
+}
+
+/* Save Section */
+.save-section {
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.save-button {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.save-button:hover {
+  --background: var(--ion-color-primary-shade);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .settings-container {
+    max-width: 600px;
+    padding: 24px;
+  }
+
+  .hours-inputs {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .account-settings-content {
+    --background: var(--ion-color-dark);
+  }
+
+  .settings-card {
+    --background: var(--ion-color-dark-tint);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .settings-card ion-card-title,
+  .settings-card ion-label {
+    color: var(--ion-color-light);
+  }
+
+  .settings-card ion-label[position="stacked"] {
+    color: var(--ion-color-light-shade);
+  }
+
+  .settings-card ion-input,
+  .settings-card ion-textarea,
+  .settings-card ion-select {
+    --color: var(--ion-color-light);
+    --placeholder-color: var(--ion-color-light-shade);
+  }
+
+  .hours-day {
+    border-color: var(--ion-color-dark-shade);
+  }
+
+  .currency-display {
+    background: var(--ion-color-dark-shade);
+  }
+}
+
+/* iOS Specific Adjustments */
+.ios .settings-card {
+  border-radius: 10px;
+}
+
+.ios .save-button {
+  --border-radius: 10px;
+}
+
+/* Material Design Adjustments */
+.md .settings-card {
+  border-radius: 4px;
+}
+
+.md .save-button {
+  --border-radius: 4px;
+}
+
+/* Additional Visual Enhancements */
+.settings-card ion-item ion-icon[slot="start"] {
+  margin-right: 16px;
+  color: var(--ion-color-primary);
+}
+
+.settings-card ion-item ion-icon[slot="end"] {
+  color: var(--ion-color-medium);
+}
+
+/* Loading State */
+.settings-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+/* Error State */
+.settings-error {
+  text-align: center;
+  padding: 32px;
+  color: var(--ion-color-danger);
+}
+
+/* Form Validation */
+.ion-invalid {
+  --border-color: var(--ion-color-danger) !important;
+}
+
+.validation-error {
+  color: var(--ion-color-danger);
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 16px;
+}
+
+/* Success States */
+.ion-valid {
+  --border-color: var(--ion-color-success) !important;
+}
+
+/* Animation for save success */
+@keyframes saveSuccess {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.save-success {
+  animation: saveSuccess 0.3s ease-in-out;
+}

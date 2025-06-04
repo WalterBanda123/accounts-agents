@@ -31,7 +31,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     const history = useHistory();
 
     const handleAccountSettings = () => {
-        console.log('Navigate to Account Settings');
+        history.push('/account-settings');
         onDidDismiss();
     };
 
@@ -41,7 +41,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     };
 
     const handleNotifications = () => {
-        console.log('Navigate to Notifications');
+        history.push('/notifications');
         onDidDismiss();
     };
 
