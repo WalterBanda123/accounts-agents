@@ -36,7 +36,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     };
 
     const handleProfile = () => {
-        console.log('Navigate to Profile');
+        history.push('/profile');
         onDidDismiss();
     };
 
