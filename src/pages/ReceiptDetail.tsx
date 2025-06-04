@@ -59,7 +59,7 @@ const ReceiptDetail: React.FC = () => {
                         <IonIcon icon={receiptOutline} size="large" color="medium" />
                         <h2>Receipt Not Found</h2>
                         <p>The requested receipt could not be found.</p>
-                        <IonButton expand="block" fill="outline" onClick={() => history.push('/transactions')}>
+                        <IonButton expand="block" fill="outline" onClick={() => history.push('/receipts')}>
                             Back to Receipts
                         </IonButton>
                     </div>
@@ -116,7 +116,7 @@ const ReceiptDetail: React.FC = () => {
             <IonHeader mode="ios">
                 <IonToolbar>
                     <IonButtons slot="start">
-                        <IonBackButton defaultHref="/transactions" />
+                        <IonBackButton defaultHref="/" />
                     </IonButtons>
                     <IonTitle>Receipt Details</IonTitle>
                     <IonButtons slot="end">

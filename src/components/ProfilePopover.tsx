@@ -41,7 +41,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     };
 
     const handleNotifications = () => {
-        console.log('Navigate to Notifications');
+        history.push('/notifications');
         onDidDismiss();
     };
 
