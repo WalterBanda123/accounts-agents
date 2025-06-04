@@ -97,74 +97,9 @@
     font-size: 1rem;
 }
 
-/* Chat Overlay */
-.chat-overlay {
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 320px;
-    height: 400px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid #e9ecef;
-}
-
-.chat-header {
-    background: var(--ion-color-primary);
-    color: white;
-    padding: 16px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
-}
-
-.chat-header h3 {
-    margin: 0;
-    font-size: 1rem;
-}
-
-.chat-messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    background: #f8f9fa;
-}
-
-.assistant-message {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    color: var(--ion-color-dark);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 12px;
-}
-
-.chat-input {
-    border-top: 1px solid #e9ecef;
-    background: white;
-}
-
-.chat-input ion-item {
-    --padding-start: 16px;
-    --padding-end: 16px;
-    --inner-padding-end: 0;
-}
-
-.chat-input ion-textarea {
-    --padding-start: 0;
-    --padding-end: 0;
-}
-
 /* Product Detail Modal */
 .product-detail {
-    padding: 20px;
+    padding: 0;
 }
 
 .detail-section {
@@ -181,7 +116,7 @@
     margin: 0 0 8px 0;
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--ion-color-primary);
+    color: var(--ion-color-dark);
 }
 
 .detail-section h4 {
@@ -198,15 +133,12 @@
     line-height: 1.5;
 }
 
-.detail-section .brand {
-    font-size: 1.1rem;
+.brand {
     font-weight: 600;
     color: var(--ion-color-primary);
-    margin-bottom: 8px;
 }
 
-.detail-section .description {
-    font-style: italic;
+.description {
     color: var(--ion-color-medium);
 }
 
@@ -242,13 +174,6 @@
     .search-section {
         padding: 12px;
     }
-
-    .chat-overlay {
-        right: 12px;
-        bottom: 80px;
-        width: calc(100vw - 24px);
-        max-width: 320px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -261,13 +186,6 @@
 
     .stocks-condensed-header .chat-button {
         align-self: flex-end;
-    }
-
-    .chat-overlay {
-        width: calc(100vw - 16px);
-        right: 8px;
-        bottom: 70px;
-        height: 350px;
     }
 
     .product-detail {

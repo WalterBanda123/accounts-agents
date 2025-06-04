@@ -105,10 +105,10 @@ const NewProduct: React.FC = () => {
             brand: formData.brand,
             size: formData.size,
             status: 'in-stock' as const,
-            lastRestocked: new Date().toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+            lastRestocked: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
             }),
             supplier: formData.supplier,
             barcode: formData.barcode || undefined
@@ -117,7 +117,7 @@ const NewProduct: React.FC = () => {
         console.log('New Product:', newProduct);
         setToastMessage('Product added successfully!');
         setShowToast(true);
-        
+
         // Reset form
         setTimeout(() => {
             setFormData({
@@ -145,7 +145,7 @@ const NewProduct: React.FC = () => {
                     </IonButtons>
                     <IonTitle>Add New Product</IonTitle>
                     <IonButtons slot="end">
-                        <IonButton 
+                        <IonButton
                             onClick={handleSave}
                             disabled={!validateForm()}
                             strong={true}
