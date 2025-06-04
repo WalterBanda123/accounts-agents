@@ -113,3 +113,18 @@ ion-toast {
     min-height: 150px;
   }
 }
+
+/* Header Profile Avatar */
+.header-avatar {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  margin-right: 8px;
+}
+
+.header-avatar:hover {
+  border-color: #007bff;
+  transform: scale(1.05);
+}

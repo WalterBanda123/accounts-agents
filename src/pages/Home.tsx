@@ -134,16 +134,6 @@ const Home: React.FC = () => {
           <IonHeader collapse="condense" mode="ios">
             <IonToolbar>
               <IonTitle size="large">Welcome</IonTitle>
-              <IonButtons slot="end">
-                <IonButton onClick={handleProfileClick}>
-                  <IonAvatar className="header-avatar large-header-avatar">
-                    <img
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-                      alt="Profile"
-                    />
-                  </IonAvatar>
-                </IonButton>
-              </IonButtons>
             </IonToolbar>
           </IonHeader>
 

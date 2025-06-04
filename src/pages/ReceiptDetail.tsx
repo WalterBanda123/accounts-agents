@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import {
+    IonAvatar,
     IonBackButton,
     IonButton,
     IonButtons,
@@ -24,6 +25,7 @@ import {
     checkmarkCircle
 } from 'ionicons/icons';
 import { ALL_TRANSACTIONS } from '../mock/transactions';
+import ProfilePopover from '../components/ProfilePopover';
 import './ReceiptDetail.css';
 
 interface RouteParams {
@@ -36,6 +38,8 @@ const ReceiptDetail: React.FC = () => {
     const [showActionSheet, setShowActionSheet] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [showProfilePopover, setShowProfilePopover] = useState(false);
+    const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
 
     const receipt = ALL_TRANSACTIONS.find(t => t.id === id);
 
@@ -101,6 +105,12 @@ const ReceiptDetail: React.FC = () => {
         setShowActionSheet(false);
     };
 
+    const handleProfileClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
+        setShowProfilePopover(true);
+    };
+
     return (
         <IonPage>
             <IonHeader mode="ios">
@@ -110,6 +120,9 @@ const ReceiptDetail: React.FC = () => {
                     </IonButtons>
                     <IonTitle>Receipt Details</IonTitle>
                     <IonButtons slot="end">
+                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+                            <img src="https://picsum.photos/100" alt="Profile" />
+                        </IonAvatar>
                         <IonButton fill="clear" onClick={() => setShowActionSheet(true)}>
                             <IonIcon icon={ellipsisVertical} />
                         </IonButton>
@@ -328,6 +341,12 @@ const ReceiptDetail: React.FC = () => {
                 message={toastMessage}
                 duration={2000}
                 position="bottom"
+            />
+
+            <ProfilePopover
+                isOpen={showProfilePopover}
+                event={profilePopoverEvent || undefined}
+                onDidDismiss={() => setShowProfilePopover(false)}
             />
         </IonPage>
     );
