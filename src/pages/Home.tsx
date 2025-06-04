@@ -1,5 +1,6 @@
 import {
   IonButton,
+  IonButtons,
   IonCol,
   IonContent,
   IonFab,
@@ -12,6 +13,7 @@ import {
   IonRow,
   IonTitle,
   IonToolbar,
+  IonAvatar,
 } from "@ionic/react";
 
 import {
@@ -32,12 +34,15 @@ import {
   CameraSource,
 } from "@capacitor/camera";
 import ReceiptModal from "../components/ReceiptModal";
+import ProfilePopover from "../components/ProfilePopover";
 import ToastComponent from "../components/ToastComponent";
 
 const Home: React.FC = () => {
   const [toastError, setToastError] = useState<string>("");
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string>("");
+  const [showProfilePopover, setShowProfilePopover] = useState<boolean>(false);
+  const [profilePopoverEvent, setProfilePopoverEvent] = useState<Event | undefined>(undefined);
   const history = useHistory();
 
   const takePhoto = async () => {
@@ -96,6 +101,16 @@ const Home: React.FC = () => {
     setCapturedImage("");
   };
 
+  const handleProfileClick = (event: React.MouseEvent) => {
+    setProfilePopoverEvent(event.nativeEvent);
+    setShowProfilePopover(true);
+  };
+
+  const handleProfilePopoverDismiss = () => {
+    setShowProfilePopover(false);
+    setProfilePopoverEvent(undefined);
+  };
+
   return (
     <React.Fragment>
 
@@ -103,12 +118,32 @@ const Home: React.FC = () => {
         <IonHeader mode="ios">
           <IonToolbar>
             <IonTitle>Dashboard</IonTitle>
+            <IonButtons slot="end">
+              <IonButton onClick={handleProfileClick}>
+                <IonAvatar className="header-avatar">
+                  <img
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+                    alt="Profile"
+                  />
+                </IonAvatar>
+              </IonButton>
+            </IonButtons>
           </IonToolbar>
         </IonHeader>
         <IonContent fullscreen>
           <IonHeader collapse="condense" mode="ios">
             <IonToolbar>
               <IonTitle size="large">Welcome</IonTitle>
+              <IonButtons slot="end">
+                <IonButton onClick={handleProfileClick}>
+                  <IonAvatar className="header-avatar large-header-avatar">
+                    <img
+                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+                      alt="Profile"
+                    />
+                  </IonAvatar>
+                </IonButton>
+              </IonButtons>
             </IonToolbar>
           </IonHeader>
 
@@ -223,6 +258,12 @@ const Home: React.FC = () => {
             isOpen={showReceiptModal}
             onDidDismiss={handleModalDismiss}
             cartImage={capturedImage}
+          />
+
+          <ProfilePopover
+            isOpen={showProfilePopover}
+            event={profilePopoverEvent}
+            onDidDismiss={handleProfilePopoverDismiss}
           />
         </IonContent>
       </IonPage>

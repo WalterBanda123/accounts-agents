@@ -1,0 +1,71 @@
+.profile-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--ion-color-light);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.profile-info p {
+  margin: 2px 0 0 0;
+  font-size: 14px;
+  color: var(--ion-color-medium);
+}
+
+.profile-menu {
+  padding: 8px 0;
+}
+
+.profile-menu ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 0;
+  --min-height: 48px;
+}
+
+.profile-menu ion-icon {
+  color: var(--ion-color-medium);
+  margin-right: 4px;
+}
+
+.logout-item {
+  --color: var(--ion-color-danger);
+}
+
+.logout-item ion-icon {
+  color: var(--ion-color-danger);
+}
+
+.profile-menu ion-item:hover {
+  --background: var(--ion-color-light);
+}
+
+/* Popover specific styling */
+ion-popover {
+  --width: 280px;
+  --max-width: 90vw;
+}
+
+ion-popover .popover-content {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
