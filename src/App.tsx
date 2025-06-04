@@ -46,52 +46,60 @@ import ReceiptDetail from './pages/ReceiptDetail';
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/login">
-          <Login />
-        </Route>
-        <Route exact path="/register">
-          <Register />
-        </Route>
-        <Route exact path="/profile">
-          <Profile />
-        </Route>
-        <Route exact path="/account-settings">
-          <AccountSettings />
-        </Route>
-        <Route exact path="/notifications">
-          <Notifications />
-        </Route>
-        <Route exact path="/notification/:id">
-          <NotificationDetail />
-        </Route>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/my_assistant">
-          <Chat />
-        </Route>
-        <Route exact path="/receipts">
-          <Transactions />
-        </Route>
-        <Route exact path="/receipt/:id">
-          <ReceiptDetail />
-        </Route>
-        <Route exact path="/stock-overview">
-          <Stocks />
-        </Route>
-        <Route exact path="/new-product">
-          <NewProduct />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/login" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-);
+const App: React.FC = () => {
+
+  
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          <Route exact path="/login">
+            <Login />
+          </Route>
+          <Route exact path="/register">
+            <Register />
+          </Route>
+          <Route exact path="/profile">
+            <Profile />
+          </Route>
+          <Route exact path="/account-settings">
+            <AccountSettings />
+          </Route>
+          <Route exact path="/notifications">
+            <Notifications />
+          </Route>
+          <Route exact path="/notification/:id">
+            <NotificationDetail />
+          </Route>
+          <Route exact path="/home">
+            <Home />
+          </Route>
+          <Route exact path="/my_assistant">
+            <Chat />
+          </Route>
+          <Route exact path="/receipts">
+            <Transactions />
+          </Route>
+          <Route exact path="/receipt/:id">
+            <ReceiptDetail />
+          </Route>
+          <Route exact path="/stock-overview">
+            <Stocks />
+          </Route>
+          <Route exact path="/new-product">
+            <NewProduct />
+          </Route>
+          <Route exact path="/">
+            <Redirect to="/login" />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IonApp>
+  )
+
+}
+  
+
 
 export default App;

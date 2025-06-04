@@ -26,27 +26,36 @@ import {
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import './Profile.css';
+import useAuthContext from '../contexts/auth/UseAuthContext';
+import { UserInterface } from '../interfaces/user';
 
 const Profile: React.FC = () => {
     const history = useHistory();
+    const { user } = useAuthContext()
     const [isEditing, setIsEditing] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
-    // Profile data state
-    const [profileData, setProfileData] = useState({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        businessName: 'Doe\'s General Store',
-        phone: '+1 (555) 123-4567',
-        profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-    });
 
-    const [editData, setEditData] = useState({ ...profileData });
+    const [profileData, setProfileData] = useState<UserInterface | null>(user);
+
+    const [editData, setEditData] = useState<UserInterface>({
+        name: profileData?.name || '',
+        email: profileData?.email || '',
+        businessName: profileData?.businessName || '',
+        phone: profileData?.phone || '',
+        profileImage: profileData?.profileImage || ''
+    });
 
     const handleEdit = () => {
         setIsEditing(true);
-        setEditData({ ...profileData });
+        setEditData({
+            name: profileData?.name || '',
+            email: profileData?.email || '',
+            businessName: profileData?.businessName || '',
+            phone: profileData?.phone || '',
+            profileImage: profileData?.profileImage || ''
+        });
     };
 
     const handleSave = () => {
@@ -58,7 +67,13 @@ const Profile: React.FC = () => {
 
     const handleCancel = () => {
         setIsEditing(false);
-        setEditData({ ...profileData });
+        setEditData({
+            name: profileData?.name || '',
+            email: profileData?.email || '',
+            businessName: profileData?.businessName || '',
+            phone: profileData?.phone || '',
+            profileImage: profileData?.profileImage || ''
+        });
     };
 
     const handleInputChange = (field: string, value: string) => {
@@ -104,7 +119,7 @@ const Profile: React.FC = () => {
                     <div className="profile-image-section">
                         <div className="avatar-container">
                             <IonAvatar className="profile-avatar-large">
-                                <img src={profileData.profileImage} alt="Profile" />
+                                <img src={profileData?.profileImage} alt="Profile" />
                             </IonAvatar>
                             {isEditing && (
                                 <IonButton
@@ -119,8 +134,8 @@ const Profile: React.FC = () => {
 
                         {!isEditing && (
                             <div className="profile-name">
-                                <h2>{profileData.name}</h2>
-                                <p>{profileData.businessName}</p>
+                                <h2>{profileData?.name}</h2>
+                                <p>{profileData?.businessName}</p>
                             </div>
                         )}
                     </div>
@@ -181,7 +196,7 @@ const Profile: React.FC = () => {
                                     </div>
                                     <div className="info-content">
                                         <label>Full Name</label>
-                                        <p>{profileData.name}</p>
+                                        <p>{profileData?.name}</p>
                                     </div>
                                 </div>
 
@@ -191,7 +206,7 @@ const Profile: React.FC = () => {
                                     </div>
                                     <div className="info-content">
                                         <label>Business Name</label>
-                                        <p>{profileData.businessName}</p>
+                                        <p>{profileData?.businessName}</p>
                                     </div>
                                 </div>
 
@@ -201,7 +216,7 @@ const Profile: React.FC = () => {
                                     </div>
                                     <div className="info-content">
                                         <label>Email</label>
-                                        <p>{profileData.email}</p>
+                                        <p>{profileData?.email}</p>
                                     </div>
                                 </div>
 
@@ -211,7 +226,7 @@ const Profile: React.FC = () => {
                                     </div>
                                     <div className="info-content">
                                         <label>Phone Number</label>
-                                        <p>{profileData.phone}</p>
+                                        <p>{profileData?.phone}</p>
                                     </div>
                                 </div>
                             </div>
