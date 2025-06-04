@@ -1,12 +1,13 @@
 import { IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
 import { receiptOutline, checkmarkCircle, timeOutline, closeCircle } from "ionicons/icons";
 import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 import { ALL_TRANSACTIONS, TransactionReceiptInterface } from "../mock/transactions";
 import './Transactions.css'
 
 const Transactions: React.FC = () => {
     const [searchText, setSearchText] = useState<string>('');
-    const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set());
+    const history = useHistory();
     const totalReceipts = ALL_TRANSACTIONS.length;
 
     const filteredTransactions = ALL_TRANSACTIONS.filter(transaction =>
@@ -28,13 +29,8 @@ const Transactions: React.FC = () => {
     };
 
     const handleTransactionClick = (transactionId: string) => {
-        const newSelected = new Set(selectedTransactions);
-        if (newSelected.has(transactionId)) {
-            newSelected.delete(transactionId);
-        } else {
-            newSelected.add(transactionId);
-        }
-        setSelectedTransactions(newSelected);
+        // Navigate to receipt detail page
+        history.push(`/receipt/${transactionId}`);
     };
 
     const getStatusIcon = (status: string) => {
@@ -113,7 +109,7 @@ const Transactions: React.FC = () => {
                     {filteredTransactions.map((transaction: TransactionReceiptInterface) => (
                         <div
                             key={transaction.id}
-                            className={`transaction-item ${selectedTransactions.has(transaction.id) ? 'selected' : ''}`}
+                            className="transaction-item"
                             onClick={() => handleTransactionClick(transaction.id)}
                         >
                             <div className="transaction-content">

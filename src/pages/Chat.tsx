@@ -106,7 +106,7 @@ const Chat: React.FC = () => {
             const initialMessage = getInitialMessage();
             addMessage(initialMessage, true);
         }
-    }, []); // Empty dependency array is intentional for initial load
+    }); // Empty dependency array is intentional for initial load
 
     useEffect(() => {
         scrollToBottom();

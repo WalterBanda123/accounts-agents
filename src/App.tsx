@@ -36,6 +36,7 @@ import Chat from './pages/Chat';
 import Transactions from './pages/Transactions';
 import Stocks from './pages/Stocks';
 import NewProduct from './pages/NewProduct';
+import ReceiptDetail from './pages/ReceiptDetail';
 
 setupIonicReact();
 
@@ -51,6 +52,9 @@ const App: React.FC = () => (
         </Route>
         <Route exact path="/receipts">
           <Transactions />
+        </Route>
+        <Route exact path="/receipt/:id">
+          <ReceiptDetail />
         </Route>
         <Route exact path="/stock-overview">
           <Stocks />
