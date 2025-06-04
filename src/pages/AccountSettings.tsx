@@ -22,6 +22,7 @@ import {
   IonCardContent,
   IonTextarea,
   IonToast,
+  IonSpinner,
 } from "@ionic/react";
 import {
   saveOutline,
@@ -34,46 +35,7 @@ import {
 } from "ionicons/icons";
 import "./AccountSettings.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
-
-interface StoreSettings {
-  // Currency Settings
-  primaryCurrency: string;
-  secondaryCurrency: string;
-  showDualCurrency: boolean;
-  manualExchangeRate: number;
-
-  // Store Information
-  storeName: string;
-  storeAddress: string;
-  storePhone: string;
-  storeEmail: string;
-  businessLicense: string;
-
-  // Tax Settings
-  vatEnabled: boolean;
-  vatRate: number;
-  vatNumber: string;
-
-  // Receipt Settings
-  receiptLogo: boolean;
-  receiptFooter: string;
-  printReceipts: boolean;
-  emailReceipts: boolean;
-
-  // Notification Preferences
-  lowStockAlerts: boolean;
-  dailyReports: boolean;
-  paymentAlerts: boolean;
-  systemUpdates: boolean;
-
-  // Display Preferences
-  language: string;
-  theme: "light" | "dark" | "auto";
-
-  // Security Settings
-  requirePin: boolean;
-  backupEnabled: boolean;
-}
+import { StoreSettings } from "../interfaces/store";
 
 const CURRENCIES = [
   { code: "ZWL", name: "Zimbabwean Dollar", symbol: "Z$" },
@@ -93,7 +55,7 @@ const LANGUAGES = [
 const AccountSettings: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const { user, updateUserProfile } = useAuthContext();
+  const { user, updateUserProfile, isLoading } = useAuthContext();
 
   const [settings, setSettings] = useState<StoreSettings>({
     // Currency Settings
@@ -179,8 +141,15 @@ const AccountSettings: React.FC = () => {
           </IonButtons>
           <IonTitle>Account Settings</IonTitle>
           <IonButtons slot="end">
-            <IonButton fill="clear" onClick={handleSave}>
-              <IonIcon icon={saveOutline} />
+            <IonButton fill="clear" onClick={handleSave} disabled={isLoading}>
+              {isLoading ? (
+                <IonSpinner
+                  name="circular"
+                  style={{ width: "20px", height: "20px" }}
+                />
+              ) : (
+                <IonIcon icon={saveOutline} />
+              )}
             </IonButton>
           </IonButtons>
         </IonToolbar>
@@ -575,9 +544,19 @@ const AccountSettings: React.FC = () => {
               fill="solid"
               onClick={handleSave}
               className="save-button"
+              disabled={isLoading}
             >
-              <IonIcon icon={saveOutline} slot="start" />
-              Save Settings
+              {isLoading ? (
+                <>
+                  <IonSpinner name="circular" style={{ marginRight: "8px" }} />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <IonIcon icon={saveOutline} slot="start" />
+                  Save Settings
+                </>
+              )}
             </IonButton>
           </div>
         </div>

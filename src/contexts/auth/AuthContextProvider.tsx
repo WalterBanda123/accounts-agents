@@ -13,14 +13,7 @@ import { fAuth } from "../../../firebase.config";
 const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
   props
 ) => {
-  const [user, setUser] = useState<UserInterface | null>({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    businessName: "Doe's General Store",
-    phone: "+1 (555) 123-4567",
-    profileImage:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-  });
+  const [user, setUser] = useState<UserInterface | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -57,6 +50,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       console.error("Sign in error:", error);
       setError(error);
       setIsLoading(false);
+      throw error; // Re-throw error so it can be caught in the Login component
     }
   };
 
@@ -134,11 +128,8 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       );
       const firebaseUser = userCredential.user;
 
-      // Update the user's profile with display name (business name)
       await updateProfile(firebaseUser, {
         displayName: businessName,
-        // Note: Firebase Auth doesn't directly support phone number in updateProfile
-        // You would typically store additional info in Firestore
       });
 
       // Update local user state
@@ -199,6 +190,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
 
     // Listen for authentication state changes
     const unsubscribe = onAuthStateChanged(fAuth, (firebaseUser) => {
+      console.log("Auth state changed:", firebaseUser);
       if (firebaseUser) {
         // User is signed in
         setUser({

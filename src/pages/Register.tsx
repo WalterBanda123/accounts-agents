@@ -12,6 +12,8 @@ import {
   IonText,
   IonBackButton,
   IonButtons,
+  IonSpinner,
+  IonToast,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 import "./Register.css";
@@ -23,21 +25,48 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const history = useHistory();
-  const { signUp } = useAuthContext();
+  const { signUp, isLoading, error, isLoggedIn } = useAuthContext();
 
   const handleRegister = async () => {
     if (!isFormValid) {
       console.error("Please fill in all fields and ensure passwords match");
+      setToastMessage(
+        "Please fill in all fields correctly and ensure passwords match"
+      );
+      setShowErrorToast(true);
       return;
     }
 
     try {
       console.log("Register:", { businessName, phone, email, password });
       await signUp(email, password, businessName, phone);
-      history.push("/home");
-    } catch (error) {
-      console.error("Registration failed:", error);
+
+      // Check if registration was successful by waiting for state update
+      setTimeout(() => {
+        if (isLoggedIn && !error) {
+          setToastMessage(
+            `Welcome to Account Manager, ${businessName}! Your account has been created successfully.`
+          );
+          setShowSuccessToast(true);
+          // Navigate after showing success message
+          setTimeout(() => {
+            history.push("/home");
+          }, 2000);
+        } else if (error) {
+          setToastMessage(
+            "Registration failed. Please try again with different credentials."
+          );
+          setShowErrorToast(true);
+        }
+      }, 100);
+    } catch (err) {
+      console.error("Registration failed:", err);
+      setToastMessage("Registration failed. Please try again.");
+      setShowErrorToast(true);
     }
   };
 
@@ -45,11 +74,25 @@ const Register: React.FC = () => {
     history.push("/login");
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    // Basic phone validation - at least 10 digits
+    const phoneRegex = /^\+?[\d\s\-()]{10,}$/;
+    return phoneRegex.test(phone);
+  };
+
   const isFormValid =
     businessName &&
     phone &&
+    validatePhone(phone) &&
     email &&
+    validateEmail(email) &&
     password &&
+    password.length >= 6 &&
     confirmPassword &&
     password === confirmPassword;
 
@@ -95,6 +138,13 @@ const Register: React.FC = () => {
                 placeholder="Enter your phone number"
               />
             </IonItem>
+            {phone && !validatePhone(phone) && (
+              <div className="password-warning">
+                <IonText color="danger">
+                  <p>Please enter a valid phone number</p>
+                </IonText>
+              </div>
+            )}
 
             {/* Email Input */}
             <IonItem className="register-item">
@@ -106,6 +156,13 @@ const Register: React.FC = () => {
                 placeholder="Enter your email"
               />
             </IonItem>
+            {email && !validateEmail(email) && (
+              <div className="password-warning">
+                <IonText color="danger">
+                  <p>Please enter a valid email address</p>
+                </IonText>
+              </div>
+            )}
 
             {/* Password Input */}
             <IonItem className="register-item">
@@ -114,9 +171,16 @@ const Register: React.FC = () => {
                 type="password"
                 value={password}
                 onIonInput={(e) => setPassword(e.detail.value!)}
-                placeholder="Create a password"
+                placeholder="Create a password (min 6 characters)"
               />
             </IonItem>
+            {password && password.length < 6 && (
+              <div className="password-warning">
+                <IonText color="danger">
+                  <p>Password must be at least 6 characters long</p>
+                </IonText>
+              </div>
+            )}
 
             {/* Confirm Password Input */}
             <IonItem className="register-item">
@@ -144,9 +208,16 @@ const Register: React.FC = () => {
               color="primary"
               className="register-button"
               onClick={handleRegister}
-              disabled={!isFormValid}
+              disabled={!isFormValid || isLoading}
             >
-              Create Account
+              {isLoading ? (
+                <>
+                  <IonSpinner name="circular" style={{ marginRight: "8px" }} />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </IonButton>
 
             {/* Terms and Conditions */}
@@ -172,6 +243,26 @@ const Register: React.FC = () => {
             </IonText>
           </div>
         </div>
+
+        {/* Error Toast */}
+        <IonToast
+          isOpen={showErrorToast}
+          onDidDismiss={() => setShowErrorToast(false)}
+          message={toastMessage}
+          duration={3000}
+          color="danger"
+          position="top"
+        />
+
+        {/* Success Toast */}
+        <IonToast
+          isOpen={showSuccessToast}
+          onDidDismiss={() => setShowSuccessToast(false)}
+          message={toastMessage}
+          duration={3000}
+          color="success"
+          position="top"
+        />
       </IonContent>
     </IonPage>
   );
