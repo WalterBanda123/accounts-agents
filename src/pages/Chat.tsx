@@ -1,7 +1,8 @@
-import { IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonPage, IonTextarea, IonTitle, IonToolbar } from "@ionic/react";
+import { IonAvatar, IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonPage, IonTextarea, IonTitle, IonToolbar } from "@ionic/react";
 import { add, send } from "ionicons/icons";
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import ProfilePopover from "../components/ProfilePopover";
 import "./Chat.css";
 
 interface Message {
@@ -20,6 +21,8 @@ interface LocationState {
 const Chat: React.FC = () => {
     const [message, setMessage] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
+    const [showProfilePopover, setShowProfilePopover] = useState(false);
+    const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
     const location = useLocation<LocationState>();
     const contentRef = useRef<HTMLIonContentElement>(null);
 
@@ -117,6 +120,12 @@ const Chat: React.FC = () => {
         console.log('Opening media picker');
     };
 
+    const handleProfileClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
+        setShowProfilePopover(true);
+    };
+
     return (
         <IonPage>
             <IonHeader mode="ios">
@@ -125,6 +134,11 @@ const Chat: React.FC = () => {
                         <IonBackButton color="dark" defaultHref='/'></IonBackButton>
                     </IonButtons>
                     <IonTitle>Chat</IonTitle>
+                    <IonButtons slot="end">
+                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+                            <img src="https://picsum.photos/100" alt="Profile" />
+                        </IonAvatar>
+                    </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen ref={contentRef}>
@@ -181,6 +195,12 @@ const Chat: React.FC = () => {
                     </IonButton>
                 </div>
             </IonFooter>
+
+            <ProfilePopover
+                isOpen={showProfilePopover}
+                event={profilePopoverEvent || undefined}
+                onDidDismiss={() => setShowProfilePopover(false)}
+            />
         </IonPage>
     )
 }

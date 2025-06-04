@@ -1,12 +1,15 @@
-import { IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
+import { IonAvatar, IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
 import { receiptOutline, checkmarkCircle, timeOutline, closeCircle } from "ionicons/icons";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { ALL_TRANSACTIONS, TransactionReceiptInterface } from "../mock/transactions";
+import ProfilePopover from "../components/ProfilePopover";
 import './Transactions.css'
 
 const Transactions: React.FC = () => {
     const [searchText, setSearchText] = useState<string>('');
+    const [showProfilePopover, setShowProfilePopover] = useState(false);
+    const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
     const history = useHistory();
     const totalReceipts = ALL_TRANSACTIONS.length;
 
@@ -59,8 +62,11 @@ const Transactions: React.FC = () => {
         }
     };
 
-
-
+    const handleProfileClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
+        setShowProfilePopover(true);
+    };
 
     return (
         <IonPage>
@@ -70,6 +76,11 @@ const Transactions: React.FC = () => {
                         <IonBackButton color={'dark'} defaultHref="/" />
                     </IonButtons>
                     <IonTitle>All Receipts</IonTitle>
+                    <IonButtons slot="end">
+                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+                            <img src="https://picsum.photos/100" alt="Profile" />
+                        </IonAvatar>
+                    </IonButtons>
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen>
@@ -157,6 +168,12 @@ const Transactions: React.FC = () => {
                     )}
                 </div>
             </IonContent>
+
+            <ProfilePopover
+                isOpen={showProfilePopover}
+                event={profilePopoverEvent || undefined}
+                onDidDismiss={() => setShowProfilePopover(false)}
+            />
         </IonPage>
     )
 }

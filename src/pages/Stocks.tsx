@@ -1,15 +1,18 @@
-import { IonBackButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonModal, IonSearchbar } from "@ionic/react";
+import { IonAvatar, IonBackButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonModal, IonSearchbar } from "@ionic/react";
 import { cubeOutline, chatbubbleEllipsesOutline, add, pencilOutline, refreshOutline } from "ionicons/icons";
 import React, { useState, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { ALL_STOCK_ITEMS, StockItem } from "../mock/stocks";
 import StockCard from "../components/StockCard";
+import ProfilePopover from "../components/ProfilePopover";
 import '../components/StockCard.css';
 import './Stocks.css';
 
 const Stocks: React.FC = () => {
     const [selectedStock, setSelectedStock] = useState<StockItem | null>(null);
     const [searchText, setSearchText] = useState<string>('');
+    const [showProfilePopover, setShowProfilePopover] = useState(false);
+    const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
     const modal = useRef<HTMLIonModalElement>(null);
     const history = useHistory();
 
@@ -52,6 +55,12 @@ const Stocks: React.FC = () => {
         });
     };
 
+    const handleProfileClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
+        setShowProfilePopover(true);
+    };
+
     const totalInventoryValue = getTotalValue();
 
     return (
@@ -63,6 +72,9 @@ const Stocks: React.FC = () => {
                     </IonButtons>
                     <IonTitle>Stock Overview</IonTitle>
                     <IonButtons slot="end">
+                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+                            <img src="https://picsum.photos/100" alt="Profile" />
+                        </IonAvatar>
                         <IonButton
                             fill="clear"
                             color="primary"
@@ -224,6 +236,12 @@ const Stocks: React.FC = () => {
                     </IonContent>
                 </IonModal>
             </IonContent>
+
+            <ProfilePopover
+                isOpen={showProfilePopover}
+                event={profilePopoverEvent || undefined}
+                onDidDismiss={() => setShowProfilePopover(false)}
+            />
         </IonPage>
     );
 };

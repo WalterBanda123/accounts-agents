@@ -1,0 +1,174 @@
+.register-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: #fafafa;
+}
+
+.register-container {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.register-header h1 {
+  font-size: 1.8rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.register-header p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.register-form {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.register-item {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  --background: #f8f9fa;
+  --border-radius: 8px;
+  --border-width: 1px;
+  --border-color: #e0e0e0;
+  --inner-padding-start: 16px;
+  --inner-padding-end: 16px;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.register-item ion-input {
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+}
+
+.register-button {
+  margin: 20px 0 16px 0;
+  --border-radius: 8px;
+  height: 44px;
+  font-weight: 500;
+}
+
+.password-warning {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.password-warning p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.terms-text {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.terms-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.signin-link {
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.signin-link p {
+  margin: 0;
+  color: #666;
+}
+
+.link-text {
+  color: var(--ion-color-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.link-text:hover {
+  color: var(--ion-color-primary-shade);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .register-content {
+    padding: 16px;
+  }
+
+  .register-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .register-container {
+    max-width: 100%;
+  }
+
+  .register-form {
+    padding: 20px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .register-content {
+    background: #1a1a1a;
+  }
+
+  .register-header {
+    color: #fff;
+  }
+
+  .register-header h1 {
+    color: #fff;
+  }
+
+  .register-header p {
+    color: #ccc;
+  }
+
+  .register-form {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+  }
+
+  .register-item {
+    --background: #333;
+    --color: #fff;
+    --border-color: #444;
+  }
+
+  .signin-link {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+  }
+
+  .signin-link p {
+    color: #ccc;
+  }
+
+  .terms-text p {
+    color: #ccc;
+  }
+}
