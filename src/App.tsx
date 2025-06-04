@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import AccountSettings from './pages/AccountSettings';
 import Notifications from './pages/Notifications';
 import NotificationDetail from './pages/NotificationDetail';
 
@@ -57,6 +58,9 @@ const App: React.FC = () => (
         </Route>
         <Route exact path="/profile">
           <Profile />
+        </Route>
+        <Route exact path="/account-settings">
+          <AccountSettings />
         </Route>
         <Route exact path="/notifications">
           <Notifications />
