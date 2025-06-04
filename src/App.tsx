@@ -35,6 +35,7 @@ import './theme/variables.css';
 import Chat from './pages/Chat';
 import Transactions from './pages/Transactions';
 import Stocks from './pages/Stocks';
+import NewProduct from './pages/NewProduct';
 
 setupIonicReact();
 
@@ -53,6 +54,9 @@ const App: React.FC = () => (
         </Route>
         <Route exact path="/stock-overview">
           <Stocks />
+        </Route>
+        <Route exact path="/new-product">
+          <NewProduct />
         </Route>
         <Route exact path="/">
           <Redirect to="/home" />

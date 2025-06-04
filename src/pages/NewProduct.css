@@ -1,0 +1,113 @@
+/* NewProduct.css */
+
+.image-upload-card {
+    margin-bottom: 16px;
+}
+
+.image-upload-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.image-placeholder {
+    text-align: center;
+    color: var(--ion-color-medium);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.image-placeholder p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.image-placeholder ion-icon {
+    color: var(--ion-color-medium);
+    opacity: 0.6;
+}
+
+ion-card {
+    margin: 16px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+ion-card-header {
+    padding-bottom: 8px;
+}
+
+ion-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ion-color-primary);
+}
+
+ion-item {
+    --border-color: transparent;
+    --inner-border-width: 0;
+    margin-bottom: 8px;
+}
+
+ion-item:last-child {
+    margin-bottom: 0;
+}
+
+ion-label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+ion-input, ion-textarea, ion-select {
+    --background: var(--ion-color-light);
+    --border-radius: 8px;
+    --padding-start: 12px;
+    --padding-end: 12px;
+}
+
+ion-select {
+    --placeholder-color: var(--ion-color-medium);
+}
+
+/* Required field indicator */
+ion-label[position="stacked"]:after {
+    content: "";
+}
+
+/* Add asterisk for required fields */
+ion-item:has(ion-label[position="stacked"]:contains("*")) ion-label:after {
+    content: " *";
+    color: var(--ion-color-danger);
+}
+
+/* Disabled state */
+ion-item[disabled] {
+    opacity: 0.6;
+}
+
+/* Success toast styling */
+ion-toast {
+    --border-radius: 8px;
+}
+
+/* Form validation styling */
+.form-error {
+    color: var(--ion-color-danger);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    ion-card {
+        margin: 12px 0;
+    }
+    
+    .image-upload-section {
+        min-height: 150px;
+    }
+}
