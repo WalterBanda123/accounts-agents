@@ -1,5 +1,5 @@
 import { IonBackButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonModal, IonSearchbar } from "@ionic/react";
-import { cubeOutline, chatbubbleEllipsesOutline, add, pencilOutline } from "ionicons/icons";
+import { cubeOutline, chatbubbleEllipsesOutline, add, pencilOutline, refreshOutline } from "ionicons/icons";
 import React, { useState, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { ALL_STOCK_ITEMS, StockItem } from "../mock/stocks";
@@ -33,6 +33,23 @@ const Stocks: React.FC = () => {
     const handleStockClick = (stock: StockItem) => {
         setSelectedStock(stock);
         modal.current?.present();
+    };
+
+    const handleRestock = (product: StockItem) => {
+        modal.current?.dismiss();
+        history.push('/my_assistant', {
+            action: 'restock',
+            productName: product.name,
+            context: `Restocking ${product.name} (${product.brand}) - Current stock: ${product.quantity} ${product.unit}`
+        });
+    };
+
+    const handleEditProduct = (product: StockItem) => {
+        modal.current?.dismiss();
+        history.push('/new-product', {
+            editMode: true,
+            productData: product
+        });
     };
 
     const totalInventoryValue = getTotalValue();
@@ -155,29 +172,51 @@ const Stocks: React.FC = () => {
 
                                 <div className="detail-section">
                                     <h4>Additional Info</h4>
-                                    <p><strong>Status:</strong> {selectedStock.status}</p>
+                                    <p><strong>Status:</strong>
+                                        <span style={{
+                                            marginLeft: '8px',
+                                            padding: '4px 12px',
+                                            borderRadius: '12px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '600',
+                                            backgroundColor: selectedStock.status === 'in-stock' ? '#d4edda' :
+                                                selectedStock.status === 'low-stock' ? '#fff3cd' : '#f8d7da',
+                                            color: selectedStock.status === 'in-stock' ? '#155724' :
+                                                selectedStock.status === 'low-stock' ? '#856404' : '#721c24'
+                                        }}>
+                                            {selectedStock.status === 'in-stock' ? '✅ In Stock' :
+                                                selectedStock.status === 'low-stock' ? '⚠️ Low Stock' : '❌ Out of Stock'}
+                                        </span>
+                                    </p>
                                     <p><strong>Last Restocked:</strong> {selectedStock.lastRestocked}</p>
                                     <p><strong>Supplier:</strong> {selectedStock.supplier}</p>
                                     {selectedStock.barcode && <p><strong>Barcode:</strong> {selectedStock.barcode}</p>}
                                 </div>
 
                                 <div className="detail-section">
+                                    <h4>Quick Actions</h4>
+                                    <p style={{ fontSize: '0.9rem', color: 'var(--ion-color-medium)', marginBottom: '16px' }}>
+                                        💬 <strong>Restock with AI:</strong> Our AI assistant can help you restock this item using natural language.
+                                        Just tell it what you need, like "Add 50 bottles" or "Restock 20 units".
+                                    </p>
                                     <IonButton
                                         expand="block"
                                         fill="solid"
                                         color="primary"
+                                        onClick={() => handleRestock(selectedStock)}
                                     >
-                                        <IonIcon icon={add} slot="start" />
-                                        Restock Item
+                                        <IonIcon icon={refreshOutline} slot="start" />
+                                        Restock with AI Assistant
                                     </IonButton>
                                     <IonButton
                                         expand="block"
                                         fill="outline"
                                         color="medium"
                                         style={{ marginTop: '8px' }}
+                                        onClick={() => handleEditProduct(selectedStock)}
                                     >
                                         <IonIcon icon={pencilOutline} slot="start" />
-                                        Edit Details
+                                        Edit Product Details
                                     </IonButton>
                                 </div>
                             </div>

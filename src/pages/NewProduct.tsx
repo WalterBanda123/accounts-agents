@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     IonBackButton,
     IonButton,
@@ -26,7 +27,16 @@ import { saveOutline, cameraOutline } from 'ionicons/icons';
 import { StockItem } from '../mock/stocks';
 import './NewProduct.css';
 
+interface LocationState {
+    editMode?: boolean;
+    productData?: StockItem;
+}
+
 const NewProduct: React.FC = () => {
+    const location = useLocation<LocationState>();
+    const isEditMode = location.state?.editMode || false;
+    const existingProduct = location.state?.productData;
+
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -53,6 +63,25 @@ const NewProduct: React.FC = () => {
     ];
 
     const units = ['pieces', 'bottles', 'cans', 'kg', 'g', 'liters', 'ml', 'boxes', 'packs'];
+
+    // Populate form data when editing existing product
+    useEffect(() => {
+        if (isEditMode && existingProduct) {
+            setFormData({
+                name: existingProduct.name,
+                description: existingProduct.description,
+                category: existingProduct.category,
+                subcategory: existingProduct.subcategory,
+                unitPrice: existingProduct.unitPrice.toString(),
+                quantity: existingProduct.quantity.toString(),
+                unit: existingProduct.unit,
+                brand: existingProduct.brand,
+                size: existingProduct.size,
+                supplier: existingProduct.supplier,
+                barcode: existingProduct.barcode || ''
+            });
+        }
+    }, [isEditMode, existingProduct]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
@@ -93,8 +122,8 @@ const NewProduct: React.FC = () => {
 
         // Here you would typically save to your data store
         // For now, we'll just show a success message
-        const newProduct: Partial<StockItem> = {
-            id: `STK${Date.now()}`, // Generate a simple ID
+        const productData: Partial<StockItem> = {
+            id: isEditMode ? existingProduct?.id : `STK${Date.now()}`, // Use existing ID if editing
             name: formData.name,
             description: formData.description,
             category: formData.category,
@@ -114,26 +143,28 @@ const NewProduct: React.FC = () => {
             barcode: formData.barcode || undefined
         };
 
-        console.log('New Product:', newProduct);
-        setToastMessage('Product added successfully!');
+        console.log(isEditMode ? 'Updated Product:' : 'New Product:', productData);
+        setToastMessage(isEditMode ? 'Product updated successfully!' : 'Product added successfully!');
         setShowToast(true);
 
-        // Reset form
-        setTimeout(() => {
-            setFormData({
-                name: '',
-                description: '',
-                category: '',
-                subcategory: '',
-                unitPrice: '',
-                quantity: '',
-                unit: 'pieces',
-                brand: '',
-                size: '',
-                supplier: '',
-                barcode: ''
-            });
-        }, 1000);
+        // Reset form only if adding new product
+        if (!isEditMode) {
+            setTimeout(() => {
+                setFormData({
+                    name: '',
+                    description: '',
+                    category: '',
+                    subcategory: '',
+                    unitPrice: '',
+                    quantity: '',
+                    unit: 'pieces',
+                    brand: '',
+                    size: '',
+                    supplier: '',
+                    barcode: ''
+                });
+            }, 1000);
+        }
     };
 
     return (
@@ -143,7 +174,7 @@ const NewProduct: React.FC = () => {
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/stock-overview" />
                     </IonButtons>
-                    <IonTitle>Add New Product</IonTitle>
+                    <IonTitle>{isEditMode ? 'Edit Product' : 'Add New Product'}</IonTitle>
                     <IonButtons slot="end">
                         <IonButton
                             onClick={handleSave}
@@ -151,7 +182,7 @@ const NewProduct: React.FC = () => {
                             strong={true}
                         >
                             <IonIcon icon={saveOutline} slot="start" />
-                            Save
+                            {isEditMode ? 'Update' : 'Save'}
                         </IonButton>
                     </IonButtons>
                 </IonToolbar>

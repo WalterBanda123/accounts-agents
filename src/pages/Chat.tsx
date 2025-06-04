@@ -1,18 +1,116 @@
 import { IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonPage, IonTextarea, IonTitle, IonToolbar } from "@ionic/react";
 import { add, send } from "ionicons/icons";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import "./Chat.css";
+
+interface Message {
+    id: string;
+    text: string;
+    isBot: boolean;
+    timestamp: string;
+}
+
+interface LocationState {
+    context?: string;
+    productName?: string;
+    action?: 'restock' | 'general';
+}
 
 const Chat: React.FC = () => {
     const [message, setMessage] = useState<string>('');
+    const [messages, setMessages] = useState<Message[]>([]);
+    const location = useLocation<LocationState>();
+    const contentRef = useRef<HTMLIonContentElement>(null);
+
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            contentRef.current?.scrollToBottom(300);
+        }, 100);
+    };
+
+    const getInitialMessage = (): string => {
+        const state = location.state;
+
+        if (state?.action === 'restock' && state?.productName) {
+            return `Hello! I can help you restock "${state.productName}". Just tell me how many units you'd like to add. For example: "Add 50 bottles" or "Restock 20 units". I can also help with inventory reports, analytics, and general store management tasks.`;
+        }
+
+        return "Hello! I'm your AI Store Assistant. I can help you with:\n\n📦 **Inventory Management**\n• Restock products (just tell me what and how much)\n• Check stock levels and status\n• Generate inventory reports\n\n📊 **Analytics & Reports**\n• Sales performance analysis\n• Low stock alerts\n• Financial summaries\n\n💬 **General Assistance**\n• Store operations guidance\n• Customer service tips\n• Business insights\n\nWhat would you like me to help you with today?";
+    };
+
+    const getBotResponse = (userMessage: string): string => {
+        const normalizedMessage = userMessage.toLowerCase().trim();
+
+        // Handle greetings
+        if (normalizedMessage.includes('hello') || normalizedMessage.includes('hi') || normalizedMessage.includes('hey')) {
+            return "Hello! 👋 I'm here to help with your store management. You can ask me about inventory, analytics, restocking, or any other store-related questions. What can I help you with?";
+        }
+
+        // Handle help requests
+        if (normalizedMessage.includes('help') || normalizedMessage.includes('what can you do')) {
+            return "I'm your comprehensive store assistant! Here's what I can help with:\n\n🏪 **Store Operations:**\n• Inventory management and restocking\n• Product information and updates\n• Stock level monitoring\n\n📈 **Analytics & Reports:**\n• Sales performance tracking\n• Financial summaries\n• Low stock alerts\n• Customer insights\n\n💡 **Business Intelligence:**\n• Trend analysis\n• Optimization suggestions\n• Market insights\n\nJust ask me anything in natural language!";
+        }
+
+        // Handle inventory/stock queries
+        if (normalizedMessage.includes('stock') || normalizedMessage.includes('inventory') || normalizedMessage.includes('restock')) {
+            return "I can help you with inventory management! For restocking, just tell me:\n\n📦 **What to restock:** Product name\n📊 **How much:** Quantity to add\n\nFor example:\n• \"Restock Coca-Cola with 50 bottles\"\n• \"Add 20 iPhone 15 Pro to inventory\"\n• \"Increase Whole Milk by 15 cartons\"\n\nI'll process the update and confirm the changes for you. What would you like to restock?";
+        }
+
+        // Handle analytics/reports
+        if (normalizedMessage.includes('report') || normalizedMessage.includes('analytics') || normalizedMessage.includes('sales') || normalizedMessage.includes('performance')) {
+            return "📊 **Store Analytics Available:**\n\n**Current Inventory Status:**\n• Total items: 12 product types\n• Low stock alerts: 2 items\n• Out of stock: 1 item\n• Total inventory value: $47,329\n\n**Quick Insights:**\n• Top category: Electronics (40% of value)\n• Fastest moving: Beverages\n• Requires attention: Organic Bananas (out of stock)\n\nWould you like detailed reports on any specific area?";
+        }
+
+        // Handle specific restock commands (simulate processing)
+        if (normalizedMessage.includes('add') || normalizedMessage.includes('restock') || normalizedMessage.includes('increase')) {
+            return "✅ I understand you want to update inventory. While I can process natural language requests, for actual inventory updates, I'm currently in demo mode.\n\n🔄 **Your request:** \"" + userMessage + "\"\n\n📝 **I would normally:**\n• Parse the product name and quantity\n• Update the inventory system\n• Confirm the changes\n• Update stock status if needed\n\nIs there anything else I can help you with regarding store management?";
+        }
+
+        // Default response
+        return `I understand you said "${userMessage}". I'm here to help with store management, inventory, analytics, and business operations. Try asking me about:\n\n• Stock levels or restocking\n• Sales reports and analytics\n• Product information\n• Store insights\n\nHow can I assist you with your store today?`;
+    };
+
+    const addMessage = (text: string, isBot: boolean = false) => {
+        const newMessage: Message = {
+            id: Date.now().toString(),
+            text,
+            isBot,
+            timestamp: 'Just now'
+        };
+
+        setMessages(prev => [...prev, newMessage]);
+        scrollToBottom();
+    };
 
     const handleSendMessage = () => {
         if (message.trim()) {
-            // TODO: Add message to chat
-            console.log('Sending message:', message);
+            // Add user message
+            addMessage(message, false);
+
+            // Get bot response
+            const botResponse = getBotResponse(message);
+
+            // Add bot response after a short delay
+            setTimeout(() => {
+                addMessage(botResponse, true);
+            }, 500);
+
             setMessage('');
         }
     };
+
+    useEffect(() => {
+        // Add initial message when component mounts
+        if (messages.length === 0) {
+            const initialMessage = getInitialMessage();
+            addMessage(initialMessage, true);
+        }
+    }, []); // Empty dependency array is intentional for initial load
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const handleAddMedia = () => {
         // TODO: Open media picker
@@ -29,80 +127,26 @@ const Chat: React.FC = () => {
                     <IonTitle>Chat</IonTitle>
                 </IonToolbar>
             </IonHeader>
-            <IonContent fullscreen>
+            <IonContent fullscreen ref={contentRef}>
                 <IonHeader collapse="condense" mode="ios">
                     <IonToolbar>
                         <IonTitle>AI Store Assistant</IonTitle>
                     </IonToolbar>
                 </IonHeader>
                 <div className="messages_container">
-                    <div className="message-group">
-                        <div className="bot_message">
-                            Hello! I'm your AI Store Assistant. How can I help you today?
+                    {messages.map((msg) => (
+                        <div key={msg.id} className={`message-group ${msg.isBot ? '' : 'client'}`}>
+                            <div className={msg.isBot ? 'bot_message' : 'client_message'}>
+                                {msg.text.split('\n').map((line, index) => (
+                                    <React.Fragment key={index}>
+                                        {line}
+                                        {index < msg.text.split('\n').length - 1 && <br />}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                            <div className="message-timestamp">{msg.timestamp}</div>
                         </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group client">
-                        <div className="client_message">
-                            Hi! I'm looking for some help with my account
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group">
-                        <div className="bot_message">
-                            I'd be happy to help you with your account! What specific information do you need assistance with?
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group client">
-                        <div className="client_message">
-                            Can you help me check my recent transactions?
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group">
-                        <div className="bot_message">
-                            Of course! I can help you review your recent transactions. I can see you have several recent purchases including groceries and electronics. Would you like me to show you the details?
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group client">
-                        <div className="client_message">
-                            Yes, please show me the last 5 transactions
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group">
-                        <div className="bot_message">
-                            Here are your last 5 transactions:<br />
-                            • Whole Foods Market - $89.99 (Dec 15)<br />
-                            • City Apartments LLC - $1,250.00 (Dec 14)<br />
-                            • Starbucks Coffee - $45.67 (Dec 14)<br />
-                            • Best Buy Electronics - $299.99 (Dec 13)<br />
-                            • Target Store - $78.34 (Dec 12)
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group client">
-                        <div className="client_message">
-                            That's perfect! Thank you for the summary
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
-
-                    <div className="message-group">
-                        <div className="bot_message">
-                            You're welcome! Is there anything else you'd like to know about your transactions or account?
-                        </div>
-                        <div className="message-timestamp">Just now</div>
-                    </div>
+                    ))}
                 </div>
 
             </IonContent>
