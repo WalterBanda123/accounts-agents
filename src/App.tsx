@@ -43,12 +43,22 @@ import Transactions from './pages/Transactions';
 import Stocks from './pages/Stocks';
 import NewProduct from './pages/NewProduct';
 import ReceiptDetail from './pages/ReceiptDetail';
+import useAuthContext from './contexts/auth/UseAuthContext';
 
 setupIonicReact();
 
 const App: React.FC = () => {
+  const { isLoggedIn } = useAuthContext();
 
-  
+  const ProtectedRoute: React.FC<{ children: React.ReactNode; path: string }> = ({ children, path }) => {
+    return (
+      <Route
+        exact
+        path={path}
+        render={() => (isLoggedIn ? children : <Redirect to="/login" />)}
+      />
+    );
+  };
 
   return (
     <IonApp>
@@ -60,46 +70,46 @@ const App: React.FC = () => {
           <Route exact path="/register">
             <Register />
           </Route>
-          <Route exact path="/profile">
+          <ProtectedRoute path="/profile">
             <Profile />
-          </Route>
-          <Route exact path="/account-settings">
+          </ProtectedRoute>
+          <ProtectedRoute path="/account-settings">
             <AccountSettings />
-          </Route>
-          <Route exact path="/notifications">
+          </ProtectedRoute>
+          <ProtectedRoute path="/notifications">
             <Notifications />
-          </Route>
-          <Route exact path="/notification/:id">
+          </ProtectedRoute>
+          <ProtectedRoute path="/notification/:id">
             <NotificationDetail />
-          </Route>
-          <Route exact path="/home">
+          </ProtectedRoute>
+          <ProtectedRoute path="/home">
             <Home />
-          </Route>
-          <Route exact path="/my_assistant">
+          </ProtectedRoute>
+          <ProtectedRoute path="/my_assistant">
             <Chat />
-          </Route>
-          <Route exact path="/receipts">
+          </ProtectedRoute>
+          <ProtectedRoute path="/receipts">
             <Transactions />
-          </Route>
-          <Route exact path="/receipt/:id">
+          </ProtectedRoute>
+          <ProtectedRoute path="/receipt/:id">
             <ReceiptDetail />
-          </Route>
-          <Route exact path="/stock-overview">
+          </ProtectedRoute>
+          <ProtectedRoute path="/stock-overview">
             <Stocks />
-          </Route>
-          <Route exact path="/new-product">
+          </ProtectedRoute>
+          <ProtectedRoute path="/new-product">
             <NewProduct />
-          </Route>
+          </ProtectedRoute>
           <Route exact path="/">
             <Redirect to="/login" />
           </Route>
         </IonRouterOutlet>
       </IonReactRouter>
     </IonApp>
-  )
+  );
 
 }
-  
+
 
 
 export default App;

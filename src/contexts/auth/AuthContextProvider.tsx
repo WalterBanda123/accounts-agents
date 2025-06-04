@@ -1,45 +1,245 @@
-import React, { useEffect, useState } from 'react'
-import AuthContext from './AuthContext'
-import { UserInterface } from '../../interfaces/user'
+import React, { useEffect, useState } from "react";
+import AuthContext from "./AuthContext";
+import { UserInterface } from "../../interfaces/user";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updateProfile,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { fAuth } from "../../../firebase.config";
 
-const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (props) => {
-    const [user, setUser] = useState<UserInterface | null>({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        businessName: 'Doe\'s General Store',
-        phone: '+1 (555) 123-4567',
-        profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-    })
-    const [error, setError] = useState<unknown>(null)
-    const [isLoading, setIsLoading] = useState<boolean>(true)
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
+  props
+) => {
+  const [user, setUser] = useState<UserInterface | null>({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    businessName: "Doe's General Store",
+    phone: "+1 (555) 123-4567",
+    profileImage:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+  });
+  const [error, setError] = useState<unknown>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
+  const signInUserWithEmailAndPassword = async (
+    email: string,
+    password: string
+  ) => {
+    try {
+      setError(null);
+      setIsLoading(true);
 
-    const signInUserWithEmailAndPassword = async (email: string, password: string) => {
-        console.log(email, password)
-        setError(null)
-        setIsLoading(false)
+      const userCredential = await signInWithEmailAndPassword(
+        fAuth,
+        email,
+        password
+      );
+      const firebaseUser = userCredential.user;
+
+      // Update local user state with Firebase user data
+      setUser({
+        name: firebaseUser.displayName || "User",
+        email: firebaseUser.email || email,
+        businessName: firebaseUser.displayName || "My Business", // You can store this in custom claims or Firestore
+        phone: firebaseUser.phoneNumber || "",
+        profileImage:
+          firebaseUser.photoURL ||
+          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      });
+
+      setIsLoggedIn(true);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Sign in error:", error);
+      setError(error);
+      setIsLoading(false);
     }
+  };
 
-    const signOut = async () => {
-        setError(null)
-        setUser(null)
+  const createUserProfile = async (
+    businessName: string,
+    email: string,
+    phone: string,
+    password: string
+  ) => {
+    try {
+      setError(null);
+      setIsLoading(true);
+
+      // Create user account
+      const userCredential = await createUserWithEmailAndPassword(
+        fAuth,
+        email,
+        password
+      );
+      const firebaseUser = userCredential.user;
+
+      // Update profile with business name as display name
+      await updateProfile(firebaseUser, {
+        displayName: businessName,
+      });
+
+      // Update local state
+      setUser({
+        name: businessName,
+        email: email,
+        businessName: businessName,
+        phone: phone,
+        profileImage:
+          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      });
+
+      setIsLoggedIn(true);
+      setIsLoading(false);
+
+      console.log("User profile created:", businessName, email, phone);
+    } catch (error) {
+      console.error("Create profile error:", error);
+      setError(error);
+      setIsLoading(false);
     }
+  };
 
-    const signUp = async (businessName: string, email: string, password: string, phone: string) => {
-        console.log(businessName, email, password, phone)
+  const signOut = async () => {
+    try {
+      setError(null);
+      await firebaseSignOut(fAuth);
+      setUser(null);
+      setIsLoggedIn(false);
+    } catch (error) {
+      console.error("Sign out error:", error);
+      setError(error);
     }
+  };
 
-    useEffect(() => {
-        setIsLoading(false)
-        setIsLoggedIn(false)
-    }, [])
+  const signUp = async (
+    email: string,
+    password: string,
+    businessName: string,
+    phone: string
+  ) => {
+    try {
+      setError(null);
+      setIsLoading(true);
 
-    return (
-        <AuthContext.Provider value={{ user, error, isLoading, isLoggedIn, signInUserWithEmailAndPassword, signOut, signUp }}>
-            {props.children}
-        </AuthContext.Provider>
-    )
-}
+      // Create user with email and password
+      const userCredential = await createUserWithEmailAndPassword(
+        fAuth,
+        email,
+        password
+      );
+      const firebaseUser = userCredential.user;
 
-export default AuthContextProvider
+      // Update the user's profile with display name (business name)
+      await updateProfile(firebaseUser, {
+        displayName: businessName,
+        // Note: Firebase Auth doesn't directly support phone number in updateProfile
+        // You would typically store additional info in Firestore
+      });
+
+      // Update local user state
+      setUser({
+        name: businessName,
+        email: email,
+        businessName: businessName,
+        phone: phone,
+        profileImage:
+          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      });
+
+      setIsLoggedIn(true);
+      setIsLoading(false);
+
+      console.log("User created successfully:", email, businessName);
+    } catch (error) {
+      console.error("Sign up error:", error);
+      setError(error);
+      setIsLoading(false);
+    }
+  };
+
+  const updateUserProfile = async (displayName?: string, photoURL?: string) => {
+    try {
+      if (fAuth.currentUser) {
+        setError(null);
+        await updateProfile(fAuth.currentUser, {
+          displayName: displayName || fAuth.currentUser.displayName,
+          photoURL: photoURL || fAuth.currentUser.photoURL,
+        });
+
+        // Update local state
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                name: displayName || prev.name,
+                businessName: displayName || prev.businessName,
+                profileImage: photoURL || prev.profileImage,
+              }
+            : null
+        );
+
+        console.log("Profile updated successfully");
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Update profile error:", error);
+      setError(error);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    // Listen for authentication state changes
+    const unsubscribe = onAuthStateChanged(fAuth, (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in
+        setUser({
+          name: firebaseUser.displayName || "User",
+          email: firebaseUser.email || "",
+          businessName: firebaseUser.displayName || "My Business",
+          phone: firebaseUser.phoneNumber || "",
+          profileImage:
+            firebaseUser.photoURL ||
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        });
+        setIsLoggedIn(true);
+      } else {
+        // User is signed out
+        setUser(null);
+        setIsLoggedIn(false);
+      }
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        error,
+        isLoading,
+        isLoggedIn,
+        signInUserWithEmailAndPassword,
+        signOut,
+        signUp,
+        createUserProfile,
+        updateUserProfile,
+      }}
+    >
+      {props.children}
+    </AuthContext.Provider>
+  );
+};
+
+export default AuthContextProvider;

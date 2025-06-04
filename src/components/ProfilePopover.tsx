@@ -16,6 +16,7 @@ import {
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import './ProfilePopover.css';
+import useAuthContext from '../contexts/auth/UseAuthContext';
 
 interface ProfilePopoverProps {
     isOpen: boolean;
@@ -29,6 +30,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     onDidDismiss,
 }) => {
     const history = useHistory();
+    const { signOut } = useAuthContext()
 
     const handleAccountSettings = () => {
         history.push('/account-settings');
@@ -45,9 +47,10 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
         onDidDismiss();
     };
 
-    const handleLogout = () => {
+    const handleLogout = async() => {
         console.log('Logout user');
         // Navigate to login page
+        await signOut()
         history.push('/login');
         onDidDismiss();
     };

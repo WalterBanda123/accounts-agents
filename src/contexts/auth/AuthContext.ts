@@ -7,8 +7,10 @@ export interface AuthContextInterface {
     isLoggedIn: boolean,
     user: UserInterface | null,
     signInUserWithEmailAndPassword: (email: string, password: string) => Promise<unknown>,
+    createUserProfile: (businessName: string, email: string, phone: string, password: string) => Promise<unknown>,
     signOut: () => Promise<unknown>,
-    signUp: (businessName: string, email: string, phone: string, password: string) => Promise<unknown>
+    signUp: (email: string, password: string, businessName: string, phone: string) => Promise<unknown>,
+    updateUserProfile: (displayName?: string, photoURL?: string) => Promise<boolean>
 }
 
 
@@ -20,11 +22,22 @@ const AuthContext = React.createContext<AuthContextInterface>({
     signInUserWithEmailAndPassword: async (email: string, password: string) => {
         return Promise.resolve({ email, password });
     },
+    createUserProfile: async (
+        businessName: string,
+        email: string, phone:
+            string,
+        password: string) => {
+        return Promise.resolve({ businessName, email, phone, password })
+    },
     signOut: async () => {
         return Promise.resolve(null)
     },
-    signUp: async () => {
-        return Promise.resolve(null)
+    signUp: async (email: string, password: string, businessName: string, phone: string) => {
+        return Promise.resolve({ email, password, businessName, phone })
+    },
+    updateUserProfile: async (displayName?: string, photoURL?: string) => {
+        console.log('Default updateUserProfile:', displayName, photoURL);
+        return Promise.resolve(true)
     }
 })
 

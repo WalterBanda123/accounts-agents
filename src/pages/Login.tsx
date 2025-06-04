@@ -13,15 +13,18 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import './Login.css';
+import useAuthContext from '../contexts/auth/UseAuthContext';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const history = useHistory();
+    const {signInUserWithEmailAndPassword} = useAuthContext()
 
-    const handleEmailLogin = () => {
+    const handleEmailLogin = async() => {
         // Login logic will be handled later
         console.log('Email login:', { email, password });
+        await signInUserWithEmailAndPassword(email, password)
         // For now, just navigate to home
         history.push('/home');
     };
