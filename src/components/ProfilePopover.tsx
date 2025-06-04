@@ -14,6 +14,7 @@ import {
     notificationsOutline,
     logOutOutline,
 } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import './ProfilePopover.css';
 
 interface ProfilePopoverProps {
@@ -27,6 +28,8 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     event,
     onDidDismiss,
 }) => {
+    const history = useHistory();
+
     const handleAccountSettings = () => {
         console.log('Navigate to Account Settings');
         onDidDismiss();
@@ -44,6 +47,8 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
 
     const handleLogout = () => {
         console.log('Logout user');
+        // Navigate to login page
+        history.push('/login');
         onDidDismiss();
     };
 
