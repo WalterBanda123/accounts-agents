@@ -30,97 +30,33 @@ import {
   Camera,
   CameraResultType,
   CameraSource,
-  Photo,
 } from "@capacitor/camera";
-
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Preferences } from "@capacitor/preferences";
-import { PhotoInterface } from "../interfaces/photo";
+import ReceiptModal from "../components/ReceiptModal";
 import ToastComponent from "../components/ToastComponent";
 
 const Home: React.FC = () => {
-
-
-  const PHOTO_STORAGE: string = 'photos';
-  const [photos, setPhotos] = useState<PhotoInterface[]>([])
-  const [toastError, setToastError] = useState<string>("")
-
+  const [toastError, setToastError] = useState<string>("");
+  const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
+  const [capturedImage, setCapturedImage] = useState<string>("");
   const history = useHistory();
-
-  const convertBlobToBase64 = (blob: Blob) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => {
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(blob);
-    });
-
-  const readAsBase64 = async (photo: Photo) => {
-    const response = await fetch(photo.webPath!);
-    const blob = await response.blob();
-    return await convertBlobToBase64(blob) as string;
-  }
-
-  const savePhoto = async (photo: Photo) => {
-    const base64Data = await readAsBase64(photo);
-
-    const fileName = Date.now() + '.jpeg';
-    await Filesystem.writeFile({
-      path: fileName,
-      data: base64Data,
-      directory: Directory.Data
-    });
-
-    return {
-      filePath: fileName,
-      webviewPath: photo.webPath
-    };
-  }
 
   const takePhoto = async () => {
     try {
       const photo = await Camera.getPhoto({
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
-        quality: 100,
+        quality: 90,
       });
 
-      const savedPhoto = await savePhoto(photo);
-
-      const updatedPhotos = [savedPhoto, ...photos];
-      setPhotos(updatedPhotos);
-      Preferences.set({
-        key: PHOTO_STORAGE,
-        value: JSON.stringify(updatedPhotos),
-      })
-
-      //use photo not saved photo
+      if (photo.webPath) {
+        setCapturedImage(photo.webPath);
+        setShowReceiptModal(true);
+      }
     } catch (error: unknown) {
       console.error(error);
-      setToastError('Failed to take photo')
+      setToastError('Failed to take photo');
     }
-  }
-
-  const deletePhoto = async (photo: PhotoInterface, position: number) => {
-    const updatedPhotos = [...photos];
-    updatedPhotos.splice(position, 1);
-    setPhotos(updatedPhotos);
-
-    Preferences.set({
-      key: PHOTO_STORAGE,
-      value: JSON.stringify(updatedPhotos)
-    });
-
-    const filename = photo.filePath
-      .substring(photo.filePath.lastIndexOf('/') + 1);
-
-    await Filesystem.deleteFile({
-      path: filename,
-      directory: Directory.Data
-    });
-  }
+  };
 
 
 
@@ -155,9 +91,14 @@ const Home: React.FC = () => {
     history.push("/stock-overview");
   };
 
+  const handleModalDismiss = () => {
+    setShowReceiptModal(false);
+    setCapturedImage("");
+  };
+
   return (
     <React.Fragment>
-     
+
       <IonPage>
         <IonHeader mode="ios">
           <IonToolbar>
@@ -276,6 +217,12 @@ const Home: React.FC = () => {
             duration={3000}
             isError={!!toastError}
             isOpen={!!toastError}
+          />
+
+          <ReceiptModal
+            isOpen={showReceiptModal}
+            onDidDismiss={handleModalDismiss}
+            cartImage={capturedImage}
           />
         </IonContent>
       </IonPage>
