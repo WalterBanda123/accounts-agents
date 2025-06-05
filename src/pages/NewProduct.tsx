@@ -87,7 +87,6 @@ const NewProduct: React.FC = () => {
     "packs",
   ];
 
-  // Populate form data when editing existing product
   useEffect(() => {
     if (isEditMode && existingProduct) {
       setFormData({
@@ -117,7 +116,7 @@ const NewProduct: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       category,
-      subcategory: "", // Reset subcategory when category changes
+      subcategory: "",
     }));
   };
 
@@ -153,10 +152,8 @@ const NewProduct: React.FC = () => {
       return;
     }
 
-    // Here you would typically save to your data store
-    // For now, we'll just show a success message
     const productData: Partial<StockItem> = {
-      id: isEditMode ? existingProduct?.id : `STK${Date.now()}`, // Use existing ID if editing
+      id: isEditMode ? existingProduct?.id : `STK${Date.now()}`, 
       name: formData.name,
       description: formData.description,
       category: formData.category,
@@ -184,7 +181,6 @@ const NewProduct: React.FC = () => {
     );
     setShowToast(true);
 
-    // Reset form only if adding new product
     if (!isEditMode) {
       setTimeout(() => {
         setFormData({
@@ -250,7 +246,6 @@ const NewProduct: React.FC = () => {
         </IonCard>
 
         <IonList>
-          {/* Basic Information */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Basic Information</IonCardTitle>
@@ -303,7 +298,6 @@ const NewProduct: React.FC = () => {
             </IonCardContent>
           </IonCard>
 
-          {/* Category */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Category</IonCardTitle>
@@ -346,7 +340,6 @@ const NewProduct: React.FC = () => {
             </IonCardContent>
           </IonCard>
 
-          {/* Pricing & Inventory */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Pricing & Inventory</IonCardTitle>
@@ -395,7 +388,6 @@ const NewProduct: React.FC = () => {
             </IonCardContent>
           </IonCard>
 
-          {/* Additional Information */}
           <IonCard>
             <IonCardHeader>
               <IonCardTitle>Additional Information</IonCardTitle>

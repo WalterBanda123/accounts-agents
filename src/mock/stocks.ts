@@ -6,14 +6,14 @@ export interface StockItem {
     subcategory: string;
     unitPrice: number;
     quantity: number;
-    unit: string; 
+    unit: string;
     brand: string;
-    size: string; 
+    size: string;
     status: 'in-stock' | 'low-stock' | 'out-of-stock';
     lastRestocked: string;
     supplier: string;
     barcode?: string;
-    image?:string
+    image?: string
 }
 
 export const ALL_STOCK_ITEMS: StockItem[] = [
@@ -31,7 +31,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'in-stock',
         lastRestocked: 'Dec 14, 2024',
         supplier: 'Coca-Cola Distributors',
-        barcode: '049000042566'
+        barcode: '049000042566',
+        image: 'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=400&h=400&fit=crop'
     },
     {
         id: 'STK002',
@@ -47,7 +48,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'low-stock',
         lastRestocked: 'Dec 12, 2024',
         supplier: 'Coca-Cola Distributors',
-        barcode: '049000042573'
+        barcode: '049000042573',
+        image: 'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=400&h=400&fit=crop'
     },
     {
         id: 'STK003',
@@ -79,7 +81,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'in-stock',
         lastRestocked: 'Dec 10, 2024',
         supplier: 'Apple Inc.',
-        barcode: '194253411567'
+        barcode: '194253411567',
+        image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=400&fit=crop'
     },
     {
         id: 'STK005',
@@ -111,7 +114,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'out-of-stock',
         lastRestocked: 'Dec 08, 2024',
         supplier: 'Local Organic Farms',
-        barcode: '123456789012'
+        barcode: '123456789012',
+        image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
     },
     {
         id: 'STK007',

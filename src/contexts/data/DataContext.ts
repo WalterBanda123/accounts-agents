@@ -9,6 +9,7 @@ export interface DataContextInterface {
     getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
     getAllProducts: () => Promise<unknown>,
     searchProducts:(search:string)=>Promise<Partial<StockItem>[]>
+    
 }
 
 const DataContext = React.createContext<DataContextInterface>({
