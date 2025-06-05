@@ -157,15 +157,13 @@ const NotificationDetail: React.FC = () => {
     const foundNotification = MOCK_NOTIFICATIONS.find((n) => n.id === id);
     if (foundNotification) {
       setNotification(foundNotification);
-      // Mark as read (in a real app, this would be an API call)
     } else {
-      // Notification not found, redirect back
       history.push("/notifications");
     }
   }, [id, history]);
 
   if (!notification) {
-    return null; // Or a loading spinner
+    return null; 
   }
 
   const getNotificationIcon = (type: string) => {
@@ -192,19 +190,16 @@ const NotificationDetail: React.FC = () => {
   };
 
   const handleMarkAsRead = () => {
-    // In a real app, this would be an API call
     setNotification((prev) => (prev ? { ...prev, isRead: true } : null));
     setShowActionSheet(false);
   };
 
   const handleDelete = () => {
-    // In a real app, this would be an API call
     setShowActionSheet(false);
     history.push("/notifications");
   };
 
   const handleShare = () => {
-    // In a real app, this would trigger the native share dialog
     if (navigator.share) {
       navigator.share({
         title: notification.title,
@@ -237,7 +232,6 @@ const NotificationDetail: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <div className="notification-detail-container">
-          {/* Header Section */}
           <div className="notification-header">
             <div className="notification-icon-large">
               <IonIcon icon={getNotificationIcon(notification.type)} />
@@ -263,8 +257,6 @@ const NotificationDetail: React.FC = () => {
             <div className="notification-message-full">
               {notification.fullMessage || notification.message}
             </div>
-
-            {/* Additional Details */}
             {notification.additionalDetails && (
               <div className="additional-details">
                 <h3>Details</h3>
@@ -340,8 +332,6 @@ const NotificationDetail: React.FC = () => {
               </IonBadge>
             </div>
           </div>
-
-          {/* Action Button */}
           {notification.actionUrl && (
             <div className="action-section">
               <IonButton
@@ -356,8 +346,6 @@ const NotificationDetail: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Action Sheet */}
         <IonActionSheet
           isOpen={showActionSheet}
           onDidDismiss={() => setShowActionSheet(false)}
