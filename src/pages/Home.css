@@ -50,6 +50,81 @@
   transform: scale(1.1);
 }
 
+/* Action Subtitles */
+.action-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+  font-weight: 400;
+}
+
+/* Today's Summary Section */
+.today-summary {
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border: 1px solid #e3e8ff;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0 24px 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.summary-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.summary-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.summary-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.summary-metrics {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 12px;
+}
+
+.metric-card {
+  flex: 1;
+  text-align: center;
+  background: white;
+  padding: 16px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .container ion-col[size="10"] h2 {
   margin: 0;
   font-size: 1.1rem;
@@ -104,6 +179,20 @@
   margin-top: 8px;
 }
 
+/* Clickable Transaction Wrapper */
+.clickable-transaction {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  margin: 2px 0;
+}
+
+.clickable-transaction:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Section Headers */
 .section-header {
   margin: 24px 16px 16px 16px;
@@ -139,6 +228,35 @@
     font-size: 1rem;
   }
 
+  .action-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .today-summary {
+    margin: 12px 0 20px 0;
+    padding: 16px;
+  }
+
+  .summary-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .summary-metrics {
+    gap: 8px;
+  }
+
+  .metric-card {
+    padding: 12px 8px;
+  }
+
+  .metric-value {
+    font-size: 1.3rem;
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+  }
+
   .section-header {
     margin: 20px 12px 12px 12px;
     padding: 12px;
@@ -153,19 +271,11 @@
     padding: 6px;
   }
 
-  /* Mobile Sales Summary */
-  .sales-summary-minimal {
-    margin: 12px 0;
-    padding: 12px;
+  .clickable-transaction:hover {
+    transform: translateX(2px);
   }
 
-  .metric-value {
-    font-size: 1.2rem;
-  }
-
-  .metric-label {
-    font-size: 0.75rem;
-  }
+  /* Mobile Sales Summary - removed as no longer used */
 }
 
 /* Sales info text under stock overview */
