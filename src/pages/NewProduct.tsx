@@ -8,8 +8,6 @@ import {
   IonContent,
   IonHeader,
   IonInput,
-  IonItem,
-  IonLabel,
   IonList,
   IonPage,
   IonSelect,
@@ -23,6 +21,7 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
+  IonFooter,
 } from "@ionic/react";
 import { saveOutline, cameraOutline } from "ionicons/icons";
 import { StockItem } from "../mock/stocks";
@@ -223,14 +222,6 @@ const NewProduct: React.FC = () => {
             <IonAvatar className="header-avatar" onClick={handleProfileClick}>
               <img src="https://picsum.photos/100" alt="Profile" />
             </IonAvatar>
-            <IonButton
-              onClick={handleSave}
-              disabled={!validateForm()}
-              strong={true}
-            >
-              <IonIcon icon={saveOutline} slot="start" />
-              {isEditMode ? "Update" : "Save"}
-            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -265,29 +256,32 @@ const NewProduct: React.FC = () => {
               <IonCardTitle>Basic Information</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonItem>
-                <IonLabel position="stacked">Product Name *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Product Name</label>
                 <IonInput
+                  className="form-input"
                   value={formData.name}
                   onIonInput={(e) => handleInputChange("name", e.detail.value!)}
                   placeholder="Enter product name"
                 />
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Brand *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Brand</label>
                 <IonInput
+                  className="form-input"
                   value={formData.brand}
                   onIonInput={(e) =>
                     handleInputChange("brand", e.detail.value!)
                   }
                   placeholder="Enter brand name"
                 />
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Description</IonLabel>
+              <div className="form-field">
+                <label className="form-label">Description</label>
                 <IonTextarea
+                  className="form-textarea"
                   value={formData.description}
                   onIonInput={(e) =>
                     handleInputChange("description", e.detail.value!)
@@ -295,16 +289,17 @@ const NewProduct: React.FC = () => {
                   placeholder="Enter product description"
                   rows={3}
                 />
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Size</IonLabel>
+              <div className="form-field">
+                <label className="form-label">Size</label>
                 <IonInput
+                  className="form-input"
                   value={formData.size}
                   onIonInput={(e) => handleInputChange("size", e.detail.value!)}
                   placeholder="e.g., 2L, 500ml, 250g"
                 />
-              </IonItem>
+              </div>
             </IonCardContent>
           </IonCard>
 
@@ -314,9 +309,10 @@ const NewProduct: React.FC = () => {
               <IonCardTitle>Category</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonItem>
-                <IonLabel position="stacked">Category *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Category</label>
                 <IonSelect
+                  className="form-select"
                   value={formData.category}
                   onIonChange={(e) => handleCategoryChange(e.detail.value)}
                   placeholder="Select category"
@@ -327,11 +323,12 @@ const NewProduct: React.FC = () => {
                     </IonSelectOption>
                   ))}
                 </IonSelect>
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Subcategory *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Subcategory</label>
                 <IonSelect
+                  className="form-select"
                   value={formData.subcategory}
                   onIonChange={(e) =>
                     handleInputChange("subcategory", e.detail.value)
@@ -345,7 +342,7 @@ const NewProduct: React.FC = () => {
                     </IonSelectOption>
                   ))}
                 </IonSelect>
-              </IonItem>
+              </div>
             </IonCardContent>
           </IonCard>
 
@@ -355,9 +352,10 @@ const NewProduct: React.FC = () => {
               <IonCardTitle>Pricing & Inventory</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonItem>
-                <IonLabel position="stacked">Unit Price *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Unit Price</label>
                 <IonInput
+                  className="form-input"
                   type="number"
                   value={formData.unitPrice}
                   onIonInput={(e) =>
@@ -365,11 +363,12 @@ const NewProduct: React.FC = () => {
                   }
                   placeholder="0.00"
                 />
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Initial Quantity *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Initial Quantity</label>
                 <IonInput
+                  className="form-input"
                   type="number"
                   value={formData.quantity}
                   onIonInput={(e) =>
@@ -377,11 +376,12 @@ const NewProduct: React.FC = () => {
                   }
                   placeholder="0"
                 />
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Unit</IonLabel>
+              <div className="form-field">
+                <label className="form-label">Unit</label>
                 <IonSelect
+                  className="form-select"
                   value={formData.unit}
                   onIonChange={(e) => handleInputChange("unit", e.detail.value)}
                 >
@@ -391,7 +391,7 @@ const NewProduct: React.FC = () => {
                     </IonSelectOption>
                   ))}
                 </IonSelect>
-              </IonItem>
+              </div>
             </IonCardContent>
           </IonCard>
 
@@ -401,27 +401,29 @@ const NewProduct: React.FC = () => {
               <IonCardTitle>Additional Information</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <IonItem>
-                <IonLabel position="stacked">Supplier *</IonLabel>
+              <div className="form-field">
+                <label className="form-label required">Supplier</label>
                 <IonInput
+                  className="form-input"
                   value={formData.supplier}
                   onIonInput={(e) =>
                     handleInputChange("supplier", e.detail.value!)
                   }
                   placeholder="Enter supplier name"
                 />
-              </IonItem>
+              </div>
 
-              <IonItem>
-                <IonLabel position="stacked">Barcode (Optional)</IonLabel>
+              <div className="form-field">
+                <label className="form-label">Barcode (Optional)</label>
                 <IonInput
+                  className="form-input"
                   value={formData.barcode}
                   onIonInput={(e) =>
                     handleInputChange("barcode", e.detail.value!)
                   }
                   placeholder="Enter barcode"
                 />
-              </IonItem>
+              </div>
             </IonCardContent>
           </IonCard>
         </IonList>
@@ -440,6 +442,20 @@ const NewProduct: React.FC = () => {
         event={profilePopoverEvent || undefined}
         onDidDismiss={() => setShowProfilePopover(false)}
       />
+      <IonFooter mode="ios">
+        <div className="save-footer">
+          <IonButton
+            expand="block"
+            className="save-product-button"
+            onClick={handleSave}
+            disabled={!validateForm()}
+            size="large"
+          >
+            <IonIcon icon={saveOutline} slot="start" />
+            {isEditMode ? "Update Product" : "Save Product"}
+          </IonButton>
+        </div>
+      </IonFooter>
     </IonPage>
   );
 };
