@@ -45,14 +45,12 @@ const Register: React.FC = () => {
       console.log("Register:", { businessName, phone, email, password });
       await signUp(email, password, businessName, phone);
 
-      // Check if registration was successful by waiting for state update
       setTimeout(() => {
         if (isLoggedIn && !error) {
           setToastMessage(
             `Welcome to Account Manager, ${businessName}! Your account has been created successfully.`
           );
           setShowSuccessToast(true);
-          // Navigate after showing success message
           setTimeout(() => {
             history.push("/home");
           }, 2000);
@@ -80,7 +78,6 @@ const Register: React.FC = () => {
   };
 
   const validatePhone = (phone: string) => {
-    // Basic phone validation - at least 10 digits
     const phoneRegex = /^\+?[\d\s\-()]{10,}$/;
     return phoneRegex.test(phone);
   };
@@ -115,9 +112,7 @@ const Register: React.FC = () => {
             <p>Create your business account</p>
           </div>
 
-          {/* Simple Register Form */}
           <div className="register-form">
-            {/* Business Name Input */}
             <IonItem className="register-item">
               <IonLabel position="stacked">Business Name</IonLabel>
               <IonInput
@@ -127,8 +122,6 @@ const Register: React.FC = () => {
                 placeholder="Enter your business name"
               />
             </IonItem>
-
-            {/* Phone Input */}
             <IonItem className="register-item">
               <IonLabel position="stacked">Phone Number</IonLabel>
               <IonInput
@@ -164,7 +157,6 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Password Input */}
             <IonItem className="register-item">
               <IonLabel position="stacked">Password</IonLabel>
               <IonInput
@@ -182,7 +174,6 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Confirm Password Input */}
             <IonItem className="register-item">
               <IonLabel position="stacked">Confirm Password</IonLabel>
               <IonInput
@@ -193,7 +184,6 @@ const Register: React.FC = () => {
               />
             </IonItem>
 
-            {/* Password mismatch warning */}
             {password && confirmPassword && password !== confirmPassword && (
               <div className="password-warning">
                 <IonText color="danger">
@@ -202,7 +192,6 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Register Button */}
             <IonButton
               expand="block"
               color="primary"
@@ -220,7 +209,6 @@ const Register: React.FC = () => {
               )}
             </IonButton>
 
-            {/* Terms and Conditions */}
             <div className="terms-text">
               <IonText color="medium">
                 <p>
@@ -231,7 +219,6 @@ const Register: React.FC = () => {
             </div>
           </div>
 
-          {/* Sign In Link */}
           <div className="signin-link">
             <IonText color="medium">
               <p>
@@ -244,7 +231,6 @@ const Register: React.FC = () => {
           </div>
         </div>
 
-        {/* Error Toast */}
         <IonToast
           isOpen={showErrorToast}
           onDidDismiss={() => setShowErrorToast(false)}
@@ -254,7 +240,6 @@ const Register: React.FC = () => {
           position="top"
         />
 
-        {/* Success Toast */}
         <IonToast
           isOpen={showSuccessToast}
           onDidDismiss={() => setShowSuccessToast(false)}

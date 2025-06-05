@@ -49,7 +49,6 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
 
   const handleLogout = async () => {
     console.log("Logout user");
-    // Navigate to login page
     await signOut();
     history.push("/login");
     onDidDismiss();

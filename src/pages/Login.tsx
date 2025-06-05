@@ -54,15 +54,12 @@ const Login: React.FC = () => {
 
       <IonContent className="login-content">
         <div className="login-container">
-          {/* App Logo/Title */}
           <div className="login-header">
             <h1>Account Manager</h1>
             <p>Sign in to continue</p>
           </div>
 
-          {/* Simple Login Form */}
           <div className="login-form">
-            {/* Email Input */}
             <IonItem className="login-item">
               <IonLabel position="stacked">Email</IonLabel>
               <IonInput
@@ -73,7 +70,6 @@ const Login: React.FC = () => {
               />
             </IonItem>
 
-            {/* Password Input */}
             <IonItem className="login-item">
               <IonLabel position="stacked">Password</IonLabel>
               <IonInput
@@ -84,7 +80,6 @@ const Login: React.FC = () => {
               />
             </IonItem>
 
-            {/* Login Button */}
             <IonButton
               expand="block"
               color="primary"
@@ -102,7 +97,6 @@ const Login: React.FC = () => {
               )}
             </IonButton>
 
-            {/* Forgot Password Link */}
             <div className="forgot-password">
               <IonText color="medium">
                 <p>Forgot your password?</p>
@@ -110,11 +104,10 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          {/* Sign Up Link */}
           <div className="signup-link">
             <IonText color="medium">
               <p>
-                Don't have an account?{" "}
+                Don't have an account?
                 <span className="link-text" onClick={handleSignUpClick}>
                   Sign up
                 </span>
@@ -123,7 +116,6 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* Error Toast */}
         <IonToast
           isOpen={showErrorToast}
           onDidDismiss={() => setShowErrorToast(false)}
@@ -133,7 +125,6 @@ const Login: React.FC = () => {
           position="top"
         />
 
-        {/* Success Toast */}
         <IonToast
           isOpen={showSuccessToast}
           onDidDismiss={() => setShowSuccessToast(false)}
