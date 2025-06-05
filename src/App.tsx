@@ -1,29 +1,34 @@
-import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Profile from './pages/Profile';
-import AccountSettings from './pages/AccountSettings';
-import Notifications from './pages/Notifications';
-import NotificationDetail from './pages/NotificationDetail';
+import { Redirect, Route } from "react-router-dom";
+import {
+  IonApp,
+  IonRouterOutlet,
+  IonSpinner,
+  setupIonicReact,
+} from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
+import AccountSettings from "./pages/AccountSettings";
+import Notifications from "./pages/Notifications";
+import NotificationDetail from "./pages/NotificationDetail";
 
 /* Core CSS required for Ionic components to work properly */
-import '@ionic/react/css/core.css';
+import "@ionic/react/css/core.css";
 
 /* Basic CSS for apps built with Ionic */
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
+import "@ionic/react/css/normalize.css";
+import "@ionic/react/css/structure.css";
+import "@ionic/react/css/typography.css";
 
 /* Optional CSS utils that can be commented out */
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/display.css';
+import "@ionic/react/css/padding.css";
+import "@ionic/react/css/float-elements.css";
+import "@ionic/react/css/text-alignment.css";
+import "@ionic/react/css/text-transformation.css";
+import "@ionic/react/css/flex-utils.css";
+import "@ionic/react/css/display.css";
 
 /**
  * Ionic Dark Mode
@@ -34,64 +39,102 @@ import '@ionic/react/css/display.css';
 
 /* import '@ionic/react/css/palettes/dark.always.css'; */
 /* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
+import "@ionic/react/css/palettes/dark.system.css";
 
 /* Theme variables */
-import './theme/variables.css';
-import Chat from './pages/Chat';
-import Transactions from './pages/Transactions';
-import Stocks from './pages/Stocks';
-import NewProduct from './pages/NewProduct';
-import ReceiptDetail from './pages/ReceiptDetail';
+import "./theme/variables.css";
+import Chat from "./pages/Chat";
+import Transactions from "./pages/Transactions";
+import Stocks from "./pages/Stocks";
+import NewProduct from "./pages/NewProduct";
+import ReceiptDetail from "./pages/ReceiptDetail";
+import useAuthContext from "./contexts/auth/UseAuthContext";
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/login">
-          <Login />
-        </Route>
-        <Route exact path="/register">
-          <Register />
-        </Route>
-        <Route exact path="/profile">
-          <Profile />
-        </Route>
-        <Route exact path="/account-settings">
-          <AccountSettings />
-        </Route>
-        <Route exact path="/notifications">
-          <Notifications />
-        </Route>
-        <Route exact path="/notification/:id">
-          <NotificationDetail />
-        </Route>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/my_assistant">
-          <Chat />
-        </Route>
-        <Route exact path="/receipts">
-          <Transactions />
-        </Route>
-        <Route exact path="/receipt/:id">
-          <ReceiptDetail />
-        </Route>
-        <Route exact path="/stock-overview">
-          <Stocks />
-        </Route>
-        <Route exact path="/new-product">
-          <NewProduct />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/login" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-);
+const App: React.FC = () => {
+  const { isLoggedIn, isLoading } = useAuthContext();
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <IonApp>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+            flexDirection: "column",
+          }}
+        >
+          <IonSpinner name="circular"></IonSpinner>
+          <p style={{ marginTop: "16px" }}>Loading...</p>
+        </div>
+      </IonApp>
+    );
+  }
+
+  const ProtectedRoute: React.FC<{
+    children: React.ReactNode;
+    path: string;
+  }> = ({ children, path }) => {
+    return (
+      <Route
+        exact
+        path={path}
+        render={() => (isLoggedIn ? children : <Redirect to="/login" />)}
+      />
+    );
+  };
+
+  return (
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          <Route exact path="/login">
+            {isLoggedIn ? <Redirect to="/home" /> : <Login />}
+          </Route>
+          <Route exact path="/register">
+            {isLoggedIn ? <Redirect to="/home" /> : <Register />}
+          </Route>
+          <ProtectedRoute path="/profile">
+            <Profile />
+          </ProtectedRoute>
+          <ProtectedRoute path="/account-settings">
+            <AccountSettings />
+          </ProtectedRoute>
+          <ProtectedRoute path="/notifications">
+            <Notifications />
+          </ProtectedRoute>
+          <ProtectedRoute path="/notification/:id">
+            <NotificationDetail />
+          </ProtectedRoute>
+          <ProtectedRoute path="/home">
+            <Home />
+          </ProtectedRoute>
+          <ProtectedRoute path="/my_assistant">
+            <Chat />
+          </ProtectedRoute>
+          <ProtectedRoute path="/receipts">
+            <Transactions />
+          </ProtectedRoute>
+          <ProtectedRoute path="/receipt/:id">
+            <ReceiptDetail />
+          </ProtectedRoute>
+          <ProtectedRoute path="/stock-overview">
+            <Stocks />
+          </ProtectedRoute>
+          <ProtectedRoute path="/new-product">
+            <NewProduct />
+          </ProtectedRoute>
+          <Route exact path="/">
+            <Redirect to="/login" />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IonApp>
+  );
+};
 
 export default App;

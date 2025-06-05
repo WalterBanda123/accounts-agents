@@ -6,9 +6,9 @@ export interface StockItem {
     subcategory: string;
     unitPrice: number;
     quantity: number;
-    unit: string; // e.g., "bottles", "pieces", "kg", "liters"
+    unit: string; 
     brand: string;
-    size: string; // e.g., "2L", "500ml", "250g"
+    size: string; 
     status: 'in-stock' | 'low-stock' | 'out-of-stock';
     lastRestocked: string;
     supplier: string;
