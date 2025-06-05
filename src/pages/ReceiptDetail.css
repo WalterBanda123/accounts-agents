@@ -1,17 +1,16 @@
 /* Receipt Detail Page Styles */
 .receipt-detail-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--ion-background-color);
+  --background: var(--ion-background-color);
 }
 
 .receipt-not-found {
   text-align: center;
   padding: 60px 20px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  background: var(--ion-color-light);
   border-radius: 16px;
   margin: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .receipt-not-found ion-icon {
@@ -36,7 +35,7 @@
   overflow: hidden;
   margin: 20px 20px 30px 20px;
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .cart-image {
@@ -61,13 +60,13 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--ion-color-success);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Receipt Container */
 .receipt-container {
-  padding: 0 20px 20px 20px;
+  padding: 0 5px 5px 5px;
   display: flex;
   justify-content: center;
 }
@@ -78,14 +77,11 @@
   max-width: 420px;
   padding: 35px 30px;
   border-radius: 16px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   font-family: "Courier New", monospace;
   position: relative;
   margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--ion-color-light-shade);
 }
 
 /* Add paper texture */
@@ -276,11 +272,7 @@
 /* Action Buttons */
 .action-buttons {
   padding: 0 20px 40px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
   margin: 0 20px 20px 20px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .action-buttons ion-button {
@@ -347,27 +339,19 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .receipt-detail-content {
-    background: linear-gradient(135deg, #2c3e50 0%, #4a69bd 100%);
-    --background: linear-gradient(135deg, #2c3e50 0%, #4a69bd 100%);
+    --background: var(--ion-background-color);
   }
 
   .receipt-paper {
-    background: #34495e;
-    color: #ecf0f1;
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      0 2px 8px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .action-buttons {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--ion-color-step-50);
+    color: var(--ion-color-primary-contrast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--ion-color-step-100);
   }
 
   .receipt-not-found {
-    background: rgba(52, 73, 94, 0.9);
-    color: #ecf0f1;
+    background: var(--ion-color-step-50);
+    color: var(--ion-color-primary-contrast);
   }
 
   .receipt-header h1,
