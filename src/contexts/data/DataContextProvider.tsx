@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { fStore } from "../../../firebase.config";
 
+const COLLECTION_NAMES = {
+  PRODUCTS: "products",
+};
+
 const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   props
 ) => {
-  const COLLECTION_NAMES = {
-    PRODUCTS: "products",
-  };
   const [inventory, setInventory] = useState<Partial<StockItem>[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<unknown>(null);
@@ -38,7 +39,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     }
   };
 
-  const getAllProducts = async () => {
+
+  const getAllProducts = useCallback(async () => {
     try {
       setIsLoading(true);
       const docs_ref = await getDocs(
@@ -59,11 +61,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setError(error);
       setIsLoading(false);
     }
-  };
-
+  }, []);
   useEffect(() => {
     getAllProducts();
-  });
+  }, [getAllProducts]); // Run once on mount and when getAllProducts changes
 
   return (
     <DataContext.Provider

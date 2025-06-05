@@ -1,12 +1,13 @@
 import { IonAvatar, IonBackButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonButton, IonModal, IonSearchbar } from "@ionic/react";
 import { cubeOutline, chatbubbleEllipsesOutline, add, pencilOutline, refreshOutline } from "ionicons/icons";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { ALL_STOCK_ITEMS, StockItem } from "../mock/stocks";
 import StockCard from "../components/StockCard";
 import ProfilePopover from "../components/ProfilePopover";
 import '../components/StockCard.css';
 import './Stocks.css';
+import { useDataContext } from "../contexts/data/UseDataContext";
 
 const Stocks: React.FC = () => {
     const [selectedStock, setSelectedStock] = useState<StockItem | null>(null);
@@ -15,6 +16,11 @@ const Stocks: React.FC = () => {
     const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
     const modal = useRef<HTMLIonModalElement>(null);
     const history = useHistory();
+    const {inventory} = useDataContext()
+
+    useEffect(()=>{
+        console.log(inventory)
+    },[inventory])
 
     const getTotalValue = () => {
         return ALL_STOCK_ITEMS.reduce((total, item) => total + (item.unitPrice * item.quantity), 0);
