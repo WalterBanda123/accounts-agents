@@ -201,7 +201,12 @@ const NewProduct: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="ion-padding">
+            <IonContent fullscreen className="ion-padding">
+                <IonHeader collapse="condense" mode="ios">
+                    <IonToolbar>
+                        <IonTitle size="large">{isEditMode ? 'Edit Product' : 'New Product'}</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
                 {/* Product Image Section */}
                 <IonCard className="image-upload-card">
                     <IonCardContent>

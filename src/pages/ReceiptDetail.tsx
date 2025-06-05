@@ -130,7 +130,12 @@ const ReceiptDetail: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="receipt-detail-content">
+            <IonContent fullscreen className="receipt-detail-content">
+                <IonHeader collapse="condense" mode="ios">
+                    <IonToolbar>
+                        <IonTitle size="large">Receipt #{receipt.receiptNumber}</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
                 {/* Cart Image Section */}
                 {receipt.cartImage && (
                     <div className="cart-image-section">

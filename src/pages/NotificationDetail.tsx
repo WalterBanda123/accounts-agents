@@ -218,7 +218,12 @@ const NotificationDetail: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="notification-detail-content">
+            <IonContent fullscreen className="notification-detail-content">
+                <IonHeader collapse="condense" mode="ios">
+                    <IonToolbar>
+                        <IonTitle size="large">Notification</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
                 <div className="notification-detail-container">
                     {/* Header Section */}
                     <div className="notification-header">

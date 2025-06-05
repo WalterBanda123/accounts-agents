@@ -113,7 +113,12 @@ const Profile: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="profile-content">
+            <IonContent fullscreen className="profile-content">
+                <IonHeader collapse="condense" mode="ios">
+                    <IonToolbar>
+                        <IonTitle size="large">Profile</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
                 <div className="profile-container">
                     {/* Profile Image Section */}
                     <div className="profile-image-section">

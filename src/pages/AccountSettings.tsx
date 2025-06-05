@@ -155,7 +155,12 @@ const AccountSettings: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="account-settings-content">
+      <IonContent fullscreen className="account-settings-content">
+        <IonHeader collapse="condense" mode="ios">
+          <IonToolbar>
+            <IonTitle size="large">Settings</IonTitle>
+          </IonToolbar>
+        </IonHeader>
         <div className="settings-container">
           {/* Currency Settings */}
           <IonCard className="settings-card">

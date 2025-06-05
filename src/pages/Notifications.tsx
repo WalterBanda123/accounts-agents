@@ -163,7 +163,12 @@ const Notifications: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent className="notifications-content">
+            <IonContent fullscreen className="notifications-content">
+                <IonHeader collapse="condense" mode="ios">
+                    <IonToolbar>
+                        <IonTitle size="large">Notifications</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
                 <div className="notifications-container">
                     {/* Search Section */}
                     <div className="search-section">
