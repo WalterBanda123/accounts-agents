@@ -28,11 +28,7 @@ import "../components/RecentTransactionCard.css";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import {
-  Camera,
-  CameraResultType,
-  CameraSource,
-} from "@capacitor/camera";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import ReceiptModal from "../components/ReceiptModal";
 import ProfilePopover from "../components/ProfilePopover";
 import ToastComponent from "../components/ToastComponent";
@@ -42,7 +38,9 @@ const Home: React.FC = () => {
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string>("");
   const [showProfilePopover, setShowProfilePopover] = useState<boolean>(false);
-  const [profilePopoverEvent, setProfilePopoverEvent] = useState<Event | undefined>(undefined);
+  const [profilePopoverEvent, setProfilePopoverEvent] = useState<
+    Event | undefined
+  >(undefined);
   const history = useHistory();
 
   const takePhoto = async () => {
@@ -59,11 +57,9 @@ const Home: React.FC = () => {
       }
     } catch (error: unknown) {
       console.error(error);
-      setToastError('Failed to take photo');
+      setToastError("Failed to take photo");
     }
   };
-
-
 
   // Calculate today's sales metrics
   const todaysTransactions = ALL_TRANSACTIONS.filter((transaction) => {
@@ -113,7 +109,6 @@ const Home: React.FC = () => {
 
   return (
     <React.Fragment>
-
       <IonPage>
         <IonHeader mode="ios">
           <IonToolbar>
@@ -140,6 +135,37 @@ const Home: React.FC = () => {
           <IonGrid>
             <IonRow>
               <IonCol>
+                <div className="today-summary">
+                  <div className="summary-header">
+                    <h3>Today's Overview</h3>
+                    <p>Your business at a glance</p>
+                  </div>
+                  <div className="summary-metrics">
+                    <div className="metric-card">
+                      <div className="metric-value">
+                        ${todaysRevenue.toFixed(2)}
+                      </div>
+                      <div className="metric-label">Revenue</div>
+                    </div>
+                    <div className="metric-card">
+                      <div className="metric-value">
+                        {todaysTransactions.length}
+                      </div>
+                      <div className="metric-label">Sales</div>
+                    </div>
+                    <div className="metric-card">
+                      <div className="metric-value">{itemsSoldToday}</div>
+                      <div className="metric-label">Items Sold</div>
+                    </div>
+                  </div>
+                </div>
+              </IonCol>
+            </IonRow>
+          </IonGrid>
+
+          <IonGrid>
+            <IonRow>
+              <IonCol>
                 <div
                   className="container scan-cart-highlighted"
                   onClick={takePhoto}
@@ -150,6 +176,7 @@ const Home: React.FC = () => {
                   <IonCol size="10">
                     <IonLabel>
                       <h2>Scan Cart</h2>
+                      <p className="action-subtitle">Process new transaction</p>
                     </IonLabel>
                   </IonCol>
                 </div>
@@ -164,6 +191,9 @@ const Home: React.FC = () => {
                   <IonCol size="10">
                     <IonLabel>
                       <h2>View Receipts</h2>
+                      <p className="action-subtitle">
+                        Browse transaction history
+                      </p>
                     </IonLabel>
                   </IonCol>
                 </div>
@@ -178,10 +208,7 @@ const Home: React.FC = () => {
                   <IonCol size="10">
                     <IonLabel>
                       <h2>Stock Overview</h2>
-                      <p className="sales-info">
-                        {todaysTransactions.length} sales today •{" "}
-                        {itemsSoldToday} items sold
-                      </p>
+                      <p className="action-subtitle">Manage your inventory</p>
                     </IonLabel>
                   </IonCol>
                 </div>
@@ -203,11 +230,16 @@ const Home: React.FC = () => {
               <IonCol>
                 <div className="recent-transactions-container">
                   {recentTransactions.map((transaction) => (
-                    <RecentTransactionCard
+                    <div
                       key={transaction.id}
-                      transaction={transaction}
-                      compact={true}
-                    />
+                      className="clickable-transaction"
+                      onClick={() => history.push(`/receipt/${transaction.id}`)}
+                    >
+                      <RecentTransactionCard
+                        transaction={transaction}
+                        compact={true}
+                      />
+                    </div>
                   ))}
                 </div>
               </IonCol>
