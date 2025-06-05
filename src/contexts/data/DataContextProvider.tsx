@@ -1,20 +1,38 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, addDoc } from "firebase/firestore";
 import { fStore } from "../../../firebase.config";
-
-const COLLECTION_NAMES = {
-  PRODUCTS: "products",
-};
 
 const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   props
 ) => {
+  const COLLECTION_NAMES = {
+    products: "products",
+  };
   const [inventory, setInventory] = useState<Partial<StockItem>[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<unknown>(null);
+
   const addNewProduct = async (product: Partial<StockItem>) => {
+    try {
+      setIsLoading(true);
+      const doc_ref = await addDoc(
+        collection(fStore, COLLECTION_NAMES.products),
+        product
+      );
+      setError(null)
+      setIsLoading(false) 
+      return {
+        data:{
+            id: doc_ref.id
+        }
+      }
+    } catch (error) {
+      setError(error);
+      setIsLoading(false);
+      return null;
+    }
     setInventory([]);
     return Promise.resolve(product);
   };
@@ -23,28 +41,40 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     try {
       setIsLoading(true);
       const doc_ref = await getDoc(
-        doc(fStore, COLLECTION_NAMES.PRODUCTS, productId)
+        doc(fStore, COLLECTION_NAMES.products, productId)
       );
       const product = { id: doc_ref.id, ...doc_ref.data() };
-      setIsLoading(false)
-      setError(null)
+      setIsLoading(false);
+      setError(null);
       if (!product) {
         return {} as Partial<StockItem>;
       }
       return product as Partial<StockItem>;
     } catch (error) {
-        setError(error)
-        setIsLoading(false)
-        return null
+      setError(error);
+      setIsLoading(false);
+      return null;
     }
   };
 
+  const searchProducts = async (search: string) => {
+    try {
+      setIsLoading(true);
+      console.log(search);
+      return Promise.resolve([...inventory]);
+    } catch (error) {
+      console.error(error);
+      setError(error);
+      setIsLoading(false);
+      return [];
+    }
+  };
 
-  const getAllProducts = useCallback(async () => {
+  const getAllProducts = async () => {
     try {
       setIsLoading(true);
       const docs_ref = await getDocs(
-        collection(fStore, COLLECTION_NAMES.PRODUCTS)
+        collection(fStore, COLLECTION_NAMES.products)
       );
       const products: Partial<StockItem>[] = [];
       docs_ref.forEach((product) => {
@@ -61,10 +91,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setError(error);
       setIsLoading(false);
     }
-  }, []);
+  };
   useEffect(() => {
     getAllProducts();
-  }, [getAllProducts]); // Run once on mount and when getAllProducts changes
+  });
 
   return (
     <DataContext.Provider
@@ -75,6 +105,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         isLoading,
         getAllProducts,
         error,
+        searchProducts,
       }}
     >
       {props.children}

@@ -13,6 +13,7 @@ export interface StockItem {
     lastRestocked: string;
     supplier: string;
     barcode?: string;
+    image?:string
 }
 
 export const ALL_STOCK_ITEMS: StockItem[] = [

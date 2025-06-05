@@ -7,7 +7,8 @@ export interface DataContextInterface {
     inventory: Partial<StockItem>[],
     addNewProduct: (product: Partial<StockItem>) => Promise<unknown>,
     getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
-    getAllProducts: () => Promise<unknown>
+    getAllProducts: () => Promise<unknown>,
+    searchProducts:(search:string)=>Promise<Partial<StockItem>[]>
 }
 
 const DataContext = React.createContext<DataContextInterface>({
@@ -22,6 +23,9 @@ const DataContext = React.createContext<DataContextInterface>({
     },
     getAllProducts:async()=>{
         return Promise.resolve({})
+    },
+    searchProducts:async()=>{
+        return Promise.resolve([])
     }
 })
 
