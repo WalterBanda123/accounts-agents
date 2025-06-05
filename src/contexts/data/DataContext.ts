@@ -2,17 +2,25 @@ import React from "react";
 import { StockItem } from "../../mock/stocks";
 
 export interface DataContextInterface {
-    inventory: StockItem[],
+    isLoading: boolean,
+    error: unknown,
+    inventory: Partial<StockItem>[],
     addNewProduct: (product: Partial<StockItem>) => Promise<unknown>,
-    getProduct: (productId: string) => Promise<Partial<StockItem>>
+    getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
+    getAllProducts: () => Promise<unknown>
 }
 
 const DataContext = React.createContext<DataContextInterface>({
+    isLoading: true,
+    error: null,
     inventory: [] as StockItem[],
     addNewProduct: async () => {
         return Promise.resolve(null);
     },
     getProduct: async () => {
+        return Promise.resolve({})
+    },
+    getAllProducts:async()=>{
         return Promise.resolve({})
     }
 })
