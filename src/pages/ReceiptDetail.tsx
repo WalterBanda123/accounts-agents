@@ -155,6 +155,34 @@ const ReceiptDetail: React.FC = () => {
         {/* Paper Receipt Style */}
         <div className="receipt-container">
           <div className="receipt-paper">
+            {/* Receipt Action Icons */}
+            <div className="receipt-actions">
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={handlePrint}
+                className="receipt-action-btn"
+              >
+                <IonIcon icon={printOutline} />
+              </IonButton>
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={handleDownload}
+                className="receipt-action-btn"
+              >
+                <IonIcon icon={downloadOutline} />
+              </IonButton>
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={handleSendText}
+                className="receipt-action-btn"
+              >
+                <IonIcon icon={chatbubbleOutline} />
+              </IonButton>
+            </div>
+
             {/* Header */}
             <div className="receipt-header">
               <h1>{receipt.merchant}</h1>
@@ -283,40 +311,6 @@ const ReceiptDetail: React.FC = () => {
               {/* Decorative elements */}
               <div className="receipt-decoration">★ ★ ★ ★ ★</div>
             </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <IonButton
-            expand="block"
-            fill="solid"
-            color="primary"
-            onClick={handlePrint}
-          >
-            <IonIcon icon={printOutline} slot="start" />
-            Print Receipt
-          </IonButton>
-
-          <div className="button-row">
-            <IonButton
-              expand="block"
-              fill="outline"
-              color="primary"
-              onClick={handleSendText}
-            >
-              <IonIcon icon={chatbubbleOutline} slot="start" />
-              Send via Text
-            </IonButton>
-            <IonButton
-              expand="block"
-              fill="outline"
-              color="primary"
-              onClick={handleEmail}
-            >
-              <IonIcon icon={mailOutline} slot="start" />
-              Email Receipt
-            </IonButton>
           </div>
         </div>
       </IonContent>
