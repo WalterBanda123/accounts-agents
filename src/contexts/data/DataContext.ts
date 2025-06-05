@@ -13,7 +13,7 @@ export interface DataContextInterface {
 const DataContext = React.createContext<DataContextInterface>({
     isLoading: true,
     error: null,
-    inventory: [] as StockItem[],
+    inventory: [] as Partial<StockItem>[],
     addNewProduct: async () => {
         return Promise.resolve(null);
     },
