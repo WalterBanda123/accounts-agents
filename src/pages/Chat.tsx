@@ -17,6 +17,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import ProfilePopover from "../components/ProfilePopover";
 import "./Chat.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
+import { AgentInterface } from "../interfaces/agents";
 
 interface Message {
   id: string;
@@ -54,7 +55,13 @@ const MessageBubble: React.FC<{ message: Message }> = React.memo(
 MessageBubble.displayName = "MessageBubble";
 
 const Chat: React.FC = () => {
-  const { askAiAssistant, error } = useDataContext();
+  const {
+    askAiAssistant,
+    error,
+    getAgentSession,
+    createSession,
+    currentSessionId,
+  } = useDataContext();
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatLoading, setChatLoading] = useState<boolean>(false);
@@ -62,9 +69,48 @@ const Chat: React.FC = () => {
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
   const contentRef = useRef<HTMLIonContentElement>(null);
+  const [agent, setAgent] = useState<AgentInterface | null>();
+  const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
 
   // Check if error exists and is a meaningful error
   const hasError = error !== null && error !== undefined;
+
+  useEffect(() => {
+    const fetchAgentSession = async () => {
+      try {
+        const response = await getAgentSession();
+        if (!response) {
+          console.log("No agent session found - this is normal for new users");
+          setAgent(null);
+          return;
+        }
+        setAgent(response as AgentInterface);
+      } catch (error) {
+        console.error("Error fetching agent session:", error);
+        setAgent(null);
+      }
+    };
+    fetchAgentSession();
+  }, [getAgentSession]);
+
+  // Initialize chat session if not already available
+  useEffect(() => {
+    const initializeSession = async () => {
+      if (!currentSessionId && !sessionInitialized) {
+        try {
+          setSessionInitialized(true);
+          console.log("Initializing new chat session...");
+          await createSession();
+          console.log("Chat session initialized successfully");
+        } catch (error) {
+          console.error("Failed to initialize chat session:", error);
+          setSessionInitialized(false);
+        }
+      }
+    };
+
+    initializeSession();
+  }, [currentSessionId, sessionInitialized, createSession]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -117,6 +163,7 @@ const Chat: React.FC = () => {
 
     const userMessage = message.trim();
     console.log("Sending message:", userMessage);
+    console.log("Using session ID:", currentSessionId);
 
     addMessage(userMessage, false);
 
@@ -126,7 +173,12 @@ const Chat: React.FC = () => {
     addTypingIndicator();
 
     try {
-      const botResponse = await askAiAssistant(userMessage);
+      console.log("agent info:", agent);
+      // Pass the current session ID to askAiAssistant
+      const botResponse = await askAiAssistant(
+        userMessage,
+        currentSessionId || undefined
+      );
       removeTypingIndicator();
 
       setChatLoading(false);
@@ -179,6 +231,8 @@ const Chat: React.FC = () => {
     addTypingIndicator,
     removeTypingIndicator,
     askAiAssistant,
+    agent,
+    currentSessionId,
   ]);
 
   const handleKeyPress = useCallback(

@@ -22,7 +22,13 @@ import {
   refreshOutline,
   cameraOutline,
 } from "ionicons/icons";
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { useHistory } from "react-router-dom";
 import { StockItem } from "../mock/stocks";
 import StockCard from "../components/StockCard";
@@ -37,66 +43,90 @@ const Stocks: React.FC = () => {
   );
   const [searchText, setSearchText] = useState<string>("");
   const [showProfilePopover, setShowProfilePopover] = useState(false);
-  const [stocks, setStocks] = useState<Partial<StockItem>[] | null>();
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
   const modal = useRef<HTMLIonModalElement>(null);
   const history = useHistory();
-  const { inventory } = useDataContext();
+  const { getAllProducts, inventory, isProductsLoading } = useDataContext();
 
   useEffect(() => {
-    setStocks(inventory);
-  }, [inventory]);
+    const fetchProducts = async () => {
+      try {
+        await getAllProducts();
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
 
-  const getTotalValue = () => {
-    return stocks?.reduce(
-      (total, item) => total + item.unitPrice! * item.quantity!,
+    if (inventory.length === 0) {
+      fetchProducts();
+    }
+  }, [getAllProducts, inventory.length]);
+
+  const handleRefresh = useCallback(async () => {
+    try {
+      await getAllProducts();
+    } catch (error) {
+      console.error("Failed to refresh products:", error);
+    }
+  }, [getAllProducts]);
+
+  const getTotalValue = useMemo(() => {
+    return inventory?.reduce(
+      (total, item) => total + (item.unitPrice || 0) * (item.quantity || 0),
       0
     );
-  };
+  }, [inventory]);
 
-  const filteredStocks = stocks?.filter((stock) => {
-    if (!searchText) return true;
+  const filteredStocks = useMemo(() => {
+    if (!searchText) return inventory;
 
     const searchLower = searchText.toLowerCase();
-    return (
-      stock.name?.toLowerCase().includes(searchLower) ||
-      stock.brand?.toLowerCase().includes(searchLower) ||
-      stock?.category?.toLowerCase().includes(searchLower) ||
-      stock?.description?.toLowerCase().includes(searchLower) ||
-      stock?.subcategory?.toLowerCase().includes(searchLower)
+    return inventory?.filter(
+      (stock) =>
+        stock.name?.toLowerCase().includes(searchLower) ||
+        stock.brand?.toLowerCase().includes(searchLower) ||
+        stock?.category?.toLowerCase().includes(searchLower) ||
+        stock?.description?.toLowerCase().includes(searchLower) ||
+        stock?.subcategory?.toLowerCase().includes(searchLower)
     );
-  });
+  }, [inventory, searchText]);
 
-  const handleStockClick = (stock: Partial<StockItem>) => {
+  const handleStockClick = useCallback((stock: Partial<StockItem>) => {
     setSelectedStock(stock);
     modal.current?.present();
-  };
+  }, []);
 
-  const handleRestock = (product: Partial<StockItem>) => {
-    modal.current?.dismiss();
-    history.push("/my_assistant", {
-      action: "restock",
-      productName: product.name,
-      context: `Restocking ${product.name} (${product.brand}) - Current stock: ${product.quantity} ${product.unit}`,
-    });
-  };
+  const handleRestock = useCallback(
+    (product: Partial<StockItem>) => {
+      modal.current?.dismiss();
+      history.push("/my_assistant", {
+        action: "restock",
+        productName: product.name,
+        context: `Restocking ${product.name} (${product.brand}) - Current stock: ${product.quantity} ${product.unit}`,
+      });
+    },
+    [history]
+  );
 
-  const handleEditProduct = (product: Partial<StockItem>) => {
-    modal.current?.dismiss();
-    history.push("/new-product", {
-      editMode: true,
-      productData: product,
-    });
-  };
+  const handleEditProduct = useCallback(
+    (product: Partial<StockItem>) => {
+      modal.current?.dismiss();
+      history.push("/new-product", {
+        editMode: true,
+        productData: product,
+      });
+    },
+    [history]
+  );
 
-  const handleProfileClick = (e: React.MouseEvent) => {
+  const handleProfileClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
     setShowProfilePopover(true);
-  };
+  }, []);
 
-  const totalInventoryValue = getTotalValue();
+  const totalInventoryValue = getTotalValue;
 
   return (
     <IonPage>
@@ -110,6 +140,14 @@ const Stocks: React.FC = () => {
             <IonAvatar className="header-avatar" onClick={handleProfileClick}>
               <img src="https://picsum.photos/100" alt="Profile" />
             </IonAvatar>
+            <IonButton
+              fill="clear"
+              color="primary"
+              onClick={handleRefresh}
+              disabled={isProductsLoading}
+            >
+              <IonIcon icon={refreshOutline} />
+            </IonButton>
             <IonButton
               fill="clear"
               color="primary"
@@ -148,7 +186,7 @@ const Stocks: React.FC = () => {
             <div className="header-text">
               <h2>Inventory</h2>
               <p>
-                {filteredStocks?.length} of {stocks?.length} items • $
+                {filteredStocks?.length} of {inventory?.length} items • $
                 {totalInventoryValue?.toLocaleString()} total value
               </p>
             </div>
@@ -165,16 +203,30 @@ const Stocks: React.FC = () => {
 
         {/* Stock List */}
         <div className="simple-stock-list">
-          {filteredStocks?.map((stock: Partial<StockItem>) => (
-            <div key={stock?.id} onClick={() => handleStockClick(stock)}>
-              <StockCard stock={stock} compact={true} />
+          {isProductsLoading && inventory.length === 0 ? (
+            <div className="loading-state">
+              <p>Loading inventory...</p>
             </div>
-          ))}
+          ) : (
+            <>
+              {filteredStocks?.map((stock: Partial<StockItem>) => (
+                <div key={stock?.id} onClick={() => handleStockClick(stock)}>
+                  <StockCard stock={stock} compact={true} />
+                </div>
+              ))}
 
-          {filteredStocks?.length === 0 && (
-            <div className="no-stocks">
-              <p>No items found matching "{searchText}"</p>
-            </div>
+              {filteredStocks?.length === 0 && inventory.length > 0 && (
+                <div className="no-stocks">
+                  <p>No items found matching "{searchText}"</p>
+                </div>
+              )}
+
+              {!isProductsLoading && inventory.length === 0 && (
+                <div className="no-stocks">
+                  <p>No inventory items found. Add your first product!</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 

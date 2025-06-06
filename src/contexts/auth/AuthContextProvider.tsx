@@ -35,6 +35,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       // Update local user state with Firebase user data
       setUser({
+        id: firebaseUser.uid,
         name: firebaseUser.displayName || "User",
         email: firebaseUser.email || email,
         businessName: firebaseUser.displayName || "My Business", // You can store this in custom claims or Firestore
@@ -72,13 +73,13 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       );
       const firebaseUser = userCredential.user;
 
-      // Update profile with business name as display name
       await updateProfile(firebaseUser, {
         displayName: businessName,
       });
 
       // Update local state
       setUser({
+        id:firebaseUser.uid,
         name: businessName,
         email: email,
         businessName: businessName,
@@ -134,6 +135,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       // Update local user state
       setUser({
+        id:firebaseUser.uid,
         name: businessName,
         email: email,
         businessName: businessName,
@@ -194,6 +196,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       if (firebaseUser) {
         // User is signed in
         setUser({
+          id:firebaseUser.uid,
           name: firebaseUser.displayName || "User",
           email: firebaseUser.email || "",
           businessName: firebaseUser.displayName || "My Business",

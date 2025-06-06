@@ -3,19 +3,25 @@ import { StockItem } from "../../mock/stocks";
 
 export interface DataContextInterface {
     isLoading: boolean,
+    isProductsLoading: boolean,
+    isChatLoading: boolean,
     error: unknown,
     inventory: Partial<StockItem>[],
     addNewProduct: (product: Partial<StockItem>) => Promise<unknown>,
     getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
     getAllProducts: () => Promise<unknown>,
     searchProducts: (search: string) => Promise<Partial<StockItem>[]>
-    askAiAssistant: (message: string) => Promise<unknown>,
+    askAiAssistant: (message: string, sessionId?: string) => Promise<unknown>,
     getAgentSession: () => Promise<unknown>,
-    getChatDetails: () => Promise<unknown>
+    getChatSession: () => Promise<unknown>,
+    createSession: () => Promise<string>,
+    currentSessionId: string | null
 }
 
 const DataContext = React.createContext<DataContextInterface>({
     isLoading: true,
+    isProductsLoading: false,
+    isChatLoading: false,
     error: null,
     inventory: [] as Partial<StockItem>[],
     addNewProduct: async () => {
@@ -32,7 +38,9 @@ const DataContext = React.createContext<DataContextInterface>({
     },
     askAiAssistant: async () => { },
     getAgentSession: async () => { },
-    getChatDetails: async () => { }
+    getChatSession: async () => { },
+    createSession: async () => Promise.resolve(''),
+    currentSessionId: null
 })
 
 export default DataContext;
