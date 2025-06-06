@@ -147,7 +147,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'in-stock',
         lastRestocked: 'Dec 14, 2024',
         supplier: 'PepsiCo Distributors',
-        barcode: '012000001413'
+        barcode: '012000001413',
+        image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
     },
     {
         id: 'STK009',
@@ -163,7 +164,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'in-stock',
         lastRestocked: 'Dec 15, 2024',
         supplier: 'Dairy Cooperative',
-        barcode: '070038320005'
+        barcode: '070038320005',
+        image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
     },
     {
         id: 'STK010',
@@ -179,7 +181,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'low-stock',
         lastRestocked: 'Dec 05, 2024',
         supplier: 'Apple Inc.',
-        barcode: '194253395263'
+        barcode: '194253395263',
+        image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
     },
     {
         id: 'STK011',
@@ -195,7 +198,8 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'in-stock',
         lastRestocked: 'Dec 15, 2024',
         supplier: 'Local Bakery Co.',
-        barcode: '078742110899'
+        barcode: '078742110899',
+        image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
     },
     {
         id: 'STK012',
@@ -211,6 +215,7 @@ export const ALL_STOCK_ITEMS: StockItem[] = [
         status: 'in-stock',
         lastRestocked: 'Dec 11, 2024',
         supplier: 'Sony Electronics',
-        barcode: '027242920264'
+        barcode: '027242920264',
+        image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop'
     }
 ];

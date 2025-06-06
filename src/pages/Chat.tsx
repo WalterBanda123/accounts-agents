@@ -1,208 +1,296 @@
-import { IonAvatar, IonBackButton, IonButton, IonButtons, IonContent, IonFooter, IonHeader, IonIcon, IonPage, IonTextarea, IonTitle, IonToolbar } from "@ionic/react";
+import {
+  IonAvatar,
+  IonBackButton,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonFooter,
+  IonHeader,
+  IonIcon,
+  IonPage,
+  IonTextarea,
+  IonTitle,
+  IonToolbar,
+} from "@ionic/react";
 import { add, send } from "ionicons/icons";
-import React, { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ProfilePopover from "../components/ProfilePopover";
 import "./Chat.css";
+import { useDataContext } from "../contexts/data/UseDataContext";
 
 interface Message {
-    id: string;
-    text: string;
-    isBot: boolean;
-    timestamp: string;
+  id: string;
+  text: string;
+  isBot: boolean;
+  timestamp: string;
 }
 
-interface LocationState {
-    context?: string;
-    productName?: string;
-    action?: 'restock' | 'general';
-}
+const MessageBubble: React.FC<{ message: Message }> = React.memo(
+  ({ message }) => (
+    <div className={`message-group ${message.isBot ? "" : "client"}`}>
+      <div className={message.isBot ? "bot_message" : "client_message"}>
+        {message.id === "typing-indicator" ? (
+          <div className="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        ) : (
+          message.text.split("\n").map((line, index) => (
+            <React.Fragment key={index}>
+              {line}
+              {index < message.text.split("\n").length - 1 && <br />}
+            </React.Fragment>
+          ))
+        )}
+      </div>
+      {message.id !== "typing-indicator" && (
+        <div className="message-timestamp">{message.timestamp}</div>
+      )}
+    </div>
+  )
+);
+
+MessageBubble.displayName = "MessageBubble";
 
 const Chat: React.FC = () => {
-    const [message, setMessage] = useState<string>('');
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [showProfilePopover, setShowProfilePopover] = useState(false);
-    const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
-    const location = useLocation<LocationState>();
-    const contentRef = useRef<HTMLIonContentElement>(null);
+  const { askAiAssistant, error } = useDataContext();
+  const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatLoading, setChatLoading] = useState<boolean>(false);
+  const [showProfilePopover, setShowProfilePopover] = useState(false);
+  const [profilePopoverEvent, setProfilePopoverEvent] =
+    useState<CustomEvent | null>(null);
+  const contentRef = useRef<HTMLIonContentElement>(null);
 
-    const scrollToBottom = () => {
-        setTimeout(() => {
-            contentRef.current?.scrollToBottom(300);
-        }, 100);
+  // Check if error exists and is a meaningful error
+  const hasError = error !== null && error !== undefined;
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      contentRef.current?.scrollToBottom(300);
+    }, 100);
+  };
+
+  const getTodaysDate = (): string => {
+    const today = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    return today.toLocaleDateString("en-US", options);
+  };
+
+  const addMessage = useCallback((text: string, isBot: boolean = false) => {
+    const newMessage: Message = {
+      id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
+      text,
+      isBot,
+      timestamp: "Just now",
     };
 
-    const getInitialMessage = (): string => {
-        const state = location.state;
+    setMessages((prev) => [...prev, newMessage]);
+    scrollToBottom();
+  }, []);
 
-        if (state?.action === 'restock' && state?.productName) {
-            return `Hello! I can help you restock "${state.productName}". Just tell me how many units you'd like to add. For example: "Add 50 bottles" or "Restock 20 units". I can also help with inventory reports, analytics, and general store management tasks.`;
-        }
-
-        return "Hello! I'm your AI Store Assistant. I can help you with:\n\n📦 **Inventory Management**\n• Restock products (just tell me what and how much)\n• Check stock levels and status\n• Generate inventory reports\n\n📊 **Analytics & Reports**\n• Sales performance analysis\n• Low stock alerts\n• Financial summaries\n\n💬 **General Assistance**\n• Store operations guidance\n• Customer service tips\n• Business insights\n\nWhat would you like me to help you with today?";
+  const addTypingIndicator = useCallback(() => {
+    const typingMessage: Message = {
+      id: "typing-indicator",
+      text: "...",
+      isBot: true,
+      timestamp: "typing",
     };
+    setMessages((prev) => [...prev, typingMessage]);
+    scrollToBottom();
+  }, []);
 
-    const getBotResponse = (userMessage: string): string => {
-        const normalizedMessage = userMessage.toLowerCase().trim();
+  const removeTypingIndicator = useCallback(() => {
+    setMessages((prev) => prev.filter((msg) => msg.id !== "typing-indicator"));
+  }, []);
 
-        // Handle greetings
-        if (normalizedMessage.includes('hello') || normalizedMessage.includes('hi') || normalizedMessage.includes('hey')) {
-            return "Hello! 👋 I'm here to help with your store management. You can ask me about inventory, analytics, restocking, or any other store-related questions. What can I help you with?";
+  const handleSendMessage = useCallback(async () => {
+    if (!message.trim() || chatLoading) {
+      return;
+    }
+
+    const userMessage = message.trim();
+    console.log("Sending message:", userMessage);
+
+    addMessage(userMessage, false);
+
+    setMessage("");
+    setChatLoading(true);
+
+    addTypingIndicator();
+
+    try {
+      const botResponse = await askAiAssistant(userMessage);
+      removeTypingIndicator();
+
+      setChatLoading(false);
+
+      if (botResponse) {
+        let responseText: string = "";
+
+        if (typeof botResponse === "string") {
+          responseText = botResponse;
+        } else if (typeof botResponse === "object" && botResponse !== null) {
+          const response = botResponse as Record<string, unknown>;
+          responseText =
+            String(response.message || "") ||
+            String(response.response || "") ||
+            String(response.text || "") ||
+            String(response.data || "") ||
+            JSON.stringify(botResponse);
+        } else {
+          responseText = "I received an unexpected response format.";
         }
 
-        // Handle help requests
-        if (normalizedMessage.includes('help') || normalizedMessage.includes('what can you do')) {
-            return "I'm your comprehensive store assistant! Here's what I can help with:\n\n🏪 **Store Operations:**\n• Inventory management and restocking\n• Product information and updates\n• Stock level monitoring\n\n📈 **Analytics & Reports:**\n• Sales performance tracking\n• Financial summaries\n• Low stock alerts\n• Customer insights\n\n💡 **Business Intelligence:**\n• Trend analysis\n• Optimization suggestions\n• Market insights\n\nJust ask me anything in natural language!";
+        if (responseText.trim()) {
+          addMessage(responseText, true);
+        } else {
+          addMessage(
+            "I apologize, but I couldn't process your request at the moment. Please try again.",
+            true
+          );
         }
+      } else {
+        addMessage(
+          "I apologize, but I couldn't process your request at the moment. Please try again.",
+          true
+        );
+      }
+    } catch (err) {
+      removeTypingIndicator();
 
-        // Handle inventory/stock queries
-        if (normalizedMessage.includes('stock') || normalizedMessage.includes('inventory') || normalizedMessage.includes('restock')) {
-            return "I can help you with inventory management! For restocking, just tell me:\n\n📦 **What to restock:** Product name\n📊 **How much:** Quantity to add\n\nFor example:\n• \"Restock Coca-Cola with 50 bottles\"\n• \"Add 20 iPhone 15 Pro to inventory\"\n• \"Increase Whole Milk by 15 cartons\"\n\nI'll process the update and confirm the changes for you. What would you like to restock?";
-        }
+      setChatLoading(false);
+      addMessage(
+        "I'm experiencing some technical difficulties. Please try again later.",
+        true
+      );
+      console.error("Chat error:", err);
+    }
+  }, [
+    message,
+    chatLoading,
+    addMessage,
+    addTypingIndicator,
+    removeTypingIndicator,
+    askAiAssistant,
+  ]);
 
-        // Handle analytics/reports
-        if (normalizedMessage.includes('report') || normalizedMessage.includes('analytics') || normalizedMessage.includes('sales') || normalizedMessage.includes('performance')) {
-            return "📊 **Store Analytics Available:**\n\n**Current Inventory Status:**\n• Total items: 12 product types\n• Low stock alerts: 2 items\n• Out of stock: 1 item\n• Total inventory value: $47,329\n\n**Quick Insights:**\n• Top category: Electronics (40% of value)\n• Fastest moving: Beverages\n• Requires attention: Organic Bananas (out of stock)\n\nWould you like detailed reports on any specific area?";
-        }
-
-        // Handle specific restock commands (simulate processing)
-        if (normalizedMessage.includes('add') || normalizedMessage.includes('restock') || normalizedMessage.includes('increase')) {
-            return "✅ I understand you want to update inventory. While I can process natural language requests, for actual inventory updates, I'm currently in demo mode.\n\n🔄 **Your request:** \"" + userMessage + "\"\n\n📝 **I would normally:**\n• Parse the product name and quantity\n• Update the inventory system\n• Confirm the changes\n• Update stock status if needed\n\nIs there anything else I can help you with regarding store management?";
-        }
-
-        // Default response
-        return `I understand you said "${userMessage}". I'm here to help with store management, inventory, analytics, and business operations. Try asking me about:\n\n• Stock levels or restocking\n• Sales reports and analytics\n• Product information\n• Store insights\n\nHow can I assist you with your store today?`;
-    };
-
-    const addMessage = (text: string, isBot: boolean = false) => {
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            text,
-            isBot,
-            timestamp: 'Just now'
-        };
-
-        setMessages(prev => [...prev, newMessage]);
-        scrollToBottom();
-    };
-
-    const handleSendMessage = () => {
-        if (message.trim()) {
-            // Add user message
-            addMessage(message, false);
-
-            // Get bot response
-            const botResponse = getBotResponse(message);
-
-            // Add bot response after a short delay
-            setTimeout(() => {
-                addMessage(botResponse, true);
-            }, 500);
-
-            setMessage('');
-        }
-    };
-
-    useEffect(() => {
-        // Add initial message when component mounts
-        if (messages.length === 0) {
-            const initialMessage = getInitialMessage();
-            addMessage(initialMessage, true);
-        }
-    }); // Empty dependency array is intentional for initial load
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const handleAddMedia = () => {
-        // TODO: Open media picker
-        console.log('Opening media picker');
-    };
-
-    const handleProfileClick = (e: React.MouseEvent) => {
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
-        setShowProfilePopover(true);
-    };
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
 
-    return (
-        <IonPage>
-            <IonHeader mode="ios">
-                <IonToolbar>
-                    <IonButtons slot='start' >
-                        <IonBackButton color="dark" defaultHref='/'></IonBackButton>
-                    </IonButtons>
-                    <IonTitle>Chat</IonTitle>
-                    <IonButtons slot="end">
-                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-                            <img src="https://picsum.photos/100" alt="Profile" />
-                        </IonAvatar>
-                    </IonButtons>
-                </IonToolbar>
-            </IonHeader>
-            <IonContent fullscreen ref={contentRef}>
-                <IonHeader collapse="condense" mode="ios">
-                    <IonToolbar>
-                        <IonTitle>AI Store Assistant</IonTitle>
-                    </IonToolbar>
-                </IonHeader>
-                <div className="messages_container">
-                    {messages.map((msg) => (
-                        <div key={msg.id} className={`message-group ${msg.isBot ? '' : 'client'}`}>
-                            <div className={msg.isBot ? 'bot_message' : 'client_message'}>
-                                {msg.text.split('\n').map((line, index) => (
-                                    <React.Fragment key={index}>
-                                        {line}
-                                        {index < msg.text.split('\n').length - 1 && <br />}
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                            <div className="message-timestamp">{msg.timestamp}</div>
-                        </div>
-                    ))}
-                </div>
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-            </IonContent>
-            <IonFooter mode="ios">
-                <div className="chat_input_container">
-                    <IonButton
-                        fill="clear"
-                        onClick={handleAddMedia}
-                        className="add_media_button"
-                    >
-                        <IonIcon icon={add} slot="icon-only" />
-                    </IonButton>
-                    <IonTextarea
-                        value={message}
-                        mode="ios"
-                        placeholder="Type a message..."
-                        onIonInput={(e) => setMessage(e.detail.value!)}
-                        className="chat_input"
-                        rows={1}
-                        autoGrow={true}
-                        wrap="soft"
-                    />
-                    <IonButton
-                        fill="solid"
-                        size="small"
-                        onClick={handleSendMessage}
-                        disabled={!message.trim()}
-                        className="send_button"
-                        color={'dark'}
-                    >
-                        <IonIcon icon={send} />
-                    </IonButton>
-                </div>
-            </IonFooter>
+  const handleAddMedia = useCallback(() => {
+    console.log("Opening media picker");
+  }, []);
 
-            <ProfilePopover
-                isOpen={showProfilePopover}
-                event={profilePopoverEvent || undefined}
-                onDidDismiss={() => setShowProfilePopover(false)}
-            />
-        </IonPage>
-    )
-}
+  const handleProfileClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
+    setShowProfilePopover(true);
+  }, []);
 
-export default Chat
+  return (
+    <IonPage>
+      <IonHeader mode="ios">
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton color="dark" defaultHref="/"></IonBackButton>
+          </IonButtons>
+          <IonTitle>Chat</IonTitle>
+          <IonButtons slot="end">
+            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+              <img src="https://picsum.photos/100" alt="Profile" />
+            </IonAvatar>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent fullscreen ref={contentRef}>
+        <IonHeader collapse="condense" mode="ios">
+          <IonToolbar>
+            <IonTitle>AI Store Assistant</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <div className="messages_container">
+          {messages.length > 0 && (
+            <div className="date-separator">
+              <span className="date-text">{getTodaysDate()}</span>
+            </div>
+          )}
+
+          {messages.map((msg) => (
+            <MessageBubble key={msg.id} message={msg} />
+          ))}
+
+          {hasError && (
+            <div className="error-message">
+              <div className="error-content">
+                <strong>Connection Error:</strong> Unable to reach the AI
+                assistant. Please check your connection and try again.
+              </div>
+            </div>
+          )}
+        </div>
+      </IonContent>
+      <IonFooter mode="ios">
+        <div className="chat_input_container">
+          <IonButton
+            fill="clear"
+            onClick={handleAddMedia}
+            className="add_media_button"
+          >
+            <IonIcon icon={add} slot="icon-only" />
+          </IonButton>
+          <IonTextarea
+            value={message}
+            mode="ios"
+            placeholder="Type a message..."
+            onIonInput={(e) => setMessage(e.detail.value!)}
+            onKeyUp={handleKeyPress}
+            className="chat_input"
+            rows={1}
+            autoGrow={true}
+            wrap="soft"
+          />
+          <IonButton
+            fill="solid"
+            size="small"
+            onClick={handleSendMessage}
+            disabled={!message.trim() || chatLoading}
+            className={`send_button ${chatLoading ? "loading" : ""}`}
+            color={"dark"}
+          >
+            {chatLoading ? (
+              <div className="loading-spinner"></div>
+            ) : (
+              <IonIcon icon={send} />
+            )}
+          </IonButton>
+        </div>
+      </IonFooter>
+
+      <ProfilePopover
+        isOpen={showProfilePopover}
+        event={profilePopoverEvent || undefined}
+        onDidDismiss={() => setShowProfilePopover(false)}
+      />
+    </IonPage>
+  );
+};
+
+export default Chat;

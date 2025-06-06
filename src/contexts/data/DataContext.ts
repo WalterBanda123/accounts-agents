@@ -8,8 +8,10 @@ export interface DataContextInterface {
     addNewProduct: (product: Partial<StockItem>) => Promise<unknown>,
     getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
     getAllProducts: () => Promise<unknown>,
-    searchProducts:(search:string)=>Promise<Partial<StockItem>[]>
-    
+    searchProducts: (search: string) => Promise<Partial<StockItem>[]>
+    askAiAssistant: (message: string) => Promise<unknown>,
+    getAgentSession: () => Promise<unknown>,
+    getChatDetails: () => Promise<unknown>
 }
 
 const DataContext = React.createContext<DataContextInterface>({
@@ -22,12 +24,15 @@ const DataContext = React.createContext<DataContextInterface>({
     getProduct: async () => {
         return Promise.resolve({})
     },
-    getAllProducts:async()=>{
+    getAllProducts: async () => {
         return Promise.resolve({})
     },
-    searchProducts:async()=>{
+    searchProducts: async () => {
         return Promise.resolve([])
-    }
+    },
+    askAiAssistant: async () => { },
+    getAgentSession: async () => { },
+    getChatDetails: async () => { }
 })
 
 export default DataContext;

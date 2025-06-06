@@ -3,10 +3,13 @@ import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
 import { collection, doc, getDoc, getDocs, addDoc } from "firebase/firestore";
 import { fStore } from "../../../firebase.config";
+import useAuthContext from "../auth/UseAuthContext";
 
 const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   props
 ) => {
+  const {user} = useAuthContext()
+
   const COLLECTION_NAMES = {
     products: "products",
   };
@@ -21,20 +24,18 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         collection(fStore, COLLECTION_NAMES.products),
         product
       );
-      setError(null)
-      setIsLoading(false) 
+      setError(null);
+      setIsLoading(false);
       return {
-        data:{
-            id: doc_ref.id
-        }
-      }
+        data: {
+          id: doc_ref.id,
+        },
+      };
     } catch (error) {
       setError(error);
       setIsLoading(false);
       return null;
     }
-    setInventory([]);
-    return Promise.resolve(product);
   };
 
   const getProduct = async (productId: string) => {
@@ -92,6 +93,33 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsLoading(false);
     }
   };
+
+  const askAiAssistant = async (message: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+      const botResponse = await response.json()
+      setError(null);
+      setIsLoading(false);
+      return botResponse;
+    } catch (error) {
+      setError(error);
+      setIsLoading(false);
+      console.error(error);
+    }
+  };
+
+  const getAgentSession = async()=>{};
+  const getChatDetails = async()=>{
+    co
+  };
+
   useEffect(() => {
     getAllProducts();
   });
@@ -106,6 +134,9 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         getAllProducts,
         error,
         searchProducts,
+        askAiAssistant,
+        getAgentSession,
+        getChatDetails,
       }}
     >
       {props.children}
