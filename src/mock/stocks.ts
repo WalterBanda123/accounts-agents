@@ -14,7 +14,7 @@ export interface StockItem {
     supplier: string;
     barcode?: string;
     image?: string;
-    store_id?: string; // Reference to the profile/store
+    store_id?: string;
 }
 
 export const ALL_STOCK_ITEMS: StockItem[] = [

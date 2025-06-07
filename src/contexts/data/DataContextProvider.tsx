@@ -339,7 +339,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       const q = query(
         sessionsRef,
         where("profileId", "==", user?.id),
-        where("isActive", "==", true)
+        where("isActive", "==", true),
+        orderBy("createdAt", "desc") // Get the most recent session first
       );
 
       const querySnapshot = await getDocs(q);
@@ -358,6 +359,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       // Update current session ID if we found an active session
       setCurrentSessionId(sessionDoc.id);
+      console.log("Found existing active session:", sessionDoc.id);
 
       return sessionData;
     } catch (error) {
@@ -366,7 +368,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsLoading(false);
       return null;
     }
-  }, [user]);
+  }, [user?.id]);
 
   const getChatSession = useCallback(async () => {
     try {
@@ -401,7 +403,18 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         throw new Error("User not authenticated");
       }
 
-      // Create session document in Firestore
+      // First check if there's already an active session
+      const existingSession = await getAgentSession();
+      if (existingSession && existingSession.sessionId) {
+        console.log(
+          "Reusing existing active session:",
+          existingSession.sessionId
+        );
+        setIsChatLoading(false);
+        return existingSession.sessionId;
+      }
+
+      // Create session document in Firestore only if no active session exists
       const sessionData = {
         profileId: userId,
         createdAt: new Date(),
@@ -410,7 +423,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         isActive: true,
       };
 
-      console.log("Creating session in Firestore for user:", userId);
+      console.log("Creating new session in Firestore for user:", userId);
 
       const sessionDocRef = await addDoc(
         collection(fStore, "sessions"),
@@ -423,7 +436,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setError(null);
       setIsChatLoading(false);
 
-      console.log("Created session:", sessionId);
+      console.log("Created new session:", sessionId);
       return sessionId;
     } catch (error) {
       setError(error);
@@ -431,7 +444,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       console.error("Error creating session:", error);
       throw error;
     }
-  }, [user?.id]);
+  }, [user?.id, getAgentSession]);
 
   const askAiAssistant = useCallback(
     async (message: string, sessionId?: string) => {
@@ -533,6 +546,48 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     },
     [currentSessionId]
   );
+
+  const deactivateAllUserSessions = useCallback(async (userId: string) => {
+    try {
+      setIsChatLoading(true);
+
+      console.log("Deactivating all sessions for user:", userId);
+
+      const sessionsRef = collection(fStore, "sessions");
+      const q = query(
+        sessionsRef,
+        where("profileId", "==", userId),
+        where("isActive", "==", true)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      // Deactivate all active sessions for this user
+      const updatePromises = querySnapshot.docs.map((doc) =>
+        updateDoc(doc.ref, {
+          isActive: false,
+          updatedAt: new Date(),
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      // Clear current session
+      setCurrentSessionId(null);
+
+      setError(null);
+      setIsChatLoading(false);
+      console.log(
+        `Deactivated ${querySnapshot.docs.length} sessions for user:`,
+        userId
+      );
+    } catch (error) {
+      setError(error);
+      setIsChatLoading(false);
+      console.error("Error deactivating user sessions:", error);
+      throw error;
+    }
+  }, []);
 
   // Message management functions
   const saveMessage = useCallback(
@@ -655,6 +710,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       createSession,
       currentSessionId,
       deactivateSession,
+      deactivateAllUserSessions,
       getUserProfile,
       createUserProfile,
       saveMessage,
@@ -677,6 +733,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       createSession,
       currentSessionId,
       deactivateSession,
+      deactivateAllUserSessions,
       getUserProfile,
       createUserProfile,
       saveMessage,

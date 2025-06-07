@@ -19,6 +19,7 @@ export interface DataContextInterface {
     createSession: () => Promise<string>,
     currentSessionId: string | null,
     deactivateSession: (sessionId: string) => Promise<void>,
+    deactivateAllUserSessions: (userId: string) => Promise<void>,
     getUserProfile: () => Promise<ProfileInterface | null>,
     createUserProfile: (userData: {
         businessName: string;
@@ -55,6 +56,7 @@ const DataContext = React.createContext<DataContextInterface>({
     createSession: async () => Promise.resolve(''),
     currentSessionId: null,
     deactivateSession: async () => Promise.resolve(),
+    deactivateAllUserSessions: async () => Promise.resolve(),
     getUserProfile: async () => Promise.resolve(null),
     createUserProfile: async () => Promise.resolve(null),
     // Message management function defaults

@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { fAuth } from "../../../firebase.config";
+import { deactivateAllUserSessions } from "../../utils/sessionUtils";
 
 const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
   props
@@ -79,7 +80,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       // Update local state
       setUser({
-        id:firebaseUser.uid,
+        id: firebaseUser.uid,
         name: businessName,
         email: email,
         businessName: businessName,
@@ -102,6 +103,18 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
   const signOut = async () => {
     try {
       setError(null);
+
+      // Deactivate any active sessions before signing out
+      if (user?.id) {
+        try {
+          console.log("Deactivating sessions for user:", user.id);
+          await deactivateAllUserSessions(user.id);
+        } catch (sessionError) {
+          console.error("Error deactivating sessions:", sessionError);
+          // Don't fail logout if session deactivation fails
+        }
+      }
+
       await firebaseSignOut(fAuth);
       setUser(null);
       setIsLoggedIn(false);
@@ -135,7 +148,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       // Update local user state
       setUser({
-        id:firebaseUser.uid,
+        id: firebaseUser.uid,
         name: businessName,
         email: email,
         businessName: businessName,
@@ -196,7 +209,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       if (firebaseUser) {
         // User is signed in
         setUser({
-          id:firebaseUser.uid,
+          id: firebaseUser.uid,
           name: firebaseUser.displayName || "User",
           email: firebaseUser.email || "",
           businessName: firebaseUser.displayName || "My Business",

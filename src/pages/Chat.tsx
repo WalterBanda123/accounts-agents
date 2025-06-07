@@ -99,20 +99,45 @@ const Chat: React.FC = () => {
         setAgent(null);
       }
     };
-    fetchAgentSession();
-  }, [getAgentSession]);
+
+    // Only fetch if user is authenticated
+    if (user?.id) {
+      fetchAgentSession();
+    } else {
+      // Clear agent and session if user is not authenticated
+      setAgent(null);
+      setSessionInitialized(false);
+    }
+  }, [getAgentSession, user?.id]);
 
   // Initialize chat session if not already available
   useEffect(() => {
     const initializeSession = async () => {
-      if (!currentSessionId && !sessionInitialized) {
+      if (!currentSessionId && !sessionInitialized && user?.id) {
         try {
           setSessionInitialized(true);
-          console.log(
-            "No existing session found, creating new chat session..."
-          );
-          await createSession();
-          console.log("New chat session initialized successfully");
+
+          // First try to get an existing active session
+          console.log("Checking for existing active session...");
+          const existingSession = await getAgentSession();
+
+          if (
+            existingSession &&
+            typeof existingSession === "object" &&
+            "sessionId" in existingSession
+          ) {
+            console.log(
+              "Found existing active session:",
+              existingSession.sessionId
+            );
+            // Session ID is already set by getAgentSession
+          } else {
+            console.log(
+              "No existing session found, creating new chat session..."
+            );
+            await createSession();
+            console.log("New chat session initialized successfully");
+          }
         } catch (error) {
           console.error("Failed to initialize chat session:", error);
           setSessionInitialized(false);
@@ -124,7 +149,13 @@ const Chat: React.FC = () => {
     };
 
     initializeSession();
-  }, [currentSessionId, sessionInitialized, createSession]);
+  }, [
+    currentSessionId,
+    sessionInitialized,
+    createSession,
+    getAgentSession,
+    user?.id,
+  ]);
 
   // Load messages when session is available
   useEffect(() => {
@@ -315,6 +346,15 @@ const Chat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Reset session state when user changes or component unmounts
+  useEffect(() => {
+    return () => {
+      // Don't deactivate session on unmount - sessions should persist across page navigation
+      // Only reset the local session initialization state
+      setSessionInitialized(false);
+    };
+  }, [user?.id]);
 
   const handleAddMedia = useCallback(() => {
     console.log("Opening media picker");
