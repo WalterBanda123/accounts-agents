@@ -17,6 +17,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import ProfilePopover from "../components/ProfilePopover";
 import "./Chat.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 import { AgentInterface } from "../interfaces/agents";
 
 interface Message {
@@ -61,7 +62,10 @@ const Chat: React.FC = () => {
     getAgentSession,
     createSession,
     currentSessionId,
+    saveMessage,
+    loadMessages,
   } = useDataContext();
+  const { user } = useAuthContext();
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatLoading, setChatLoading] = useState<boolean>(false);
@@ -122,6 +126,38 @@ const Chat: React.FC = () => {
     initializeSession();
   }, [currentSessionId, sessionInitialized, createSession]);
 
+  // Load messages when session is available
+  useEffect(() => {
+    const loadSessionMessages = async () => {
+      if (currentSessionId && sessionInitialized) {
+        try {
+          console.log("Loading messages for session:", currentSessionId);
+          const sessionMessages = await loadMessages(currentSessionId);
+
+          // Convert ChatMessage[] to Message[] format used by UI
+          const convertedMessages: Message[] = sessionMessages.map((msg) => ({
+            id: msg.id || Date.now().toString(),
+            text: msg.text,
+            isBot: msg.isBot,
+            timestamp: msg.timestamp.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          }));
+
+          setMessages(convertedMessages);
+          console.log(
+            `Loaded ${convertedMessages.length} messages from session`
+          );
+        } catch (error) {
+          console.error("Error loading session messages:", error);
+        }
+      }
+    };
+
+    loadSessionMessages();
+  }, [currentSessionId, sessionInitialized, loadMessages]);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       contentRef.current?.scrollToBottom(300);
@@ -139,17 +175,38 @@ const Chat: React.FC = () => {
     return today.toLocaleDateString("en-US", options);
   };
 
-  const addMessage = useCallback((text: string, isBot: boolean = false) => {
-    const newMessage: Message = {
-      id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
-      text,
-      isBot,
-      timestamp: "Just now",
-    };
+  const addMessage = useCallback(
+    async (text: string, isBot: boolean = false) => {
+      const newMessage: Message = {
+        id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
+        text,
+        isBot,
+        timestamp: "Just now",
+      };
 
-    setMessages((prev) => [...prev, newMessage]);
-    scrollToBottom();
-  }, []);
+      setMessages((prev) => [...prev, newMessage]);
+      scrollToBottom();
+
+      // Save message to Firestore if we have a session and user
+      if (currentSessionId && user?.id) {
+        try {
+          const messageOrder = messages.length + 1;
+          await saveMessage({
+            profileId: user.id,
+            sessionId: currentSessionId,
+            text,
+            isBot,
+            timestamp: new Date(),
+            messageOrder,
+          });
+          console.log("Message saved to Firestore");
+        } catch (error) {
+          console.error("Error saving message to Firestore:", error);
+        }
+      }
+    },
+    [currentSessionId, user?.id, messages.length, saveMessage]
+  );
 
   const addTypingIndicator = useCallback(() => {
     const typingMessage: Message = {
@@ -175,7 +232,7 @@ const Chat: React.FC = () => {
     console.log("Sending message:", userMessage);
     console.log("Using session ID:", currentSessionId);
 
-    addMessage(userMessage, false);
+    await addMessage(userMessage, false);
 
     setMessage("");
     setChatLoading(true);
@@ -211,15 +268,15 @@ const Chat: React.FC = () => {
         }
 
         if (responseText.trim()) {
-          addMessage(responseText, true);
+          await addMessage(responseText, true);
         } else {
-          addMessage(
+          await addMessage(
             "I apologize, but I couldn't process your request at the moment. Please try again.",
             true
           );
         }
       } else {
-        addMessage(
+        await addMessage(
           "I apologize, but I couldn't process your request at the moment. Please try again.",
           true
         );
@@ -228,7 +285,7 @@ const Chat: React.FC = () => {
       removeTypingIndicator();
 
       setChatLoading(false);
-      addMessage(
+      await addMessage(
         "I'm experiencing some technical difficulties. Please try again later.",
         true
       );

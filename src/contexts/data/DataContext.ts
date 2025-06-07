@@ -1,5 +1,6 @@
 import React from "react";
 import { StockItem } from "../../mock/stocks";
+import { ChatMessage } from "../../interfaces/message";
 
 export interface DataContextInterface {
     isLoading: boolean,
@@ -16,7 +17,11 @@ export interface DataContextInterface {
     getChatSession: () => Promise<unknown>,
     createSession: () => Promise<string>,
     currentSessionId: string | null,
-    deactivateSession: (sessionId: string) => Promise<void>
+    deactivateSession: (sessionId: string) => Promise<void>,
+    // Message management functions
+    saveMessage: (message: Omit<ChatMessage, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>,
+    loadMessages: (sessionId: string) => Promise<ChatMessage[]>,
+    deleteMessage: (messageId: string) => Promise<void>
 }
 
 const DataContext = React.createContext<DataContextInterface>({
@@ -42,7 +47,11 @@ const DataContext = React.createContext<DataContextInterface>({
     getChatSession: async () => { },
     createSession: async () => Promise.resolve(''),
     currentSessionId: null,
-    deactivateSession: async () => Promise.resolve()
+    deactivateSession: async () => Promise.resolve(),
+    // Message management function defaults
+    saveMessage: async () => Promise.resolve(''),
+    loadMessages: async () => Promise.resolve([]),
+    deleteMessage: async () => Promise.resolve()
 })
 
 export default DataContext;

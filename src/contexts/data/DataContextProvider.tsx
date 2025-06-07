@@ -1,14 +1,17 @@
 import React, { useState, useCallback, useMemo } from "react";
 import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
+import { ChatMessage, MessageData } from "../../interfaces/message";
 import {
   collection,
   doc,
   getDoc,
   getDocs,
   addDoc,
+  deleteDoc,
   query,
   where,
+  orderBy,
   updateDoc,
 } from "firebase/firestore";
 import { fStore } from "../../../firebase.config";
@@ -329,6 +332,110 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     [currentSessionId]
   );
 
+  // Message management functions
+  const saveMessage = useCallback(
+    async (
+      message: Omit<ChatMessage, "id" | "createdAt" | "updatedAt">
+    ): Promise<string> => {
+      try {
+        setIsChatLoading(true);
+
+        const messageData: MessageData = {
+          ...message,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        console.log("Saving message to Firestore:", messageData);
+
+        const messageDocRef = await addDoc(
+          collection(fStore, "messages"),
+          messageData
+        );
+
+        setError(null);
+        setIsChatLoading(false);
+        console.log("Saved message with ID:", messageDocRef.id);
+
+        return messageDocRef.id;
+      } catch (error) {
+        setError(error);
+        setIsChatLoading(false);
+        console.error("Error saving message:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  const loadMessages = useCallback(
+    async (sessionId: string): Promise<ChatMessage[]> => {
+      try {
+        setIsChatLoading(true);
+
+        const messagesRef = collection(fStore, "messages");
+        const q = query(
+          messagesRef,
+          where("sessionId", "==", sessionId),
+          orderBy("messageOrder", "asc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const messages: ChatMessage[] = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          messages.push({
+            id: doc.id,
+            profileId: data.profileId,
+            sessionId: data.sessionId,
+            text: data.text,
+            isBot: data.isBot,
+            timestamp: data.timestamp.toDate(),
+            messageOrder: data.messageOrder,
+            createdAt: data.createdAt.toDate(),
+            updatedAt: data.updatedAt.toDate(),
+          });
+        });
+
+        setError(null);
+        setIsChatLoading(false);
+        console.log(
+          `Loaded ${messages.length} messages for session:`,
+          sessionId
+        );
+
+        return messages;
+      } catch (error) {
+        setError(error);
+        setIsChatLoading(false);
+        console.error("Error loading messages:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  const deleteMessage = useCallback(
+    async (messageId: string): Promise<void> => {
+      try {
+        setIsChatLoading(true);
+
+        await deleteDoc(doc(fStore, "messages", messageId));
+
+        setError(null);
+        setIsChatLoading(false);
+        console.log("Deleted message:", messageId);
+      } catch (error) {
+        setError(error);
+        setIsChatLoading(false);
+        console.error("Error deleting message:", error);
+        throw error;
+      }
+    },
+    []
+  );
+
   const contextValue = useMemo(
     () => ({
       addNewProduct,
@@ -346,6 +453,9 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       createSession,
       currentSessionId,
       deactivateSession,
+      saveMessage,
+      loadMessages,
+      deleteMessage,
     }),
     [
       addNewProduct,
@@ -363,6 +473,9 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       createSession,
       currentSessionId,
       deactivateSession,
+      saveMessage,
+      loadMessages,
+      deleteMessage,
     ]
   );
 
