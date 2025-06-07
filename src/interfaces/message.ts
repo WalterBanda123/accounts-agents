@@ -20,3 +20,9 @@ export interface MessageData {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface MessageGroup {
+    date: string; // YYYY-MM-DD format
+    dateLabel: string; // "Today", "Yesterday", "January 15, 2024"
+    messages: ChatMessage[];
+}

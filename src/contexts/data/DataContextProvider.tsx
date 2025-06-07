@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
 import { ChatMessage, MessageData } from "../../interfaces/message";
@@ -37,7 +37,24 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [isProductsLoading, setIsProductsLoading] = useState<boolean>(false);
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
   const [error, setError] = useState<unknown>(null);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
+    // Initialize from sessionStorage if available
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('currentSessionId') || null;
+    }
+    return null;
+  });
+
+  // Persist session ID to sessionStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentSessionId) {
+        sessionStorage.setItem('currentSessionId', currentSessionId);
+      } else {
+        sessionStorage.removeItem('currentSessionId');
+      }
+    }
+  }, [currentSessionId]);
 
   // Helper function to check if a store_id matches the user's profile
   const isUserStore = useCallback(
@@ -335,12 +352,17 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     try {
       setIsLoading(true);
 
+      if (!user?.id) {
+        setIsLoading(false);
+        return null;
+      }
+
       const sessionsRef = collection(fStore, "sessions");
       const q = query(
         sessionsRef,
-        where("profileId", "==", user?.id),
-        where("isActive", "==", true),
-        orderBy("createdAt", "desc") // Get the most recent session first
+        where("profileId", "==", user.id),
+        where("appName", "==", "store_assistant") // Only get store assistant sessions
+        // Removed orderBy to avoid index requirement - we'll sort in code
       );
 
       const querySnapshot = await getDocs(q);
@@ -349,17 +371,41 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setError(null);
 
       if (querySnapshot.empty) {
-        console.log("No active agent session found for user");
+        console.log("No agent session found for user");
         return null;
       }
 
-      // Get the most recent session (first document)
-      const sessionDoc = querySnapshot.docs[0];
-      const sessionData = { sessionId: sessionDoc.id, ...sessionDoc.data() };
+      // Sort sessions by createdAt in JavaScript to get the most recent
+      const sessions = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        data: doc.data(),
+        ref: doc.ref
+      }));
+      
+      // Sort by createdAt descending (most recent first)
+      sessions.sort((a, b) => {
+        const aTime = a.data.createdAt?.toDate?.()?.getTime() || 0;
+        const bTime = b.data.createdAt?.toDate?.()?.getTime() || 0;
+        return bTime - aTime;
+      });
 
-      // Update current session ID if we found an active session
+      // Get the most recent session (first document) - we'll reuse it regardless of active status
+      const sessionDoc = sessions[0];
+      const sessionDocData = sessionDoc.data;
+      const sessionData = { sessionId: sessionDoc.id, ...sessionDocData };
+
+      // Reactivate the session if it's not active
+      if (!sessionDocData.isActive) {
+        await updateDoc(sessionDoc.ref, {
+          isActive: true,
+          updatedAt: new Date(),
+        });
+        console.log("Reactivated session:", sessionDoc.id);
+      }
+
+      // Update current session ID
       setCurrentSessionId(sessionDoc.id);
-      console.log("Found existing active session:", sessionDoc.id);
+      console.log("Using session:", sessionDoc.id);
 
       return sessionData;
     } catch (error) {
@@ -403,18 +449,18 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         throw new Error("User not authenticated");
       }
 
-      // First check if there's already an active session
+      // Always check for existing session first
       const existingSession = await getAgentSession();
       if (existingSession && existingSession.sessionId) {
         console.log(
-          "Reusing existing active session:",
+          "Using existing session:",
           existingSession.sessionId
         );
         setIsChatLoading(false);
         return existingSession.sessionId;
       }
 
-      // Create session document in Firestore only if no active session exists
+      // Only create a new session if no session exists at all
       const sessionData = {
         profileId: userId,
         createdAt: new Date(),
@@ -423,7 +469,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         isActive: true,
       };
 
-      console.log("Creating new session in Firestore for user:", userId);
+      console.log("Creating first-time session for user:", userId);
 
       const sessionDocRef = await addDoc(
         collection(fStore, "sessions"),
@@ -693,6 +739,59 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     []
   );
 
+  // Load all messages for the user (simplified approach)
+  const loadAllUserMessages = useCallback(
+    async (): Promise<ChatMessage[]> => {
+      try {
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        setIsChatLoading(true);
+
+        console.log("Loading all messages for user:", user.id);
+
+        // Query messages directly by profileId (user ID)
+        const messagesRef = collection(fStore, "messages");
+        const q = query(
+          messagesRef,
+          where("profileId", "==", user.id),
+          orderBy("timestamp", "asc") // Order by timestamp for chronological display
+        );
+
+        const querySnapshot = await getDocs(q);
+        const allMessages: ChatMessage[] = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          allMessages.push({
+            id: doc.id,
+            profileId: data.profileId,
+            sessionId: data.sessionId,
+            text: data.text,
+            isBot: data.isBot,
+            timestamp: data.timestamp.toDate(),
+            messageOrder: data.messageOrder,
+            createdAt: data.createdAt?.toDate(),
+            updatedAt: data.updatedAt?.toDate(),
+          });
+        });
+
+        setError(null);
+        setIsChatLoading(false);
+        console.log(`Loaded ${allMessages.length} messages for user`);
+
+        return allMessages;
+      } catch (error) {
+        setError(error);
+        setIsChatLoading(false);
+        console.error("Error loading all user messages:", error);
+        throw error;
+      }
+    },
+    [user?.id]
+  );
+
   const contextValue = useMemo(
     () => ({
       addNewProduct,
@@ -716,6 +815,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       saveMessage,
       loadMessages,
       deleteMessage,
+      loadAllUserMessages,
     }),
     [
       addNewProduct,
@@ -739,6 +839,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       saveMessage,
       loadMessages,
       deleteMessage,
+      loadAllUserMessages,
     ]
   );
 

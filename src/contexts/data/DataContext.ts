@@ -29,6 +29,7 @@ export interface DataContextInterface {
     // Message management functions
     saveMessage: (message: Omit<ChatMessage, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>,
     loadMessages: (sessionId: string) => Promise<ChatMessage[]>,
+    loadAllUserMessages: () => Promise<ChatMessage[]>,
     deleteMessage: (messageId: string) => Promise<void>
 }
 
@@ -62,6 +63,7 @@ const DataContext = React.createContext<DataContextInterface>({
     // Message management function defaults
     saveMessage: async () => Promise.resolve(''),
     loadMessages: async () => Promise.resolve([]),
+    loadAllUserMessages: async () => Promise.resolve([]),
     deleteMessage: async () => Promise.resolve()
 })
 

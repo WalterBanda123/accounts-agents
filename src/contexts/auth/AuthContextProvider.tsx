@@ -34,12 +34,11 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       );
       const firebaseUser = userCredential.user;
 
-      // Update local user state with Firebase user data
       setUser({
         id: firebaseUser.uid,
         name: firebaseUser.displayName || "User",
         email: firebaseUser.email || email,
-        businessName: firebaseUser.displayName || "My Business", // You can store this in custom claims or Firestore
+        businessName: firebaseUser.displayName || "My Business", 
         phone: firebaseUser.phoneNumber || "",
         profileImage:
           firebaseUser.photoURL ||
@@ -52,7 +51,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
       console.error("Sign in error:", error);
       setError(error);
       setIsLoading(false);
-      throw error; // Re-throw error so it can be caught in the Login component
+      throw error;
     }
   };
 

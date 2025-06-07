@@ -15,10 +15,14 @@ import {
 import { add, send } from "ionicons/icons";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ProfilePopover from "../components/ProfilePopover";
+import DateSeparator from "../components/DateSeparator";
 import "./Chat.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
 import useAuthContext from "../contexts/auth/UseAuthContext";
 import { AgentInterface } from "../interfaces/agents";
+import { MessageGroup } from "../interfaces/message";
+import { groupMessagesByDate } from "../utils/messageUtils";
+import { getTimeString } from "../utils/dateUtils";
 
 interface Message {
   id: string;
@@ -63,11 +67,11 @@ const Chat: React.FC = () => {
     createSession,
     currentSessionId,
     saveMessage,
-    loadMessages,
+    loadAllUserMessages,
   } = useDataContext();
   const { user } = useAuthContext();
   const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageGroups, setMessageGroups] = useState<MessageGroup[]>([]);
   const [chatLoading, setChatLoading] = useState<boolean>(false);
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
@@ -75,6 +79,7 @@ const Chat: React.FC = () => {
   const contentRef = useRef<HTMLIonContentElement>(null);
   const [agent, setAgent] = useState<AgentInterface | null>();
   const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
+  const messagesLoadedRef = useRef<boolean>(false);
 
   // Check if error exists and is a meaningful error
   const hasError = error !== null && error !== undefined;
@@ -113,81 +118,61 @@ const Chat: React.FC = () => {
   // Initialize chat session if not already available
   useEffect(() => {
     const initializeSession = async () => {
-      if (!currentSessionId && !sessionInitialized && user?.id) {
+      if (user?.id && !sessionInitialized) {
         try {
-          setSessionInitialized(true);
-
-          // First try to get an existing active session
-          console.log("Checking for existing active session...");
+          // Try to get or create a session
+          console.log("Initializing chat session for user:", user.id);
+          
+          // First try to get an existing session
           const existingSession = await getAgentSession();
-
-          if (
-            existingSession &&
-            typeof existingSession === "object" &&
-            "sessionId" in existingSession
-          ) {
-            console.log(
-              "Found existing active session:",
-              existingSession.sessionId
-            );
-            // Session ID is already set by getAgentSession
+          if (existingSession && typeof existingSession === "object" && 
+              "sessionId" in existingSession && existingSession.sessionId) {
+            console.log("Using existing session:", existingSession.sessionId);
+            setSessionInitialized(true); // Only set to true when we have a session
           } else {
-            console.log(
-              "No existing session found, creating new chat session..."
-            );
-            await createSession();
-            console.log("New chat session initialized successfully");
+            // Create a new session if none exists
+            console.log("Creating new chat session...");
+            const newSessionId = await createSession();
+            if (newSessionId) {
+              console.log("New chat session created successfully:", newSessionId);
+              setSessionInitialized(true); // Only set to true when we have a session
+            } else {
+              console.error("Failed to create session");
+            }
           }
         } catch (error) {
           console.error("Failed to initialize chat session:", error);
           setSessionInitialized(false);
         }
-      } else if (currentSessionId) {
-        setSessionInitialized(true);
-        console.log("Using existing session:", currentSessionId);
       }
     };
 
     initializeSession();
-  }, [
-    currentSessionId,
-    sessionInitialized,
-    createSession,
-    getAgentSession,
-    user?.id,
-  ]);
+  }, [user?.id, sessionInitialized, createSession, getAgentSession]);
 
   // Load messages when session is available
   useEffect(() => {
-    const loadSessionMessages = async () => {
-      if (currentSessionId && sessionInitialized) {
+    const loadAllChatMessages = async () => {
+      if (sessionInitialized && user?.id && !messagesLoadedRef.current) {
         try {
-          console.log("Loading messages for session:", currentSessionId);
-          const sessionMessages = await loadMessages(currentSessionId);
+          console.log("Loading all user messages for date-based grouping");
+          messagesLoadedRef.current = true;
+          const allMessages = await loadAllUserMessages();
 
-          // Convert ChatMessage[] to Message[] format used by UI
-          const convertedMessages: Message[] = sessionMessages.map((msg) => ({
-            id: msg.id || Date.now().toString(),
-            text: msg.text,
-            isBot: msg.isBot,
-            timestamp: msg.timestamp.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          }));
-
-          setMessages(convertedMessages);
-          console.log(
-            `Loaded ${convertedMessages.length} messages from session`
-          );
+          // Group messages by date
+          const grouped = groupMessagesByDate(allMessages);
+          setMessageGroups(grouped);
+          
+          console.log(`Loaded and grouped ${allMessages.length} messages into ${grouped.length} date groups`);
         } catch (error) {
-          console.error("Error loading session messages:", error);
+          console.error("Error loading all user messages:", error);
+          messagesLoadedRef.current = false;
         }
       }
     };
 
-    loadSessionMessages();
-  }, [currentSessionId, sessionInitialized, loadMessages]);
+    loadAllChatMessages();
+  }, [sessionInitialized, user?.id, loadAllUserMessages]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -195,40 +180,62 @@ const Chat: React.FC = () => {
     }, 100);
   };
 
-  const getTodaysDate = (): string => {
-    const today = new Date();
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    return today.toLocaleDateString("en-US", options);
-  };
-
   const addMessage = useCallback(
     async (text: string, isBot: boolean = false) => {
-      const newMessage: Message = {
-        id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
+      // Create a more unique ID to prevent duplicate keys
+      const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${isBot ? 'bot' : 'user'}`;
+      
+      // Create a new message that will be added to current group
+      const newChatMessage = {
+        profileId: user?.id || "",
+        sessionId: currentSessionId || "",
         text,
         isBot,
-        timestamp: "Just now",
+        timestamp: new Date(),
+        messageOrder: 1, // Will be updated when saved
       };
 
-      setMessages((prev) => [...prev, newMessage]);
+      // Update the message groups by adding the new message to today's group
+      setMessageGroups((prevGroups) => {
+        const today = new Date();
+        const todayDateString = today.toISOString().split('T')[0];
+        
+        // Find today's group or create it
+        const updatedGroups = [...prevGroups];
+        const todayGroupIndex = updatedGroups.findIndex(group => group.date === todayDateString);
+        
+        if (todayGroupIndex === -1) {
+          // Create today's group
+          const todayGroup: MessageGroup = {
+            date: todayDateString,
+            dateLabel: 'Today',
+            messages: [{ id: messageId, ...newChatMessage }]
+          };
+          updatedGroups.unshift(todayGroup); // Add to beginning (most recent)
+        } else {
+          // Add to existing today's group
+          const newMessage = { id: messageId, ...newChatMessage };
+          updatedGroups[todayGroupIndex].messages.push(newMessage);
+        }
+        
+        return updatedGroups;
+      });
+
       scrollToBottom();
 
       // Save message to Firestore if we have a session and user
       if (currentSessionId && user?.id) {
         try {
-          const messageOrder = messages.length + 1;
+          // Use a ref to get the current messageGroups length to avoid stale closure
+          let totalMessages = 0;
+          setMessageGroups(currentGroups => {
+            totalMessages = currentGroups.reduce((acc, group) => acc + group.messages.length, 0);
+            return currentGroups; // Don't change the state, just read it
+          });
+          
           await saveMessage({
-            profileId: user.id,
-            sessionId: currentSessionId,
-            text,
-            isBot,
-            timestamp: new Date(),
-            messageOrder,
+            ...newChatMessage,
+            messageOrder: totalMessages,
           });
           console.log("Message saved to Firestore");
         } catch (error) {
@@ -236,22 +243,53 @@ const Chat: React.FC = () => {
         }
       }
     },
-    [currentSessionId, user?.id, messages.length, saveMessage]
+    [currentSessionId, user?.id, saveMessage]
   );
 
   const addTypingIndicator = useCallback(() => {
-    const typingMessage: Message = {
-      id: "typing-indicator",
-      text: "...",
-      isBot: true,
-      timestamp: "typing",
-    };
-    setMessages((prev) => [...prev, typingMessage]);
+    setMessageGroups((prevGroups) => {
+      const today = new Date();
+      const todayDateString = today.toISOString().split('T')[0];
+      
+      // Find today's group or create it
+      const updatedGroups = [...prevGroups];
+      const todayGroupIndex = updatedGroups.findIndex(group => group.date === todayDateString);
+      
+      const typingMessage = {
+        id: "typing-indicator",
+        profileId: "",
+        sessionId: "",
+        text: "...",
+        isBot: true,
+        timestamp: new Date(),
+        messageOrder: 0,
+      };
+      
+      if (todayGroupIndex === -1) {
+        // Create today's group with typing indicator
+        const todayGroup: MessageGroup = {
+          date: todayDateString,
+          dateLabel: 'Today',
+          messages: [typingMessage]
+        };
+        updatedGroups.unshift(todayGroup);
+      } else {
+        // Add typing indicator to existing today's group
+        updatedGroups[todayGroupIndex].messages.push(typingMessage);
+      }
+      
+      return updatedGroups;
+    });
     scrollToBottom();
   }, []);
 
   const removeTypingIndicator = useCallback(() => {
-    setMessages((prev) => prev.filter((msg) => msg.id !== "typing-indicator"));
+    setMessageGroups((prevGroups) => {
+      return prevGroups.map(group => ({
+        ...group,
+        messages: group.messages.filter((msg) => msg.id !== "typing-indicator")
+      }));
+    });
   }, []);
 
   const handleSendMessage = useCallback(async () => {
@@ -345,15 +383,19 @@ const Chat: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messageGroups]);
 
-  // Reset session state when user changes or component unmounts
+  // Reset messages loaded ref when user changes
   useEffect(() => {
-    return () => {
-      // Don't deactivate session on unmount - sessions should persist across page navigation
-      // Only reset the local session initialization state
+    if (user?.id) {
+      // Reset messages loaded flag when user changes (new user login)
+      messagesLoadedRef.current = false;
+    } else {
+      // Clear state when user logs out
+      setMessageGroups([]);
       setSessionInitialized(false);
-    };
+      messagesLoadedRef.current = false;
+    }
   }, [user?.id]);
 
   const handleAddMedia = useCallback(() => {
@@ -388,14 +430,24 @@ const Chat: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <div className="messages_container">
-          {messages.length > 0 && (
-            <div className="date-separator">
-              <span className="date-text">{getTodaysDate()}</span>
-            </div>
-          )}
-
-          {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+          {messageGroups.map((group) => (
+            <React.Fragment key={group.date}>
+              {/* Only show date separator if it's not the only group, or if it's not today */}
+              {(messageGroups.length > 1 || group.dateLabel !== 'Today') && (
+                <DateSeparator dateLabel={group.dateLabel} />
+              )}
+              {group.messages.map((msg) => (
+                <MessageBubble 
+                  key={msg.id} 
+                  message={{
+                    id: msg.id || Date.now().toString(),
+                    text: msg.text,
+                    isBot: msg.isBot,
+                    timestamp: msg.id === "typing-indicator" ? "typing" : getTimeString(msg.timestamp),
+                  }} 
+                />
+              ))}
+            </React.Fragment>
           ))}
 
           {hasError && (
