@@ -13,7 +13,8 @@ export interface StockItem {
     lastRestocked: string;
     supplier: string;
     barcode?: string;
-    image?: string
+    image?: string;
+    store_id?: string; // Reference to the profile/store
 }
 
 export const ALL_STOCK_ITEMS: StockItem[] = [

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import {
   IonAvatar,
   IonBackButton,
@@ -26,6 +26,7 @@ import {
 import { saveOutline, cameraOutline } from "ionicons/icons";
 import { StockItem } from "../mock/stocks";
 import ProfilePopover from "../components/ProfilePopover";
+import { useDataContext } from "../contexts/data/UseDataContext";
 import "./NewProduct.css";
 
 interface LocationState {
@@ -35,8 +36,10 @@ interface LocationState {
 
 const NewProduct: React.FC = () => {
   const location = useLocation<LocationState>();
+  const history = useHistory();
   const isEditMode = location.state?.editMode || false;
   const existingProduct = location.state?.productData;
+  const { addNewProduct, isProductsLoading } = useDataContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -145,7 +148,7 @@ const NewProduct: React.FC = () => {
     return true;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       setToastMessage("Please fill in all required fields");
       setShowToast(true);
@@ -153,7 +156,7 @@ const NewProduct: React.FC = () => {
     }
 
     const productData: Partial<StockItem> = {
-      id: isEditMode ? existingProduct?.id : `STK${Date.now()}`, 
+      id: isEditMode ? existingProduct?.id : `STK${Date.now()}`,
       name: formData.name,
       description: formData.description,
       category: formData.category,
@@ -173,30 +176,49 @@ const NewProduct: React.FC = () => {
       barcode: formData.barcode || undefined,
     };
 
-    console.log(isEditMode ? "Updated Product:" : "New Product:", productData);
-    setToastMessage(
-      isEditMode
-        ? "Product updated successfully!"
-        : "Product added successfully!"
-    );
-    setShowToast(true);
+    try {
+      if (!isEditMode) {
+        // Add new product using DataContext
+        await addNewProduct(productData);
 
-    if (!isEditMode) {
-      setTimeout(() => {
-        setFormData({
-          name: "",
-          description: "",
-          category: "",
-          subcategory: "",
-          unitPrice: "",
-          quantity: "",
-          unit: "pieces",
-          brand: "",
-          size: "",
-          supplier: "",
-          barcode: "",
-        });
-      }, 1000);
+        setToastMessage("Product added successfully!");
+        setShowToast(true);
+
+        // Reset form after successful save
+        setTimeout(() => {
+          setFormData({
+            name: "",
+            description: "",
+            category: "",
+            subcategory: "",
+            unitPrice: "",
+            quantity: "",
+            unit: "pieces",
+            brand: "",
+            size: "",
+            supplier: "",
+            barcode: "",
+          });
+        }, 1000);
+
+        // Navigate back to stocks page after a delay
+        setTimeout(() => {
+          history.push("/stock-overview");
+        }, 2000);
+      } else {
+        // TODO: Implement product update functionality
+        console.log("Updated Product:", productData);
+        setToastMessage("Product updated successfully!");
+        setShowToast(true);
+
+        setTimeout(() => {
+          history.push("/stock-overview");
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error saving product:", error);
+      setToastMessage("Error saving product. Please try again.");
+      setShowToast(true);
     }
   };
 
@@ -440,11 +462,15 @@ const NewProduct: React.FC = () => {
             expand="block"
             className="save-product-button"
             onClick={handleSave}
-            disabled={!validateForm()}
+            disabled={!validateForm() || isProductsLoading}
             size="large"
           >
             <IonIcon icon={saveOutline} slot="start" />
-            {isEditMode ? "Update Product" : "Save Product"}
+            {isProductsLoading
+              ? "Saving..."
+              : isEditMode
+              ? "Update Product"
+              : "Save Product"}
           </IonButton>
         </div>
       </IonFooter>

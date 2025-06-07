@@ -2,6 +2,8 @@ import React, { useState, useCallback, useMemo } from "react";
 import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
 import { ChatMessage, MessageData } from "../../interfaces/message";
+import { ProfileInterface } from "../../interfaces/profile";
+import { ensureUserProfileExists } from "../../utils/profileUtils";
 import {
   collection,
   doc,
@@ -25,6 +27,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const COLLECTION_NAMES = useMemo(
     () => ({
       products: "products",
+      profiles: "profiles",
     }),
     []
   );
@@ -36,13 +39,148 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [error, setError] = useState<unknown>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
+  // Helper function to check if a store_id matches the user's profile
+  const isUserStore = useCallback(
+    (storeId: string | undefined, profileId: string): boolean => {
+      if (!storeId) return false;
+      return storeId === profileId || storeId === `/profiles/${profileId}`;
+    },
+    []
+  );
+
+  // Helper function to get products with fallback queries
+  const queryUserProducts = useCallback(
+    async (profileId: string) => {
+      const productsRef = collection(fStore, COLLECTION_NAMES.products);
+
+      // Try querying with profile reference path first (more likely format)
+      const profileRefPath = `/profiles/${profileId}`;
+      let q = query(productsRef, where("store_id", "==", profileRefPath));
+      let docs_ref = await getDocs(q);
+
+      // If no results, try querying with direct profile ID
+      if (docs_ref.empty) {
+        q = query(productsRef, where("store_id", "==", profileId));
+        docs_ref = await getDocs(q);
+      }
+
+      return docs_ref;
+    },
+    [COLLECTION_NAMES.products]
+  );
+
+  const getUserProfile = useCallback(async () => {
+    try {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      console.log("Getting user profile for user ID:", user.id);
+      const profilesRef = collection(fStore, COLLECTION_NAMES.profiles);
+      const q = query(profilesRef, where("user_id", "==", user.id));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.log("No profile found for user:", user.id);
+        return null;
+      }
+
+      const profileDoc = querySnapshot.docs[0];
+      const profile = {
+        id: profileDoc.id,
+        ...profileDoc.data(),
+      } as ProfileInterface;
+
+      console.log("Found user profile:", profile);
+      return profile;
+    } catch (error) {
+      console.error("Error getting user profile:", error);
+      setError(error);
+      return null;
+    }
+  }, [user?.id, COLLECTION_NAMES.profiles]);
+
+  const createUserProfile = useCallback(
+    async (userData: {
+      businessName: string;
+      email: string;
+      phone: string;
+    }) => {
+      try {
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        // Check if profile already exists
+        const existingProfile = await getUserProfile();
+        if (existingProfile) {
+          console.log("Profile already exists for user:", user.id);
+          return existingProfile;
+        }
+
+        const profileData: Omit<ProfileInterface, "id"> = {
+          user_id: user.id,
+          businessName: userData.businessName,
+          email: userData.email,
+          phone: userData.phone,
+          profileImage: user.profileImage,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const profileDocRef = await addDoc(
+          collection(fStore, COLLECTION_NAMES.profiles),
+          profileData
+        );
+
+        const newProfile: ProfileInterface = {
+          id: profileDocRef.id,
+          ...profileData,
+        };
+
+        console.log("Created user profile:", newProfile);
+        return newProfile;
+      } catch (error) {
+        console.error("Error creating user profile:", error);
+        setError(error);
+        return null;
+      }
+    },
+    [user?.id, user?.profileImage, COLLECTION_NAMES.profiles, getUserProfile]
+  );
+
   const addNewProduct = useCallback(
     async (product: Partial<StockItem>) => {
       try {
         setIsProductsLoading(true);
+
+        console.log("Ensuring user profile exists for user:", user?.id);
+        // Ensure user profile exists
+        const userProfile = await ensureUserProfileExists(
+          getUserProfile,
+          createUserProfile,
+          user
+        );
+        if (!userProfile) {
+          throw new Error("Failed to get or create user profile");
+        }
+        console.log("Using profile/store ID:", userProfile.id);
+
+        // Add store_id to the product (referencing the profile as store)
+        // Store as reference path format to match existing data
+        const productWithProfile = {
+          ...product,
+          store_id: `/profiles/${userProfile.id}`,
+        };
+
+        console.log(
+          "Adding product with store_id reference path:",
+          productWithProfile
+        );
+
         const doc_ref = await addDoc(
           collection(fStore, COLLECTION_NAMES.products),
-          product
+          productWithProfile
         );
         setError(null);
         setIsProductsLoading(false);
@@ -57,22 +195,50 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         return null;
       }
     },
-    [COLLECTION_NAMES.products]
+    [COLLECTION_NAMES.products, getUserProfile, createUserProfile, user]
   );
 
   const getProduct = useCallback(
     async (productId: string) => {
       try {
         setIsProductsLoading(true);
+
+        // Get user profile first
+        const userProfile = await getUserProfile();
+        if (!userProfile) {
+          throw new Error("User profile not found");
+        }
+
         const doc_ref = await getDoc(
           doc(fStore, COLLECTION_NAMES.products, productId)
         );
-        const product = { id: doc_ref.id, ...doc_ref.data() };
-        setIsProductsLoading(false);
-        setError(null);
-        if (!product) {
+
+        if (!doc_ref.exists()) {
+          setIsProductsLoading(false);
+          setError(null);
           return {} as Partial<StockItem>;
         }
+
+        const productData = doc_ref.data();
+
+        // Verify the product belongs to the user's store
+        const belongsToUser = isUserStore(productData.store_id, userProfile.id);
+
+        if (!belongsToUser) {
+          console.log(
+            "Product does not belong to user store. Store ID:",
+            productData.store_id,
+            "User Profile ID:",
+            userProfile.id
+          );
+          setIsProductsLoading(false);
+          setError(null);
+          return {} as Partial<StockItem>;
+        }
+
+        const product = { id: doc_ref.id, ...productData };
+        setIsProductsLoading(false);
+        setError(null);
         return product as Partial<StockItem>;
       } catch (error) {
         setError(error);
@@ -80,17 +246,45 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         return null;
       }
     },
-    [COLLECTION_NAMES.products]
+    [COLLECTION_NAMES.products, getUserProfile, isUserStore]
   );
 
   const searchProducts = useCallback(
     async (search: string) => {
       try {
         setIsProductsLoading(true);
-        console.log(search);
-        const results = [...inventory];
+
+        // Get user profile first
+        const userProfile = await getUserProfile();
+        if (!userProfile) {
+          throw new Error("User profile not found");
+        }
+
+        // Query products that belong to the user's store using helper function
+        const docs_ref = await queryUserProducts(userProfile.id);
+
+        const allProducts: Partial<StockItem>[] = [];
+        docs_ref.forEach((product) => {
+          const updatedProd: Partial<StockItem> = {
+            id: product.id,
+            ...product.data(),
+          };
+          allProducts.push(updatedProd);
+        });
+
+        // Filter by search term
+        const searchLower = search.toLowerCase();
+        const results = allProducts.filter(
+          (product) =>
+            product.name?.toLowerCase().includes(searchLower) ||
+            product.brand?.toLowerCase().includes(searchLower) ||
+            product.category?.toLowerCase().includes(searchLower) ||
+            product.description?.toLowerCase().includes(searchLower) ||
+            product.subcategory?.toLowerCase().includes(searchLower)
+        );
+
         setIsProductsLoading(false);
-        return Promise.resolve(results);
+        return results;
       } catch (error) {
         console.error(error);
         setError(error);
@@ -98,20 +292,28 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         return [];
       }
     },
-    [inventory]
+    [getUserProfile, queryUserProducts]
   );
 
   const getAllProducts = useCallback(async () => {
     try {
       setIsProductsLoading(true);
-      const docs_ref = await getDocs(
-        collection(fStore, COLLECTION_NAMES.products)
-      );
+
+      // Get user profile first
+      const userProfile = await getUserProfile();
+      if (!userProfile) {
+        throw new Error("User profile not found");
+      }
+
+      const docs_ref = await queryUserProducts(userProfile.id);
+
       const products: Partial<StockItem>[] = [];
+      console.log(docs_ref);
       docs_ref.forEach((product) => {
+        const productData = product.data();
         const updatedProd: Partial<StockItem> = {
           id: product.id,
-          ...product.data(),
+          ...productData,
         };
         products.push(updatedProd);
       });
@@ -119,6 +321,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsProductsLoading(false);
       setError(null);
 
+      console.log("Retrieved products:", products);
       return products;
     } catch (error) {
       console.error(error);
@@ -126,7 +329,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsProductsLoading(false);
       return null;
     }
-  }, [COLLECTION_NAMES.products]);
+  }, [getUserProfile, queryUserProducts]);
 
   const getAgentSession = useCallback(async () => {
     try {
@@ -241,7 +444,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           throw new Error("User not authenticated");
         }
 
-        // Use provided sessionId or current session, create new one if none exists
         let activeSessionId = sessionId || currentSessionId;
 
         if (!activeSessionId) {
@@ -453,6 +655,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       createSession,
       currentSessionId,
       deactivateSession,
+      getUserProfile,
+      createUserProfile,
       saveMessage,
       loadMessages,
       deleteMessage,
@@ -473,6 +677,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       createSession,
       currentSessionId,
       deactivateSession,
+      getUserProfile,
+      createUserProfile,
       saveMessage,
       loadMessages,
       deleteMessage,
