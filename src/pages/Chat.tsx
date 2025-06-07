@@ -85,6 +85,11 @@ const Chat: React.FC = () => {
           return;
         }
         setAgent(response as AgentInterface);
+        // Session ID is already set in the context by getAgentSession
+        const sessionData = response as { sessionId?: string };
+        if (sessionData.sessionId) {
+          console.log("Found existing session:", sessionData.sessionId);
+        }
       } catch (error) {
         console.error("Error fetching agent session:", error);
         setAgent(null);
@@ -99,13 +104,18 @@ const Chat: React.FC = () => {
       if (!currentSessionId && !sessionInitialized) {
         try {
           setSessionInitialized(true);
-          console.log("Initializing new chat session...");
+          console.log(
+            "No existing session found, creating new chat session..."
+          );
           await createSession();
-          console.log("Chat session initialized successfully");
+          console.log("New chat session initialized successfully");
         } catch (error) {
           console.error("Failed to initialize chat session:", error);
           setSessionInitialized(false);
         }
+      } else if (currentSessionId) {
+        setSessionInitialized(true);
+        console.log("Using existing session:", currentSessionId);
       }
     };
 

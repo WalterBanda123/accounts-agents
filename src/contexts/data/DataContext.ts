@@ -15,7 +15,8 @@ export interface DataContextInterface {
     getAgentSession: () => Promise<unknown>,
     getChatSession: () => Promise<unknown>,
     createSession: () => Promise<string>,
-    currentSessionId: string | null
+    currentSessionId: string | null,
+    deactivateSession: (sessionId: string) => Promise<void>
 }
 
 const DataContext = React.createContext<DataContextInterface>({
@@ -40,7 +41,8 @@ const DataContext = React.createContext<DataContextInterface>({
     getAgentSession: async () => { },
     getChatSession: async () => { },
     createSession: async () => Promise.resolve(''),
-    currentSessionId: null
+    currentSessionId: null,
+    deactivateSession: async () => Promise.resolve()
 })
 
 export default DataContext;

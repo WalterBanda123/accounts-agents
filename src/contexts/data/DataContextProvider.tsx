@@ -9,6 +9,7 @@ import {
   addDoc,
   query,
   where,
+  updateDoc,
 } from "firebase/firestore";
 import { fStore } from "../../../firebase.config";
 import useAuthContext from "../auth/UseAuthContext";
@@ -129,20 +130,29 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsLoading(true);
 
       const sessionsRef = collection(fStore, "sessions");
-      const q = query(sessionsRef, where("profileId", "==", user?.id));
+      const q = query(
+        sessionsRef,
+        where("profileId", "==", user?.id),
+        where("isActive", "==", true)
+      );
 
       const querySnapshot = await getDocs(q);
-      const sessionDoc = querySnapshot.docs[0];
 
       setIsLoading(false);
       setError(null);
 
-      if (!sessionDoc) {
-        console.log("No agent session found for user");
+      if (querySnapshot.empty) {
+        console.log("No active agent session found for user");
         return null;
       }
 
+      // Get the most recent session (first document)
+      const sessionDoc = querySnapshot.docs[0];
       const sessionData = { sessionId: sessionDoc.id, ...sessionDoc.data() };
+
+      // Update current session ID if we found an active session
+      setCurrentSessionId(sessionDoc.id);
+
       return sessionData;
     } catch (error) {
       console.error("Error getting agent session:", error);
@@ -180,34 +190,28 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsChatLoading(true);
 
       const userId = user?.id;
-      const appName = "store_assistant";
 
       if (!userId) {
         throw new Error("User not authenticated");
       }
 
-      const endpoint = `http://127.0.0.1:8000/apps/${appName}/users/${userId}/sessions`;
+      // Create session document in Firestore
+      const sessionData = {
+        profileId: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        appName: "store_assistant",
+        isActive: true,
+      };
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}), // Empty body as per API spec
-      });
+      console.log("Creating session in Firestore for user:", userId);
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to create session: ${response.status} - ${response.statusText}`
-        );
-      }
+      const sessionDocRef = await addDoc(
+        collection(fStore, "sessions"),
+        sessionData
+      );
 
-      const sessionData = await response.json();
-      const sessionId = sessionData.sessionId || sessionData.id;
-
-      if (!sessionId) {
-        throw new Error("Session creation response missing sessionId");
-      }
+      const sessionId = sessionDocRef.id;
 
       setCurrentSessionId(sessionId);
       setError(null);
@@ -229,62 +233,28 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         setIsChatLoading(true);
 
         const userId = user?.id;
-        const appName = "store_assistant";
 
         if (!userId) {
           throw new Error("User not authenticated");
         }
 
+        // Use provided sessionId or current session, create new one if none exists
         let activeSessionId = sessionId || currentSessionId;
+
         if (!activeSessionId) {
           console.log("No session available, creating new session...");
-          try {
-            const createEndpoint = `http://127.0.0.1:8000/apps/${appName}/users/${userId}/sessions`;
-            console.log("Creating new session at:", createEndpoint);
-
-            const createResponse = await fetch(createEndpoint, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({}),
-            });
-
-            if (!createResponse.ok) {
-              throw new Error(
-                `Failed to create session: ${createResponse.status} - ${createResponse.statusText}`
-              );
-            }
-
-            const sessionData = await createResponse.json();
-            activeSessionId = sessionData.sessionId || sessionData.id;
-
-            if (!activeSessionId) {
-              throw new Error("Session creation response missing sessionId");
-            }
-
-            setCurrentSessionId(activeSessionId);
-            console.log("Created session:", activeSessionId);
-          } catch (createError) {
-            console.error("Error creating session:", createError);
-            throw createError;
-          }
+          activeSessionId = await createSession();
         }
 
-        // Construct the /run endpoint URL
-        const endpoint = `http://127.0.0.1:8000/run`;
+        // Use the simple endpoint structure
+        const endpoint = `http://127.0.0.1:8003/run`;
 
         const requestBody = {
-          appName,
-          userId,
-          sessionId: activeSessionId,
-          newMessage: {
-            parts: [
-              {
-                text: message,
-              },
-            ],
+          message,
+          context: {
+            user_id: userId,
           },
+          session_id: activeSessionId,
         };
 
         console.log("Making request to:", endpoint);
@@ -308,20 +278,17 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         setError(null);
         setIsChatLoading(false);
 
-        // Extract text from response parts if available
-        if (
-          botResponse?.message?.parts &&
-          Array.isArray(botResponse.message.parts)
-        ) {
-          return botResponse.message.parts
-            .map((part: { text?: string }) => part.text || "")
-            .join(" ");
+        // Extract response text from various possible response structures
+        if (typeof botResponse === "string") {
+          return botResponse;
         }
 
-        // Fallback for different response structures
+        // Handle different response formats
         return (
-          botResponse?.message ||
           botResponse?.response ||
+          botResponse?.message ||
+          botResponse?.text ||
+          botResponse?.content ||
           JSON.stringify(botResponse)
         );
       } catch (error) {
@@ -331,7 +298,35 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         throw error;
       }
     },
-    [user?.id, currentSessionId]
+    [user?.id, currentSessionId, createSession]
+  );
+
+  const deactivateSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        setIsChatLoading(true);
+
+        await updateDoc(doc(fStore, "sessions", sessionId), {
+          isActive: false,
+          updatedAt: new Date(),
+        });
+
+        // Clear current session if it's the one being deactivated
+        if (currentSessionId === sessionId) {
+          setCurrentSessionId(null);
+        }
+
+        setError(null);
+        setIsChatLoading(false);
+        console.log("Deactivated session:", sessionId);
+      } catch (error) {
+        setError(error);
+        setIsChatLoading(false);
+        console.error("Error deactivating session:", error);
+        throw error;
+      }
+    },
+    [currentSessionId]
   );
 
   const contextValue = useMemo(
@@ -350,6 +345,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       getChatSession,
       createSession,
       currentSessionId,
+      deactivateSession,
     }),
     [
       addNewProduct,
@@ -366,6 +362,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       getChatSession,
       createSession,
       currentSessionId,
+      deactivateSession,
     ]
   );
 
