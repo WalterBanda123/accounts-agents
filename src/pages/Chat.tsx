@@ -23,6 +23,7 @@ import { AgentInterface } from "../interfaces/agents";
 import { MessageGroup } from "../interfaces/message";
 import { groupMessagesByDate } from "../utils/messageUtils";
 import { getTimeString } from "../utils/dateUtils";
+import { parseBasicMarkdown } from "../utils/markdownUtils";
 
 interface Message {
   id: string;
@@ -42,12 +43,9 @@ const MessageBubble: React.FC<{ message: Message }> = React.memo(
             <span></span>
           </div>
         ) : (
-          message.text.split("\n").map((line, index) => (
-            <React.Fragment key={index}>
-              {line}
-              {index < message.text.split("\n").length - 1 && <br />}
-            </React.Fragment>
-          ))
+          <div className="message-content">
+            {parseBasicMarkdown(message.text)}
+          </div>
         )}
       </div>
       {message.id !== "typing-indicator" && (
