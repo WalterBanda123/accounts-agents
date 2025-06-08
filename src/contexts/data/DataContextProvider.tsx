@@ -488,20 +488,20 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         if (imageFile) {
           // Use separate endpoint for image analysis
           endpoint = `http://127.0.0.1:8003/analyze-image`;
-          
+
           // Use FormData for image uploads
           const formData = new FormData();
-          formData.append('message', message);
-          formData.append('session_id', activeSessionId);
-          formData.append('user_id', userId);
-          formData.append('image', imageFile, 'product-image.jpg');
+          formData.append("message", message);
+          formData.append("session_id", activeSessionId);
+          formData.append("user_id", userId);
+          formData.append("image", imageFile, "product-image.jpg");
 
           requestBody = formData;
           // Don't set Content-Type header, let browser set it with boundary
         } else {
           // Use separate endpoint for text-only AI requests
           endpoint = `http://127.0.0.1:8003/run`;
-          
+
           // Use JSON for text-only requests
           requestBody = JSON.stringify({
             message,
@@ -510,7 +510,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
             },
             session_id: activeSessionId,
           });
-          headers['Content-Type'] = 'application/json';
+          headers["Content-Type"] = "application/json";
         }
 
         const response = await fetch(endpoint, {
@@ -521,13 +521,21 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         if (!response.ok) {
           const endpointType = imageFile ? "image analysis" : "text AI";
-          
+
           if (response.status === 404) {
-            throw new Error(`${endpointType} endpoint not found. Please check if the backend server is running and the ${imageFile ? '/analyze-image' : '/askAI'} endpoint is available.`);
+            throw new Error(
+              `${endpointType} endpoint not found. Please check if the backend server is running and the ${
+                imageFile ? "/analyze-image" : "/askAI"
+              } endpoint is available.`
+            );
           } else if (response.status === 500) {
-            throw new Error(`Internal server error in ${endpointType} service. The AI model may not be properly configured.`);
+            throw new Error(
+              `Internal server error in ${endpointType} service. The AI model may not be properly configured.`
+            );
           } else if (response.status === 413) {
-            throw new Error("Image file too large. Please try with a smaller image.");
+            throw new Error(
+              "Image file too large. Please try with a smaller image."
+            );
           } else {
             throw new Error(
               `${endpointType} request failed! status: ${response.status} - ${response.statusText}`
@@ -536,7 +544,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         }
 
         const botResponse = await response.json();
-        
+
         setError(null);
         setIsChatLoading(false);
 
