@@ -1,0 +1,32 @@
+/* DateSeparator.css */
+
+.date-separator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 12px 0 8px 0;
+  position: relative;
+}
+
+.date-separator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--ion-color-light);
+  z-index: 1;
+}
+
+.date-text {
+  background: var(--ion-color-light-tint);
+  color: var(--ion-color-medium);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 8px;
+  position: relative;
+  z-index: 2;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}

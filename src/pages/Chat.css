@@ -169,6 +169,40 @@
   --opacity: 0.5;
 }
 
+/* Loading spinner for send button */
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.send_button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Enhanced send button states */
+.send_button:not(.loading):hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.send_button:not(.loading):active {
+  transform: scale(0.95);
+}
+
 /* Message grouping and timestamps */
 .message-group {
   display: flex;
@@ -225,48 +259,43 @@
 .typing-indicator {
   display: flex;
   align-items: center;
-  padding: 14px 18px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid #e9ecef;
-  border-radius: 20px;
-  border-bottom-left-radius: 6px;
-  max-width: 80px;
-  margin-right: auto;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 8px 12px;
+  min-width: 50px;
 }
 
-.typing-dots {
-  display: flex;
-  gap: 4px;
-}
-
-.typing-dot {
-  width: 8px;
-  height: 8px;
+.typing-indicator span {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background-color: var(--ion-color-medium);
-  animation: typingDot 1.4s infinite ease-in-out;
+  animation: typingAnimation 1.4s infinite ease-in-out;
+  opacity: 0.4;
 }
 
-.typing-dot:nth-child(1) {
-  animation-delay: -0.32s;
+.typing-indicator span:nth-child(1) {
+  animation-delay: 0s;
 }
 
-.typing-dot:nth-child(2) {
-  animation-delay: -0.16s;
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-@keyframes typingDot {
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingAnimation {
   0%,
-  80%,
+  60%,
   100% {
-    opacity: 0.3;
+    opacity: 0.4;
     transform: scale(0.8);
   }
-  40% {
+  30% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.2);
   }
 }
 
@@ -295,4 +324,90 @@
 .header-avatar:hover {
   border-color: #007bff;
   transform: scale(1.05);
+}
+
+/* Error message styling */
+.error-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 16px 0;
+  animation: errorAppear 0.3s ease-out;
+}
+
+.error-content {
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  border: 1px solid #feb2b2;
+  border-radius: 12px;
+  padding: 12px 16px;
+  max-width: 85%;
+  color: #c53030;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(197, 48, 48, 0.1);
+}
+
+.error-content strong {
+  font-weight: 600;
+  color: #9b2c2c;
+}
+
+@keyframes errorAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Loading state for disabled send button */
+.send_button.button-disabled {
+  --opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Improved message spacing when there are errors */
+.messages_container .error-message + .message-group {
+  margin-top: 8px;
+}
+
+/* Date separator styling - WhatsApp style */
+.date-separator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0 16px 0;
+  position: relative;
+}
+
+.date-separator::before {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e9ecef, transparent);
+  margin-right: 16px;
+}
+
+.date-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to left, transparent, #e9ecef, transparent);
+  margin-left: 16px;
+}
+
+.date-text {
+  background: #f8f9fa;
+  color: #6c757d;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
