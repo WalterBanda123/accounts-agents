@@ -1,7 +1,84 @@
 /* NewProduct.css */
 
+/* Enhanced Image Upload Card */
 .image-upload-card {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px dashed transparent;
+  transition: all 0.3s ease;
+}
+
+.image-upload-card:hover {
+  border-color: var(--ion-color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.image-upload-card.processing {
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 8px 25px rgba(var(--ion-color-primary-rgb), 0.2);
+  animation: processingPulse 2s ease-in-out infinite;
+}
+
+@keyframes processingPulse {
+  0%, 100% {
+    box-shadow: 0 8px 25px rgba(var(--ion-color-primary-rgb), 0.2);
+  }
+  50% {
+    box-shadow: 0 8px 25px rgba(var(--ion-color-primary-rgb), 0.4);
+  }
+}
+
+.image-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+}
+
+.image-card-subtitle {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  line-height: 1.4;
+}
+
+.ai-icon {
+  color: var(--ion-color-primary);
+  font-size: 20px;
+}
+
+.ai-features {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: rgba(var(--ion-color-primary-rgb), 0.1);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ai-features small {
+  color: var(--ion-color-primary);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.image-tips {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.image-tips small {
+  color: var(--ion-color-medium);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.success-icon {
+  color: var(--ion-color-success);
+  font-size: 18px;
+  margin-left: auto;
 }
 
 .image-upload-section {
@@ -9,6 +86,7 @@
   justify-content: center;
   align-items: center;
   min-height: 200px;
+  position: relative;
 }
 
 .image-placeholder {
@@ -17,18 +95,255 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  padding: 20px;
+}
+
+.image-placeholder h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
 }
 
 .image-placeholder p {
   margin: 0;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
+  color: var(--ion-color-medium);
+  max-width: 280px;
+  line-height: 1.5;
 }
 
 .image-placeholder ion-icon {
-  color: var(--ion-color-medium);
+  color: var(--ion-color-primary);
+  opacity: 0.7;
+}
+
+.upload-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.primary-upload-button {
+  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  --border-radius: 12px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.3);
+  font-weight: 600;
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.primary-upload-button:disabled {
+  --background: linear-gradient(135deg, #ccc 0%, #bbb 100%);
+  --box-shadow: none;
   opacity: 0.6;
+}
+
+.secondary-upload-button {
+  --border-color: var(--ion-color-primary);
+  --color: var(--ion-color-primary);
+  --border-radius: 12px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  font-weight: 600;
+  min-width: 140px;
+  transition: all 0.3s ease;
+}
+
+.secondary-upload-button:disabled {
+  --border-color: #ccc;
+  --color: #ccc;
+  opacity: 0.6;
+}
+
+/* Image Preview Styles */
+.image-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 300px;
+  max-height: 300px;
+}
+
+.preview-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-preview:hover .image-overlay {
+  opacity: 1;
+}
+
+.processing-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: white;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  z-index: 10;
+}
+
+.processing-overlay p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.processing-overlay small {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.processing-overlay ion-spinner {
+  --color: white;
+  width: 32px;
+  height: 32px;
+}
+  font-weight: 500;
+}
+
+.retake-button {
+  --color: white;
+  --background: rgba(0, 0, 0, 0.6);
+  --border-radius: 8px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  backdrop-filter: blur(4px);
+  font-weight: 500;
+}
+
+/* Guide Card Styles */
+.guide-card {
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border: 1px solid #fbbf24;
+  border-radius: 16px;
+}
+
+.guide-content {
+  padding: 20px;
+}
+
+.guide-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.guide-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.guide-icon {
+  color: #f59e0b;
+  font-size: 22px;
+}
+
+.guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-number {
+  background: #f59e0b;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h5 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.step-content p {
+  margin: 0;
+  font-size: 13px;
+  color: #a16207;
+  line-height: 1.4;
+}
+
+/* Mobile responsiveness for guide */
+@media (max-width: 768px) {
+  .guide-steps {
+    gap: 12px;
+  }
+  
+  .guide-step {
+    gap: 10px;
+  }
+  
+  .step-number {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+  
+  .step-content h5 {
+    font-size: 13px;
+  }
+  
+  .step-content p {
+    font-size: 12px;
+  }
 }
 
 .save-footer {
@@ -271,6 +586,59 @@ ion-card-content {
   cursor: not-allowed;
 }
 
+/* AI-populated field indicators */
+.form-label ion-icon {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.form-label ion-icon:hover {
+  opacity: 1;
+}
+
+/* Enhanced form field styling for AI-populated fields */
+.form-field.ai-populated {
+  position: relative;
+}
+
+.form-field.ai-populated::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+/* Success state for AI processing */
+.image-upload-card.processing-success {
+  border-color: var(--ion-color-success);
+  background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+}
+
+.image-upload-card.processing-success .image-card-title {
+  color: var(--ion-color-success);
+}
+
+/* Toast message enhancements */
+ion-toast.ai-success {
+  --background: var(--ion-color-success);
+  --color: white;
+}
+
+ion-toast.ai-warning {
+  --background: var(--ion-color-warning);
+  --color: white;
+}
+
+ion-toast.ai-error {
+  --background: var(--ion-color-danger);
+  --color: white;
+}
+
 /* Legacy support - minimal for backwards compatibility */
 ion-item {
   --border-color: transparent;
@@ -352,6 +720,37 @@ ion-toast {
 
   .image-upload-section {
     min-height: 150px;
+  }
+
+  .image-placeholder {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .image-placeholder h3 {
+    font-size: 18px;
+  }
+
+  .image-placeholder p {
+    font-size: 14px;
+    max-width: 250px;
+  }
+
+  .upload-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .primary-upload-button,
+  .secondary-upload-button {
+    width: 100%;
+    max-width: 200px;
+    min-width: unset;
+  }
+
+  .preview-image {
+    height: 150px;
   }
 
   .save-footer {

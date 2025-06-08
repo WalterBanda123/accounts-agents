@@ -13,7 +13,7 @@ export interface DataContextInterface {
     getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
     getAllProducts: () => Promise<unknown>,
     searchProducts: (search: string) => Promise<Partial<StockItem>[]>
-    askAiAssistant: (message: string, sessionId?: string) => Promise<unknown>,
+    askAiAssistant: (message: string, sessionId?: string, imageFile?: File | Blob) => Promise<unknown>,
     getAgentSession: () => Promise<unknown>,
     getChatSession: () => Promise<unknown>,
     createSession: () => Promise<string>,

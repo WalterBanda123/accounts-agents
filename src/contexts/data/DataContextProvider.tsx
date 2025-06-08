@@ -94,13 +94,11 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         throw new Error("User not authenticated");
       }
 
-      console.log("Getting user profile for user ID:", user.id);
       const profilesRef = collection(fStore, COLLECTION_NAMES.profiles);
       const q = query(profilesRef, where("user_id", "==", user.id));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        console.log("No profile found for user:", user.id);
         return null;
       }
 
@@ -110,7 +108,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         ...profileDoc.data(),
       } as ProfileInterface;
 
-      console.log("Found user profile:", profile);
       return profile;
     } catch (error) {
       console.error("Error getting user profile:", error);
@@ -133,7 +130,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         // Check if profile already exists
         const existingProfile = await getUserProfile();
         if (existingProfile) {
-          console.log("Profile already exists for user:", user.id);
           return existingProfile;
         }
 
@@ -157,7 +153,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           ...profileData,
         };
 
-        console.log("Created user profile:", newProfile);
         return newProfile;
       } catch (error) {
         console.error("Error creating user profile:", error);
@@ -173,7 +168,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       try {
         setIsProductsLoading(true);
 
-        console.log("Ensuring user profile exists for user:", user?.id);
         // Ensure user profile exists
         const userProfile = await ensureUserProfileExists(
           getUserProfile,
@@ -183,7 +177,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         if (!userProfile) {
           throw new Error("Failed to get or create user profile");
         }
-        console.log("Using profile/store ID:", userProfile.id);
 
         // Add store_id to the product (referencing the profile as store)
         // Store as reference path format to match existing data
@@ -191,11 +184,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           ...product,
           store_id: `/profiles/${userProfile.id}`,
         };
-
-        console.log(
-          "Adding product with store_id reference path:",
-          productWithProfile
-        );
 
         const doc_ref = await addDoc(
           collection(fStore, COLLECTION_NAMES.products),
@@ -244,12 +232,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         const belongsToUser = isUserStore(productData.store_id, userProfile.id);
 
         if (!belongsToUser) {
-          console.log(
-            "Product does not belong to user store. Store ID:",
-            productData.store_id,
-            "User Profile ID:",
-            userProfile.id
-          );
           setIsProductsLoading(false);
           setError(null);
           return {} as Partial<StockItem>;
@@ -327,7 +309,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       const docs_ref = await queryUserProducts(userProfile.id);
 
       const products: Partial<StockItem>[] = [];
-      console.log(docs_ref);
       docs_ref.forEach((product) => {
         const productData = product.data();
         const updatedProd: Partial<StockItem> = {
@@ -340,7 +321,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsProductsLoading(false);
       setError(null);
 
-      console.log("Retrieved products:", products);
       return products;
     } catch (error) {
       console.error(error);
@@ -373,7 +353,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setError(null);
 
       if (querySnapshot.empty) {
-        console.log("No agent session found for user");
         return null;
       }
 
@@ -402,12 +381,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           isActive: true,
           updatedAt: new Date(),
         });
-        console.log("Reactivated session:", sessionDoc.id);
       }
 
       // Update current session ID
       setCurrentSessionId(sessionDoc.id);
-      console.log("Using session:", sessionDoc.id);
 
       return sessionData;
     } catch (error) {
@@ -423,7 +400,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsLoading(true);
 
       const sessionsRef = collection(fStore, "sessions");
-      console.log(user);
       const q = query(sessionsRef, where("profileId", "==", user?.id));
 
       const querySnapshot = await getDocs(q);
@@ -454,7 +430,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       // Always check for existing session first
       const existingSession = await getAgentSession();
       if (existingSession && existingSession.sessionId) {
-        console.log("Using existing session:", existingSession.sessionId);
         setIsChatLoading(false);
         return existingSession.sessionId;
       }
@@ -468,8 +443,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         isActive: true,
       };
 
-      console.log("Creating first-time session for user:", userId);
-
       const sessionDocRef = await addDoc(
         collection(fStore, "sessions"),
         sessionData
@@ -481,7 +454,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setError(null);
       setIsChatLoading(false);
 
-      console.log("Created new session:", sessionId);
       return sessionId;
     } catch (error) {
       setError(error);
@@ -492,7 +464,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   }, [user?.id, getAgentSession]);
 
   const askAiAssistant = useCallback(
-    async (message: string, sessionId?: string) => {
+    async (message: string, sessionId?: string, imageFile?: File | Blob) => {
       try {
         setIsChatLoading(true);
 
@@ -505,39 +477,66 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         let activeSessionId = sessionId || currentSessionId;
 
         if (!activeSessionId) {
-          console.log("No session available, creating new session...");
           activeSessionId = await createSession();
         }
 
-        // Use the simple endpoint structure
-        const endpoint = `http://127.0.0.1:8003/run`;
+        // Use different endpoints for different request types
+        let endpoint: string;
+        let requestBody: FormData | string;
+        const headers: Record<string, string> = {};
 
-        const requestBody = {
-          message,
-          context: {
-            user_id: userId,
-          },
-          session_id: activeSessionId,
-        };
+        if (imageFile) {
+          // Use separate endpoint for image analysis
+          endpoint = `http://127.0.0.1:8003/analyze-image`;
+          
+          // Use FormData for image uploads
+          const formData = new FormData();
+          formData.append('message', message);
+          formData.append('session_id', activeSessionId);
+          formData.append('user_id', userId);
+          formData.append('image', imageFile, 'product-image.jpg');
 
-        console.log("Making request to:", endpoint);
-        console.log("Request body:", requestBody);
+          requestBody = formData;
+          // Don't set Content-Type header, let browser set it with boundary
+        } else {
+          // Use separate endpoint for text-only AI requests
+          endpoint = `http://127.0.0.1:8003/run`;
+          
+          // Use JSON for text-only requests
+          requestBody = JSON.stringify({
+            message,
+            context: {
+              user_id: userId,
+            },
+            session_id: activeSessionId,
+          });
+          headers['Content-Type'] = 'application/json';
+        }
 
         const response = await fetch(endpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
+          headers,
+          body: requestBody,
         });
 
         if (!response.ok) {
-          throw new Error(
-            `HTTP error! status: ${response.status} - ${response.statusText}`
-          );
+          const endpointType = imageFile ? "image analysis" : "text AI";
+          
+          if (response.status === 404) {
+            throw new Error(`${endpointType} endpoint not found. Please check if the backend server is running and the ${imageFile ? '/analyze-image' : '/askAI'} endpoint is available.`);
+          } else if (response.status === 500) {
+            throw new Error(`Internal server error in ${endpointType} service. The AI model may not be properly configured.`);
+          } else if (response.status === 413) {
+            throw new Error("Image file too large. Please try with a smaller image.");
+          } else {
+            throw new Error(
+              `${endpointType} request failed! status: ${response.status} - ${response.statusText}`
+            );
+          }
         }
 
         const botResponse = await response.json();
+        
         setError(null);
         setIsChatLoading(false);
 
@@ -581,7 +580,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         setError(null);
         setIsChatLoading(false);
-        console.log("Deactivated session:", sessionId);
       } catch (error) {
         setError(error);
         setIsChatLoading(false);
@@ -595,8 +593,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const deactivateAllUserSessions = useCallback(async (userId: string) => {
     try {
       setIsChatLoading(true);
-
-      console.log("Deactivating all sessions for user:", userId);
 
       const sessionsRef = collection(fStore, "sessions");
       const q = query(
@@ -622,10 +618,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       setError(null);
       setIsChatLoading(false);
-      console.log(
-        `Deactivated ${querySnapshot.docs.length} sessions for user:`,
-        userId
-      );
     } catch (error) {
       setError(error);
       setIsChatLoading(false);
@@ -648,8 +640,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           updatedAt: new Date(),
         };
 
-        console.log("Saving message to Firestore:", messageData);
-
         const messageDocRef = await addDoc(
           collection(fStore, "messages"),
           messageData
@@ -657,7 +647,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         setError(null);
         setIsChatLoading(false);
-        console.log("Saved message with ID:", messageDocRef.id);
 
         return messageDocRef.id;
       } catch (error) {
@@ -702,10 +691,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         setError(null);
         setIsChatLoading(false);
-        console.log(
-          `Loaded ${messages.length} messages for session:`,
-          sessionId
-        );
 
         return messages;
       } catch (error) {
@@ -727,7 +712,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         setError(null);
         setIsChatLoading(false);
-        console.log("Deleted message:", messageId);
       } catch (error) {
         setError(error);
         setIsChatLoading(false);
@@ -746,8 +730,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
 
       setIsChatLoading(true);
-
-      console.log("Loading all messages for user:", user.id);
 
       // Query messages directly by profileId (user ID)
       const messagesRef = collection(fStore, "messages");
@@ -777,7 +759,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       setError(null);
       setIsChatLoading(false);
-      console.log(`Loaded ${allMessages.length} messages for user`);
 
       return allMessages;
     } catch (error) {
