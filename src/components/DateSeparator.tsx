@@ -1,6 +1,5 @@
-
-import React from 'react';
-import './DateSeparator.css';
+import React from "react";
+import "./DateSeparator.css";
 
 interface DateSeparatorProps {
   dateLabel: string;

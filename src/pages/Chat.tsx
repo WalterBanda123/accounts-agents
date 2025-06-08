@@ -80,6 +80,7 @@ const Chat: React.FC = () => {
   const [agent, setAgent] = useState<AgentInterface | null>();
   const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
   const messagesLoadedRef = useRef<boolean>(false);
+  const sendingMessageRef = useRef<boolean>(false); // Prevent double sends
 
   // Check if error exists and is a meaningful error
   const hasError = error !== null && error !== undefined;
@@ -122,11 +123,15 @@ const Chat: React.FC = () => {
         try {
           // Try to get or create a session
           console.log("Initializing chat session for user:", user.id);
-          
+
           // First try to get an existing session
           const existingSession = await getAgentSession();
-          if (existingSession && typeof existingSession === "object" && 
-              "sessionId" in existingSession && existingSession.sessionId) {
+          if (
+            existingSession &&
+            typeof existingSession === "object" &&
+            "sessionId" in existingSession &&
+            existingSession.sessionId
+          ) {
             console.log("Using existing session:", existingSession.sessionId);
             setSessionInitialized(true); // Only set to true when we have a session
           } else {
@@ -134,7 +139,10 @@ const Chat: React.FC = () => {
             console.log("Creating new chat session...");
             const newSessionId = await createSession();
             if (newSessionId) {
-              console.log("New chat session created successfully:", newSessionId);
+              console.log(
+                "New chat session created successfully:",
+                newSessionId
+              );
               setSessionInitialized(true); // Only set to true when we have a session
             } else {
               console.error("Failed to create session");
@@ -162,8 +170,10 @@ const Chat: React.FC = () => {
           // Group messages by date
           const grouped = groupMessagesByDate(allMessages);
           setMessageGroups(grouped);
-          
-          console.log(`Loaded and grouped ${allMessages.length} messages into ${grouped.length} date groups`);
+
+          console.log(
+            `Loaded and grouped ${allMessages.length} messages into ${grouped.length} date groups`
+          );
         } catch (error) {
           console.error("Error loading all user messages:", error);
           messagesLoadedRef.current = false;
@@ -183,8 +193,12 @@ const Chat: React.FC = () => {
   const addMessage = useCallback(
     async (text: string, isBot: boolean = false) => {
       // Create a more unique ID to prevent duplicate keys
-      const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${isBot ? 'bot' : 'user'}`;
-      
+      const timestamp = performance.now(); // More precise than Date.now()
+      const randomId = Math.random().toString(36).substr(2, 9);
+      const messageId = `msg-${timestamp}-${randomId}-${
+        isBot ? "bot" : "user"
+      }`;
+
       // Create a new message that will be added to current group
       const newChatMessage = {
         profileId: user?.id || "",
@@ -198,26 +212,28 @@ const Chat: React.FC = () => {
       // Update the message groups by adding the new message to today's group
       setMessageGroups((prevGroups) => {
         const today = new Date();
-        const todayDateString = today.toISOString().split('T')[0];
-        
+        const todayDateString = today.toISOString().split("T")[0];
+
         // Find today's group or create it
         const updatedGroups = [...prevGroups];
-        const todayGroupIndex = updatedGroups.findIndex(group => group.date === todayDateString);
-        
+        const todayGroupIndex = updatedGroups.findIndex(
+          (group) => group.date === todayDateString
+        );
+
         if (todayGroupIndex === -1) {
           // Create today's group
           const todayGroup: MessageGroup = {
             date: todayDateString,
-            dateLabel: 'Today',
-            messages: [{ id: messageId, ...newChatMessage }]
+            dateLabel: "Today",
+            messages: [{ id: messageId, ...newChatMessage }],
           };
-          updatedGroups.unshift(todayGroup); // Add to beginning (most recent)
+          updatedGroups.push(todayGroup); // Add to end (chronological order)
         } else {
           // Add to existing today's group
           const newMessage = { id: messageId, ...newChatMessage };
           updatedGroups[todayGroupIndex].messages.push(newMessage);
         }
-        
+
         return updatedGroups;
       });
 
@@ -228,11 +244,14 @@ const Chat: React.FC = () => {
         try {
           // Use a ref to get the current messageGroups length to avoid stale closure
           let totalMessages = 0;
-          setMessageGroups(currentGroups => {
-            totalMessages = currentGroups.reduce((acc, group) => acc + group.messages.length, 0);
+          setMessageGroups((currentGroups) => {
+            totalMessages = currentGroups.reduce(
+              (acc, group) => acc + group.messages.length,
+              0
+            );
             return currentGroups; // Don't change the state, just read it
           });
-          
+
           await saveMessage({
             ...newChatMessage,
             messageOrder: totalMessages,
@@ -249,12 +268,23 @@ const Chat: React.FC = () => {
   const addTypingIndicator = useCallback(() => {
     setMessageGroups((prevGroups) => {
       const today = new Date();
-      const todayDateString = today.toISOString().split('T')[0];
-      
+      const todayDateString = today.toISOString().split("T")[0];
+
       // Find today's group or create it
       const updatedGroups = [...prevGroups];
-      const todayGroupIndex = updatedGroups.findIndex(group => group.date === todayDateString);
-      
+      const todayGroupIndex = updatedGroups.findIndex(
+        (group) => group.date === todayDateString
+      );
+
+      // Check if typing indicator already exists to prevent duplicates
+      const existingTypingIndicator = updatedGroups.some((group) =>
+        group.messages.some((msg) => msg.id === "typing-indicator")
+      );
+
+      if (existingTypingIndicator) {
+        return prevGroups; // Don't add if already exists
+      }
+
       const typingMessage = {
         id: "typing-indicator",
         profileId: "",
@@ -264,20 +294,20 @@ const Chat: React.FC = () => {
         timestamp: new Date(),
         messageOrder: 0,
       };
-      
+
       if (todayGroupIndex === -1) {
         // Create today's group with typing indicator
         const todayGroup: MessageGroup = {
           date: todayDateString,
-          dateLabel: 'Today',
-          messages: [typingMessage]
+          dateLabel: "Today",
+          messages: [typingMessage],
         };
-        updatedGroups.unshift(todayGroup);
+        updatedGroups.push(todayGroup); // Add to end (chronological order)
       } else {
         // Add typing indicator to existing today's group
         updatedGroups[todayGroupIndex].messages.push(typingMessage);
       }
-      
+
       return updatedGroups;
     });
     scrollToBottom();
@@ -285,17 +315,20 @@ const Chat: React.FC = () => {
 
   const removeTypingIndicator = useCallback(() => {
     setMessageGroups((prevGroups) => {
-      return prevGroups.map(group => ({
+      return prevGroups.map((group) => ({
         ...group,
-        messages: group.messages.filter((msg) => msg.id !== "typing-indicator")
+        messages: group.messages.filter((msg) => msg.id !== "typing-indicator"),
       }));
     });
   }, []);
 
   const handleSendMessage = useCallback(async () => {
-    if (!message.trim() || chatLoading) {
+    if (!message.trim() || chatLoading || sendingMessageRef.current) {
       return;
     }
+
+    // Set sending flag to prevent double execution
+    sendingMessageRef.current = true;
 
     const userMessage = message.trim();
     console.log("Sending message:", userMessage);
@@ -315,8 +348,9 @@ const Chat: React.FC = () => {
         userMessage,
         currentSessionId || undefined
       );
-      removeTypingIndicator();
 
+      // Always remove typing indicator regardless of response
+      removeTypingIndicator();
       setChatLoading(false);
 
       if (botResponse) {
@@ -351,14 +385,18 @@ const Chat: React.FC = () => {
         );
       }
     } catch (err) {
+      // Always remove typing indicator and stop loading on error
       removeTypingIndicator();
-
       setChatLoading(false);
+
       await addMessage(
         "I'm experiencing some technical difficulties. Please try again later.",
         true
       );
       console.error("Chat error:", err);
+    } finally {
+      // Always reset the sending flag
+      sendingMessageRef.current = false;
     }
   }, [
     message,
@@ -433,18 +471,21 @@ const Chat: React.FC = () => {
           {messageGroups.map((group) => (
             <React.Fragment key={group.date}>
               {/* Only show date separator if it's not the only group, or if it's not today */}
-              {(messageGroups.length > 1 || group.dateLabel !== 'Today') && (
+              {(messageGroups.length > 1 || group.dateLabel !== "Today") && (
                 <DateSeparator dateLabel={group.dateLabel} />
               )}
               {group.messages.map((msg) => (
-                <MessageBubble 
-                  key={msg.id} 
+                <MessageBubble
+                  key={msg.id}
                   message={{
                     id: msg.id || Date.now().toString(),
                     text: msg.text,
                     isBot: msg.isBot,
-                    timestamp: msg.id === "typing-indicator" ? "typing" : getTimeString(msg.timestamp),
-                  }} 
+                    timestamp:
+                      msg.id === "typing-indicator"
+                        ? "typing"
+                        : getTimeString(msg.timestamp),
+                  }}
                 />
               ))}
             </React.Fragment>
@@ -484,7 +525,9 @@ const Chat: React.FC = () => {
             fill="solid"
             size="small"
             onClick={handleSendMessage}
-            disabled={!message.trim() || chatLoading}
+            disabled={
+              !message.trim() || chatLoading || sendingMessageRef.current
+            }
             className={`send_button ${chatLoading ? "loading" : ""}`}
             color={"dark"}
           >

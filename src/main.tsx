@@ -8,12 +8,13 @@ import DataContextProvider from "./contexts/data/DataContextProvider";
 defineCustomElements(window);
 const container = document.getElementById("root");
 const root = createRoot(container!);
+
+// Temporarily disable StrictMode to prevent double execution in development
+// You can re-enable it later when the chat functionality is stable
 root.render(
-  <React.StrictMode>
-    <AuthContextProvider>
-      <DataContextProvider>
-        <App />
-      </DataContextProvider>
-    </AuthContextProvider>
-  </React.StrictMode>
+  <AuthContextProvider>
+    <DataContextProvider>
+      <App />
+    </DataContextProvider>
+  </AuthContextProvider>
 );

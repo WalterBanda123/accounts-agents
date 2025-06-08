@@ -37,21 +37,23 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [isProductsLoading, setIsProductsLoading] = useState<boolean>(false);
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
   const [error, setError] = useState<unknown>(null);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
-    // Initialize from sessionStorage if available
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('currentSessionId') || null;
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(
+    () => {
+      // Initialize from sessionStorage if available
+      if (typeof window !== "undefined") {
+        return sessionStorage.getItem("currentSessionId") || null;
+      }
+      return null;
     }
-    return null;
-  });
+  );
 
   // Persist session ID to sessionStorage when it changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (currentSessionId) {
-        sessionStorage.setItem('currentSessionId', currentSessionId);
+        sessionStorage.setItem("currentSessionId", currentSessionId);
       } else {
-        sessionStorage.removeItem('currentSessionId');
+        sessionStorage.removeItem("currentSessionId");
       }
     }
   }, [currentSessionId]);
@@ -376,12 +378,12 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
 
       // Sort sessions by createdAt in JavaScript to get the most recent
-      const sessions = querySnapshot.docs.map(doc => ({
+      const sessions = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         data: doc.data(),
-        ref: doc.ref
+        ref: doc.ref,
       }));
-      
+
       // Sort by createdAt descending (most recent first)
       sessions.sort((a, b) => {
         const aTime = a.data.createdAt?.toDate?.()?.getTime() || 0;
@@ -452,10 +454,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       // Always check for existing session first
       const existingSession = await getAgentSession();
       if (existingSession && existingSession.sessionId) {
-        console.log(
-          "Using existing session:",
-          existingSession.sessionId
-        );
+        console.log("Using existing session:", existingSession.sessionId);
         setIsChatLoading(false);
         return existingSession.sessionId;
       }
@@ -740,57 +739,54 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   );
 
   // Load all messages for the user (simplified approach)
-  const loadAllUserMessages = useCallback(
-    async (): Promise<ChatMessage[]> => {
-      try {
-        if (!user?.id) {
-          throw new Error("User not authenticated");
-        }
-
-        setIsChatLoading(true);
-
-        console.log("Loading all messages for user:", user.id);
-
-        // Query messages directly by profileId (user ID)
-        const messagesRef = collection(fStore, "messages");
-        const q = query(
-          messagesRef,
-          where("profileId", "==", user.id),
-          orderBy("timestamp", "asc") // Order by timestamp for chronological display
-        );
-
-        const querySnapshot = await getDocs(q);
-        const allMessages: ChatMessage[] = [];
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          allMessages.push({
-            id: doc.id,
-            profileId: data.profileId,
-            sessionId: data.sessionId,
-            text: data.text,
-            isBot: data.isBot,
-            timestamp: data.timestamp.toDate(),
-            messageOrder: data.messageOrder,
-            createdAt: data.createdAt?.toDate(),
-            updatedAt: data.updatedAt?.toDate(),
-          });
-        });
-
-        setError(null);
-        setIsChatLoading(false);
-        console.log(`Loaded ${allMessages.length} messages for user`);
-
-        return allMessages;
-      } catch (error) {
-        setError(error);
-        setIsChatLoading(false);
-        console.error("Error loading all user messages:", error);
-        throw error;
+  const loadAllUserMessages = useCallback(async (): Promise<ChatMessage[]> => {
+    try {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
       }
-    },
-    [user?.id]
-  );
+
+      setIsChatLoading(true);
+
+      console.log("Loading all messages for user:", user.id);
+
+      // Query messages directly by profileId (user ID)
+      const messagesRef = collection(fStore, "messages");
+      const q = query(
+        messagesRef,
+        where("profileId", "==", user.id),
+        orderBy("timestamp", "asc") // Order by timestamp for chronological display
+      );
+
+      const querySnapshot = await getDocs(q);
+      const allMessages: ChatMessage[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        allMessages.push({
+          id: doc.id,
+          profileId: data.profileId,
+          sessionId: data.sessionId,
+          text: data.text,
+          isBot: data.isBot,
+          timestamp: data.timestamp.toDate(),
+          messageOrder: data.messageOrder,
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        });
+      });
+
+      setError(null);
+      setIsChatLoading(false);
+      console.log(`Loaded ${allMessages.length} messages for user`);
+
+      return allMessages;
+    } catch (error) {
+      setError(error);
+      setIsChatLoading(false);
+      console.error("Error loading all user messages:", error);
+      throw error;
+    }
+  }, [user?.id]);
 
   const contextValue = useMemo(
     () => ({
