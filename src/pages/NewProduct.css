@@ -321,7 +321,7 @@
   line-height: 1.4;
 }
 
-/* Mobile responsiveness for guide */
+
 @media (max-width: 768px) {
   .guide-steps {
     gap: 12px;

@@ -1,3 +1,4 @@
+// filepath: /Users/walterbanda/Desktop/Hackathon/untitled folder/accounts-agents/src/pages/NewProduct.tsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import {
@@ -24,6 +25,10 @@ import {
   IonFooter,
   IonSpinner,
   IonActionSheet,
+  IonRadioGroup,
+  IonRadio,
+  IonLabel,
+  IonItem,
 } from "@ionic/react";
 import {
   saveOutline,
@@ -31,6 +36,9 @@ import {
   imagesOutline,
   sparklesOutline,
   checkmarkCircleOutline,
+  cubeOutline,
+  layersOutline,
+  pricetagOutline,
 } from "ionicons/icons";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { StockItem } from "../mock/stocks";
@@ -59,11 +67,17 @@ const NewProduct: React.FC = () => {
     unitPrice: "",
     quantity: "",
     unit: "pieces",
+    packPrice: "",
+    packSize: "", 
+    packQuantity: "", 
+    packUnit: "packs",
+    saleType: "individual", 
     brand: "",
     size: "",
     supplier: "",
     barcode: "",
-    imageUrl: "",
+    individualImageUrl: "",
+    packImageUrl: "",
   });
 
   const [showToast, setShowToast] = useState(false);
@@ -73,10 +87,11 @@ const NewProduct: React.FC = () => {
     useState<CustomEvent | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedIndividualImage, setCapturedIndividualImage] = useState<string | null>(null);
+  const [capturedPackImage, setCapturedPackImage] = useState<string | null>(null);
   const [imageProcessingSuccess, setImageProcessingSuccess] = useState(false);
+  const [currentImageType, setCurrentImageType] = useState<'individual' | 'pack'>('individual');
   const [aiPopulatedFields, setAiPopulatedFields] = useState<string[]>([]);
-  const [retryCount, setRetryCount] = useState(0);
   const [lastAiResponse, setLastAiResponse] = useState<string>("");
 
   const categories = [
@@ -194,14 +209,22 @@ const NewProduct: React.FC = () => {
         unitPrice: existingProduct.unitPrice.toString(),
         quantity: existingProduct.quantity.toString(),
         unit: existingProduct.unit,
+        // Pack fields (set defaults for existing products)
+        packPrice: "",
+        packSize: "",
+        packQuantity: "",
+        packUnit: "packs",
+        saleType: "individual",
+        // Other fields
         brand: existingProduct.brand,
         size: existingProduct.size,
         supplier: existingProduct.supplier,
         barcode: existingProduct.barcode || "",
-        imageUrl: existingProduct.image || "",
+        individualImageUrl: existingProduct.image || "",
+        packImageUrl: "",
       });
       if (existingProduct.image) {
-        setCapturedImage(existingProduct.image);
+        setCapturedIndividualImage(existingProduct.image);
       }
     }
   }, [isEditMode, existingProduct]);
@@ -233,16 +256,29 @@ const NewProduct: React.FC = () => {
       "name",
       "category",
       "subcategory",
-      "unitPrice",
-      "quantity",
       "brand",
       "supplier",
     ];
+    
+    // Check basic required fields
     for (const field of required) {
       if (!formData[field as keyof typeof formData]) {
         return false;
       }
     }
+    
+    if (formData.saleType === "individual" || formData.saleType === "both") {
+      if (!formData.unitPrice || !formData.quantity) {
+        return false;
+      }
+    }
+    
+    if (formData.saleType === "pack" || formData.saleType === "both") {
+      if (!formData.packPrice || !formData.packSize || !formData.packQuantity) {
+        return false;
+      }
+    }
+    
     return true;
   };
 
@@ -259,8 +295,8 @@ const NewProduct: React.FC = () => {
       description: formData.description,
       category: formData.category,
       subcategory: formData.subcategory,
-      unitPrice: parseFloat(formData.unitPrice),
-      quantity: parseInt(formData.quantity),
+      unitPrice: parseFloat(formData.unitPrice || "0"),
+      quantity: parseInt(formData.quantity || "0"),
       unit: formData.unit,
       brand: formData.brand,
       size: formData.size,
@@ -272,18 +308,25 @@ const NewProduct: React.FC = () => {
       }),
       supplier: formData.supplier,
       barcode: formData.barcode || undefined,
-      image: formData.imageUrl || undefined,
+      image: formData.individualImageUrl || formData.packImageUrl || undefined,
+      packPrice: formData.packPrice ? parseFloat(formData.packPrice) : undefined,
+      packSize: formData.packSize ? parseInt(formData.packSize) : undefined,
+      packQuantity: formData.packQuantity ? parseInt(formData.packQuantity) : undefined,
+      saleType: formData.saleType,
+    } as StockItem & {
+      packPrice?: number;
+      packSize?: number;
+      packQuantity?: number;
+      saleType: string;
     };
 
     try {
       if (!isEditMode) {
-        // Add new product using DataContext
         await addNewProduct(productData);
 
         setToastMessage("Product added successfully!");
         setShowToast(true);
 
-        // Reset form after successful save
         setTimeout(() => {
           setFormData({
             name: "",
@@ -293,23 +336,28 @@ const NewProduct: React.FC = () => {
             unitPrice: "",
             quantity: "",
             unit: "pieces",
+            packPrice: "",
+            packSize: "",
+            packQuantity: "",
+            packUnit: "packs",
+            saleType: "individual",
             brand: "",
             size: "",
             supplier: "",
             barcode: "",
-            imageUrl: "",
+            individualImageUrl: "",
+            packImageUrl: "",
           });
-          setCapturedImage(null);
-          setImageProcessingSuccess(false);
+          setCapturedIndividualImage(null);
+          setCapturedPackImage(null);
           setAiPopulatedFields([]);
+          setImageProcessingSuccess(false);
         }, 1000);
 
-        // Navigate back to stocks page after a delay
         setTimeout(() => {
           history.push("/stock-overview");
         }, 2000);
       } else {
-        // TODO: Implement product update functionality
         console.log("Updated Product:", productData);
         setToastMessage("Product updated successfully!");
         setShowToast(true);
@@ -331,7 +379,8 @@ const NewProduct: React.FC = () => {
     setShowProfilePopover(true);
   };
 
-  const handleImageUpload = () => {
+  const handleImageUpload = (imageType: 'individual' | 'pack') => {
+    setCurrentImageType(imageType);
     setShowActionSheet(true);
   };
 
@@ -375,9 +424,15 @@ const NewProduct: React.FC = () => {
       });
 
       if (image.dataUrl) {
-        setCapturedImage(image.dataUrl);
+        if (currentImageType === 'individual') {
+          setCapturedIndividualImage(image.dataUrl);
+          setFormData(prev => ({ ...prev, individualImageUrl: image.dataUrl! }));
+        } else {
+          setCapturedPackImage(image.dataUrl);
+          setFormData(prev => ({ ...prev, packImageUrl: image.dataUrl! }));
+        }
         setShowActionSheet(false);
-        await processImageWithAI(image.dataUrl);
+        await processImageWithAI(image.dataUrl, currentImageType);
       }
     } catch (error) {
       console.error("Error capturing image:", error);
@@ -386,22 +441,24 @@ const NewProduct: React.FC = () => {
     }
   };
 
-  const processImageWithAI = async (imageDataUrl: string) => {
+  const processImageWithAI = async (imageDataUrl: string, imageType: 'individual' | 'pack') => {
     setIsProcessingImage(true);
     setImageProcessingSuccess(false);
-    setRetryCount(0); // Reset retry count for new image
 
-    // Show initial processing message
-    setToastMessage("🤖 AI is analyzing your image...");
+    const promptSuffix = imageType === 'pack' 
+      ? "This is a PACK/CARTON image. Focus on pack details like pack size, total contents, bulk pricing information."
+      : "This is an INDIVIDUAL ITEM image. Focus on single unit details like unit price, individual product information.";
+
+    setToastMessage(`🤖 AI is analyzing your ${imageType} image...`);
     setShowToast(true);
 
     try {
-      // Convert data URL to Blob for raw image data upload
       const response = await fetch(imageDataUrl);
       const blob = await response.blob();
 
-      // Enhanced prompt with detailed instructions for better AI analysis
-      const message = `Analyze this product image carefully and extract detailed product information. 
+      const message = `Analyze this ${imageType} product image carefully and extract detailed product information. 
+
+${promptSuffix}
 
 IMPORTANT INSTRUCTIONS:
 - Look closely at labels, packaging, text, and visual details in the image
@@ -420,14 +477,8 @@ Return ONLY a JSON object in this exact format:
   "subcategory": "specific subcategory based on product type",
   "description": "detailed description of what you can see in the image",
   "image_url": ""
-}
+}`;
 
-VALIDATION: If the image shows a clear product but you return generic values like "Product from Image", "Unknown Brand", or "General", the analysis will be considered failed.`;
-
-      console.log("Enhanced AI prompt:", message);
-      console.log("Image blob size:", blob.size, "bytes");
-
-      // Use askAiAssistant with image File/Blob
       const aiResponse = await askAiAssistant(
         message,
         currentSessionId || undefined,
@@ -437,51 +488,33 @@ VALIDATION: If the image shows a clear product but you return generic values lik
       setLastAiResponse(
         typeof aiResponse === "string" ? aiResponse : JSON.stringify(aiResponse)
       );
-      console.log("Raw AI response received:", aiResponse);
-      console.log("AI response type:", typeof aiResponse);
 
-      // Enhanced AI response parsing with multiple fallback strategies
+      // Parse AI response
       let data;
       try {
-        data =
-          typeof aiResponse === "string" ? JSON.parse(aiResponse) : aiResponse;
+        data = typeof aiResponse === "string" ? JSON.parse(aiResponse) : aiResponse;
       } catch {
-        // Try to extract JSON from text response if it's embedded
         if (typeof aiResponse === "string") {
           const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             try {
               data = JSON.parse(jsonMatch[0]);
             } catch {
-              console.log("Raw AI response (no valid JSON found):", aiResponse);
-              setToastMessage(
-                "AI responded but could not parse product data. Please fill in details manually."
-              );
+              setToastMessage("AI responded but could not parse product data. Please fill in details manually.");
               setShowToast(true);
               return;
             }
           } else {
-            console.log(
-              "Raw AI response (no JSON structure found):",
-              aiResponse
-            );
-            setToastMessage(
-              "AI analyzed the image but returned unexpected format. Please fill in details manually."
-            );
+            setToastMessage("AI analyzed the image but returned unexpected format. Please fill in details manually.");
             setShowToast(true);
             return;
           }
         } else {
-          console.log("Raw AI response:", aiResponse);
-          setToastMessage(
-            "Received AI response but could not process it. Please fill in details manually."
-          );
+          setToastMessage("Received AI response but could not process it. Please fill in details manually.");
           setShowToast(true);
           return;
         }
       }
-
-      console.log("Parsed AI response data:", data);
 
       // Handle multiple response formats
       let product;
@@ -490,336 +523,62 @@ VALIDATION: If the image shows a clear product but you return generic values lik
       } else if (data && data.product) {
         product = data.product;
       } else if (data && (data.name || data.brand)) {
-        // Direct product data without wrapper
         product = data;
       } else if (data && data.data && data.data.product) {
-        // Nested data structure
         product = data.data.product;
       } else {
-        throw new Error(
-          "Failed to extract product information from AI response structure"
-        );
-      }
-
-      console.log("Extracted product data:", product);
-
-      // Validate that AI provided meaningful data (not generic placeholders)
-      const isGenericResponse = (product: {
-        name?: string;
-        brand?: string;
-        description?: string;
-        category?: string;
-        subcategory?: string;
-      }): boolean => {
-        const genericIndicators = [
-          "product from image",
-          "unknown brand",
-          "product imported from image",
-          "please update details",
-          "general",
-          "miscellaneous",
-        ];
-
-        const checkGeneric = (value: string) => {
-          if (!value || typeof value !== "string") return false;
-          return genericIndicators.some((indicator) =>
-            value.toLowerCase().includes(indicator.toLowerCase())
-          );
-        };
-
-        return (
-          checkGeneric(product.name || "") ||
-          checkGeneric(product.brand || "") ||
-          checkGeneric(product.description || "") ||
-          (product.category === "General" &&
-            product.subcategory === "Miscellaneous")
-        );
-      };
-
-      if (isGenericResponse(product)) {
-        console.warn("AI returned generic placeholder data:", product);
-
-        // Try retry logic if this is the first attempt
-        if (retryCount < 1) {
-          console.log("Attempting retry with more specific prompt...");
-          setRetryCount(retryCount + 1);
-
-          // Try a more specific retry prompt
-          const retryMessage = `This is a retry attempt. The previous analysis returned generic data. Please look more carefully at this product image and provide SPECIFIC details:
-
-FOCUS ON:
-- Read any text/labels visible on the packaging
-- Identify specific brand names, product names, sizes
-- Look for nutritional info, ingredients, or product descriptions
-- Examine logos, colors, and visual elements
-
-If you truly cannot read specific details from the image, respond with:
-{"error": "Cannot read product details from image", "reason": "image quality/lighting/angle"}
-
-Otherwise, provide specific extracted information in JSON format.`;
-
-          // Recursive retry call
-          const retryResponse = await askAiAssistant(
-            retryMessage,
-            currentSessionId || undefined,
-            blob
-          );
-          setLastAiResponse(
-            typeof retryResponse === "string"
-              ? retryResponse
-              : JSON.stringify(retryResponse)
-          );
-
-          // Parse retry response
-          let retryData;
-          try {
-            retryData =
-              typeof retryResponse === "string"
-                ? JSON.parse(retryResponse)
-                : retryResponse;
-
-            if (retryData.error) {
-              console.log("AI confirmed image quality issue:", retryData);
-              setToastMessage(
-                `🤖 ${
-                  retryData.reason ||
-                  "AI could not read the product details clearly"
-                }. Please try: 1) Better lighting 2) Closer/clearer photo 3) Focus on product labels`
-              );
-              setShowToast(true);
-              setIsProcessingImage(false);
-              return;
-            }
-
-            // Check if retry gave better results
-            if (!isGenericResponse(retryData)) {
-              product = retryData.product || retryData;
-              console.log("Retry successful with better data:", product);
-            } else {
-              throw new Error("Retry also returned generic data");
-            }
-          } catch (error) {
-            console.log("Retry failed:", error);
-            setToastMessage(
-              "🤖 AI attempted analysis twice but could not extract clear product details. Image may need better lighting, focus, or angle. Please fill in manually."
-            );
-            setShowToast(true);
-            setIsProcessingImage(false);
-            return;
-          }
-        } else {
-          setToastMessage(
-            "🤖 AI processed the image but returned generic data after retry. The image may not be clear enough for analysis. Try: 1) Better lighting 2) Clearer view of product labels 3) Focus on text/branding"
-          );
-          setShowToast(true);
-          setIsProcessingImage(false);
-          return;
-        }
-      }
-
-      // Additional validation for meaningful data
-      if (!product.name || product.name.trim().length < 3) {
-        console.warn("AI could not extract meaningful product name:", product);
-        setToastMessage(
-          "🤖 AI processed the image but could not identify the product name clearly. Please ensure the product label is visible and try again."
-        );
-        setShowToast(true);
-        setIsProcessingImage(false);
-        return;
+        throw new Error("Failed to extract product information from AI response structure");
       }
 
       if (product) {
-        // Enhanced smart unit detection based on size and product analysis
-        const guessUnit = (
-          size: string,
-          name?: string,
-          category?: string
-        ): string => {
-          if (!size) return "pieces";
+        const populatedFields: Partial<typeof formData> = {};
 
-          const sizeStr = size.toLowerCase();
-          const nameStr = (name || "").toLowerCase();
-          const categoryStr = (category || "").toLowerCase();
+        if (product.name && typeof product.name === "string" && product.name.trim()) {
+          populatedFields.name = product.name.trim();
+        }
 
-          // Weight-based units
-          if (sizeStr.includes("kg") || sizeStr.includes("kilogram"))
-            return "kg";
-          if (
-            sizeStr.includes("g") &&
-            !sizeStr.includes("kg") &&
-            !sizeStr.includes("bag")
-          )
-            return "g";
-          if (sizeStr.includes("lb") || sizeStr.includes("pound")) return "kg"; // Convert to metric
-          if (sizeStr.includes("oz") && !sizeStr.includes("fl oz")) return "g"; // Convert to metric
+        if (product.brand && typeof product.brand === "string" && product.brand.trim()) {
+          populatedFields.brand = product.brand.trim();
+        }
 
-          // Volume-based units
-          if (
-            sizeStr.includes("l") ||
-            sizeStr.includes("liter") ||
-            sizeStr.includes("litre")
-          )
-            return "liters";
-          if (sizeStr.includes("ml") || sizeStr.includes("milliliter"))
-            return "ml";
-          if (sizeStr.includes("fl oz") || sizeStr.includes("fluid ounce"))
-            return "ml"; // Convert to metric
-          if (sizeStr.includes("gallon")) return "liters"; // Convert to metric
+        if (product.size && typeof product.size === "string" && product.size.trim()) {
+          populatedFields.size = product.size.trim();
+        }
 
-          // Pack/Multi-unit detection
-          if (
-            sizeStr.includes("pack") ||
-            sizeStr.includes("pk") ||
-            nameStr.includes("pack")
-          ) {
-            // Check for specific pack quantities
-            if (sizeStr.match(/\d+\s*pack/) || nameStr.match(/\d+\s*pack/))
-              return "packs";
-            return "packs";
-          }
+        if (product.category && typeof product.category === "string" && product.category.trim()) {
+          const categoryValue = product.category.trim();
+          const matchedCategory = categories.find(
+            (cat) =>
+              cat.value.toLowerCase() === categoryValue.toLowerCase() ||
+              cat.subcategories.some(
+                (sub) => sub.toLowerCase() === categoryValue.toLowerCase()
+              )
+          );
 
-          // Container-based units
-          if (
-            sizeStr.includes("bottle") ||
-            nameStr.includes("bottle") ||
-            categoryStr.includes("beverages")
-          )
-            return "bottles";
-          if (sizeStr.includes("can") || nameStr.includes("can")) return "cans";
-          if (sizeStr.includes("box") || nameStr.includes("box"))
-            return "boxes";
-          if (sizeStr.includes("bag") || nameStr.includes("bag")) return "bags";
-          if (sizeStr.includes("jar") || nameStr.includes("jar")) return "jars";
-          if (sizeStr.includes("tube") || nameStr.includes("tube"))
-            return "tubes";
-          if (sizeStr.includes("sachet") || nameStr.includes("sachet"))
-            return "sachets";
-          if (sizeStr.includes("roll") || nameStr.includes("roll"))
-            return "rolls";
-          if (sizeStr.includes("sheet") || nameStr.includes("sheet"))
-            return "sheets";
+          if (matchedCategory) {
+            populatedFields.category = matchedCategory.value;
 
-          // Count-based units
-          if (sizeStr.includes("dozen") || sizeStr.includes("12"))
-            return "dozen";
-          if (sizeStr.match(/\d+\s*(piece|pcs|count|ct)/)) return "pieces";
-
-          // Category-specific defaults
-          if (categoryStr.includes("dairy") && sizeStr.includes("carton"))
-            return "cartons";
-          if (categoryStr.includes("frozen") && sizeStr.includes("package"))
-            return "packs";
-          if (categoryStr.includes("bakery") && sizeStr.includes("loaf"))
-            return "loaves";
-
-          return "pieces"; // Default fallback
-        };
-
-        // Enhanced auto-population with smart field mapping and validation
-        const populateFormFields = (product: Record<string, unknown>) => {
-          const updatedFields: Partial<typeof formData> = {};
-
-          // Basic field mapping with fallbacks
-          if (
-            product.name &&
-            typeof product.name === "string" &&
-            product.name.trim()
-          ) {
-            updatedFields.name = product.name.trim();
-          }
-
-          if (
-            product.brand &&
-            typeof product.brand === "string" &&
-            product.brand.trim()
-          ) {
-            updatedFields.brand = product.brand.trim();
-          }
-
-          if (
-            product.size &&
-            typeof product.size === "string" &&
-            product.size.trim()
-          ) {
-            updatedFields.size = product.size.trim();
-            // Update unit based on enhanced detection
-            updatedFields.unit = guessUnit(
-              product.size as string,
-              product.name as string,
-              product.category as string
-            );
-          }
-
-          // Category mapping with validation
-          if (
-            product.category &&
-            typeof product.category === "string" &&
-            product.category.trim()
-          ) {
-            const categoryValue = product.category.trim();
-            const matchedCategory = categories.find(
-              (cat) =>
-                cat.value.toLowerCase() === categoryValue.toLowerCase() ||
-                cat.subcategories.some(
-                  (sub) => sub.toLowerCase() === categoryValue.toLowerCase()
-                )
-            );
-
-            if (matchedCategory) {
-              updatedFields.category = matchedCategory.value;
-
-              // Smart subcategory detection
-              if (
-                product.subcategory &&
-                typeof product.subcategory === "string" &&
-                product.subcategory.trim()
-              ) {
-                const subcategoryValue = product.subcategory.trim();
-                const matchedSubcategory = matchedCategory.subcategories.find(
-                  (sub) => sub.toLowerCase() === subcategoryValue.toLowerCase()
-                );
-                if (matchedSubcategory) {
-                  updatedFields.subcategory = matchedSubcategory;
-                }
+            if (product.subcategory && typeof product.subcategory === "string" && product.subcategory.trim()) {
+              const subcategoryValue = product.subcategory.trim();
+              const matchedSubcategory = matchedCategory.subcategories.find(
+                (sub) => sub.toLowerCase() === subcategoryValue.toLowerCase()
+              );
+              if (matchedSubcategory) {
+                populatedFields.subcategory = matchedSubcategory;
               }
             }
           }
+        }
 
-          if (
-            product.description &&
-            typeof product.description === "string" &&
-            product.description.trim()
-          ) {
-            updatedFields.description = product.description.trim();
-          }
+        if (product.description && typeof product.description === "string" && product.description.trim()) {
+          populatedFields.description = product.description.trim();
+        }
 
-          if (
-            product.image_url &&
-            typeof product.image_url === "string" &&
-            product.image_url.trim()
-          ) {
-            updatedFields.imageUrl = product.image_url.trim();
-          }
-
-          return updatedFields;
-        };
-
-        const populatedFields = populateFormFields(product);
-
-        // Track which fields were populated by AI
         const fieldNames = Object.keys(populatedFields).map((key) => {
-          switch (key) {
-            case "imageUrl":
-              return "Image URL";
-            case "unitPrice":
-              return "Unit Price";
-            default:
-              return key.charAt(0).toUpperCase() + key.slice(1);
-          }
+          return key.charAt(0).toUpperCase() + key.slice(1);
         });
         setAiPopulatedFields(fieldNames);
 
-        // Auto-populate form fields with AI response
         setFormData((prev) => ({
           ...prev,
           ...populatedFields,
@@ -827,16 +586,15 @@ Otherwise, provide specific extracted information in JSON format.`;
 
         setImageProcessingSuccess(true);
 
-        // Count how many fields were populated
         const populatedCount = Object.keys(populatedFields).length;
         if (populatedCount > 0) {
           const fieldsList = fieldNames.join(", ");
           setToastMessage(
-            `✅ AI extracted ${populatedCount} fields: ${fieldsList}. Review and complete remaining fields.`
+            `✅ AI extracted ${populatedCount} fields from ${imageType} image: ${fieldsList}. Review and complete remaining fields.`
           );
         } else {
           setToastMessage(
-            "⚠️ AI processed the image but could not extract specific product details. Please fill in manually."
+            `⚠️ AI processed the ${imageType} image but could not extract specific product details. Please fill in manually.`
           );
         }
         setShowToast(true);
@@ -845,38 +603,120 @@ Otherwise, provide specific extracted information in JSON format.`;
       }
     } catch (error) {
       console.error("Error processing image with AI:", error);
-
-      // Provide specific error messages based on error type
-      let errorMessage = "Failed to process image with AI. ";
-
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        errorMessage +=
-          "Network connection issue. Please check your internet connection and try again.";
-      } else if (error instanceof SyntaxError) {
-        errorMessage +=
-          "AI returned invalid data format. Please try with a clearer image.";
-      } else if (
-        typeof error === "object" &&
-        error !== null &&
-        "message" in error
-      ) {
-        const errorObj = error as { message: string };
-        if (errorObj.message.includes("extract product information")) {
-          errorMessage +=
-            "Could not identify product details in the image. Please use a clearer photo of the product packaging.";
-        } else {
-          errorMessage += "Please fill in details manually or try again.";
-        }
-      } else {
-        errorMessage +=
-          "Please fill in details manually or try again with a different image.";
-      }
-
-      setToastMessage(errorMessage);
+      setToastMessage(`Failed to process ${imageType} image with AI. Please fill in details manually or try again.`);
       setShowToast(true);
     } finally {
       setIsProcessingImage(false);
     }
+  };
+
+  const renderImageUploadCard = (type: 'individual' | 'pack') => {
+    const currentImage = type === 'individual' ? capturedIndividualImage : capturedPackImage;
+    const icon = type === 'individual' ? cubeOutline : layersOutline;
+    const title = type === 'individual' ? 'Individual Item Image' : 'Pack/Carton Image';
+    const subtitle = type === 'individual' 
+      ? 'Upload image of a single unit for individual sale pricing'
+      : 'Upload image of the pack/carton for bulk sale pricing';
+
+    return (
+      <IonCard
+        className={`image-upload-card ${
+          isProcessingImage && currentImageType === type ? "processing" : ""
+        }`}
+      >
+        <IonCardHeader>
+          <IonCardTitle className="image-card-title">
+            {isProcessingImage && currentImageType === type ? (
+              <IonSpinner name="dots" color="primary" />
+            ) : (
+              <IonIcon icon={icon} className="ai-icon" />
+            )}
+            {isProcessingImage && currentImageType === type ? "Processing Image..." : title}
+            {imageProcessingSuccess && !isProcessingImage && currentImage && (
+              <IonIcon
+                icon={checkmarkCircleOutline}
+                className="success-icon"
+              />
+            )}
+          </IonCardTitle>
+          <p className="image-card-subtitle">
+            {isProcessingImage && currentImageType === type
+              ? "AI is analyzing your image and extracting product information..."
+              : subtitle}
+          </p>
+        </IonCardHeader>
+        <IonCardContent>
+          <div className="image-upload-section">
+            {currentImage ? (
+              <div className="image-preview">
+                <img
+                  src={currentImage}
+                  alt={`${type} Product`}
+                  className="preview-image"
+                />
+                {isProcessingImage && currentImageType === type && (
+                  <div className="processing-overlay">
+                    <IonSpinner name="crescent" color="light" />
+                    <p>Extracting product info...</p>
+                    <small>This may take a few seconds</small>
+                  </div>
+                )}
+                {!(isProcessingImage && currentImageType === type) && (
+                  <div className="image-overlay">
+                    <IonButton
+                      fill="clear"
+                      className="retake-button"
+                      onClick={() => handleImageUpload(type)}
+                    >
+                      <IonIcon icon={cameraOutline} />
+                      Retake
+                    </IonButton>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="image-placeholder">
+                <IonIcon icon={icon} size="large" />
+                <h3>Add {type === 'individual' ? 'Individual Item' : 'Pack/Carton'} Image</h3>
+                <p>Get product details automatically with AI</p>
+                <div className="ai-features">
+                  <small>
+                    ✨ AI can extract: Name • Brand • Size • Category •
+                    Description
+                  </small>
+                </div>
+                <div className="upload-buttons">
+                  <IonButton
+                    fill="solid"
+                    className="primary-upload-button"
+                    onClick={() => handleImageUpload(type)}
+                    disabled={isProcessingImage}
+                  >
+                    <IonIcon icon={cameraOutline} slot="start" />
+                    Take Photo
+                  </IonButton>
+                  <IonButton
+                    fill="outline"
+                    className="secondary-upload-button"
+                    onClick={() => handleImageUpload(type)}
+                    disabled={isProcessingImage}
+                  >
+                    <IonIcon icon={imagesOutline} slot="start" />
+                    Choose Image
+                  </IonButton>
+                </div>
+                <div className="image-tips">
+                  <small>
+                    💡 Tips: Use good lighting, show product labels clearly,
+                    avoid blurry images
+                  </small>
+                </div>
+              </div>
+            )}
+          </div>
+        </IonCardContent>
+      </IonCard>
+    );
   };
 
   return (
@@ -903,136 +743,75 @@ Otherwise, provide specific extracted information in JSON format.`;
             </IonTitle>
           </IonToolbar>
         </IonHeader>
-        {/* Product Image Section */}
-        <IonCard
-          className={`image-upload-card ${
-            isProcessingImage ? "processing" : ""
-          }`}
-        >
+
+        {/* Sale Type Selection */}
+        <IonCard>
           <IonCardHeader>
-            <IonCardTitle className="image-card-title">
-              {isProcessingImage ? (
-                <IonSpinner name="dots" color="primary" />
-              ) : (
-                <IonIcon icon={sparklesOutline} className="ai-icon" />
-              )}
-              {isProcessingImage ? "Processing Image..." : "Smart Image Upload"}
-              {imageProcessingSuccess && !isProcessingImage && (
-                <IonIcon
-                  icon={checkmarkCircleOutline}
-                  className="success-icon"
-                />
-              )}
+            <IonCardTitle>
+              <IonIcon icon={pricetagOutline} style={{marginRight: '8px'}} />
+              Sale Type
             </IonCardTitle>
-            <p className="image-card-subtitle">
-              {isProcessingImage
-                ? "AI is analyzing your image and extracting product information..."
-                : "Take a photo or upload an image to automatically extract product information"}
-            </p>
           </IonCardHeader>
           <IonCardContent>
-            <div className="image-upload-section">
-              {capturedImage ? (
-                <div className="image-preview">
-                  <img
-                    src={capturedImage}
-                    alt="Product"
-                    className="preview-image"
-                  />
-                  {isProcessingImage && (
-                    <div className="processing-overlay">
-                      <IonSpinner name="crescent" color="light" />
-                      <p>Extracting product info...</p>
-                      <small>This may take a few seconds</small>
-                    </div>
-                  )}
-                  {!isProcessingImage && (
-                    <div className="image-overlay">
-                      <IonButton
-                        fill="clear"
-                        className="retake-button"
-                        onClick={handleImageUpload}
-                      >
-                        <IonIcon icon={cameraOutline} />
-                        Retake
-                      </IonButton>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="image-placeholder">
-                  <IonIcon icon={cameraOutline} size="large" />
-                  <h3>Add Product Image</h3>
-                  <p>Get product details automatically with AI</p>
-                  <div className="ai-features">
-                    <small>
-                      ✨ AI can extract: Name • Brand • Size • Category •
-                      Description
-                    </small>
-                  </div>
-                  <div className="upload-buttons">
-                    <IonButton
-                      fill="solid"
-                      className="primary-upload-button"
-                      onClick={handleImageUpload}
-                      disabled={isProcessingImage}
-                    >
-                      <IonIcon icon={cameraOutline} slot="start" />
-                      Take Photo
-                    </IonButton>
-                    <IonButton
-                      fill="outline"
-                      className="secondary-upload-button"
-                      onClick={handleImageUpload}
-                      disabled={isProcessingImage}
-                    >
-                      <IonIcon icon={imagesOutline} slot="start" />
-                      Choose Image
-                    </IonButton>
-                  </div>
-                  <div className="image-tips">
-                    <small>
-                      💡 Tips: Use good lighting, show product labels clearly,
-                      avoid blurry images
-                    </small>
-                  </div>
-                </div>
-              )}
-            </div>
+            <IonRadioGroup
+              value={formData.saleType}
+              onIonChange={(e) => handleInputChange("saleType", e.detail.value)}
+            >
+              <IonItem>
+                <IonLabel>Individual Item Sales Only</IonLabel>
+                <IonRadio slot="start" value="individual" />
+              </IonItem>
+              <IonItem>
+                <IonLabel>Pack/Carton Sales Only</IonLabel>
+                <IonRadio slot="start" value="pack" />
+              </IonItem>
+              <IonItem>
+                <IonLabel>Both Individual & Pack Sales</IonLabel>
+                <IonRadio slot="start" value="both" />
+              </IonItem>
+            </IonRadioGroup>
           </IonCardContent>
         </IonCard>
 
+        {/* Product Images Section */}
+        {(formData.saleType === "individual" || formData.saleType === "both") && 
+          renderImageUploadCard('individual')
+        }
+        
+        {(formData.saleType === "pack" || formData.saleType === "both") && 
+          renderImageUploadCard('pack')
+        }
+
         {/* Guide Section */}
-        {!capturedImage && !isProcessingImage && (
+        {!capturedIndividualImage && !capturedPackImage && !isProcessingImage && (
           <IonCard className="guide-card">
             <IonCardContent className="guide-content">
               <div className="guide-header">
                 <IonIcon icon={sparklesOutline} className="guide-icon" />
-                <h4>Quick Start Guide</h4>
+                <h4>Enhanced Product Management</h4>
               </div>
               <div className="guide-steps">
                 <div className="guide-step">
                   <span className="step-number">1</span>
                   <div className="step-content">
-                    <h5>Take or Upload Photo</h5>
+                    <h5>Choose Sale Type</h5>
                     <p>
-                      Capture a clear image of your product or select from
-                      gallery
+                      Select whether you sell individual items, packs/cartons, or both
                     </p>
                   </div>
                 </div>
                 <div className="guide-step">
                   <span className="step-number">2</span>
                   <div className="step-content">
-                    <h5>AI Extraction</h5>
-                    <p>Our AI will automatically extract product information</p>
+                    <h5>Upload Images</h5>
+                    <p>Add separate images for individual items and packs for better inventory management</p>
                   </div>
                 </div>
                 <div className="guide-step">
                   <span className="step-number">3</span>
                   <div className="step-content">
-                    <h5>Review & Save</h5>
-                    <p>Check the details and add any missing information</p>
+                    <h5>AI Extraction & Pricing</h5>
+                    <p>AI extracts details and you set pricing for both individual and pack sales</p>
                   </div>
                 </div>
               </div>
@@ -1213,66 +992,126 @@ Otherwise, provide specific extracted information in JSON format.`;
             </IonCardContent>
           </IonCard>
 
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Pricing & Inventory</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="form-field">
-                <label className="form-label required">Unit Price</label>
-                <IonInput
-                  className="form-input"
-                  type="number"
-                  value={formData.unitPrice}
-                  onIonInput={(e) =>
-                    handleInputChange("unitPrice", e.detail.value!)
-                  }
-                  placeholder="0.00"
-                />
-              </div>
+          {/* Individual Item Pricing */}
+          {(formData.saleType === "individual" || formData.saleType === "both") && (
+            <IonCard>
+              <IonCardHeader>
+                <IonCardTitle>
+                  <IonIcon icon={cubeOutline} style={{marginRight: '8px'}} />
+                  Individual Item Pricing & Inventory
+                </IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <div className="form-field">
+                  <label className="form-label required">Individual Unit Price</label>
+                  <IonInput
+                    className="form-input"
+                    type="number"
+                    value={formData.unitPrice}
+                    onIonInput={(e) =>
+                      handleInputChange("unitPrice", e.detail.value!)
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
 
-              <div className="form-field">
-                <label className="form-label required">Initial Quantity</label>
-                <IonInput
-                  className="form-input"
-                  type="number"
-                  value={formData.quantity}
-                  onIonInput={(e) =>
-                    handleInputChange("quantity", e.detail.value!)
-                  }
-                  placeholder="0"
-                />
-              </div>
+                <div className="form-field">
+                  <label className="form-label required">Initial Quantity (Individual Items)</label>
+                  <IonInput
+                    className="form-input"
+                    type="number"
+                    value={formData.quantity}
+                    onIonInput={(e) =>
+                      handleInputChange("quantity", e.detail.value!)
+                    }
+                    placeholder="0"
+                  />
+                </div>
 
-              <div className="form-field">
-                <label className="form-label">
-                  Unit
-                  {isFieldPopulatedByAI("unit") && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonSelect
-                  className="form-select"
-                  value={formData.unit}
-                  onIonChange={(e) => handleInputChange("unit", e.detail.value)}
-                >
-                  {units.map((unit) => (
-                    <IonSelectOption key={unit} value={unit}>
-                      {unit}
-                    </IonSelectOption>
-                  ))}
-                </IonSelect>
-              </div>
-            </IonCardContent>
-          </IonCard>
+                <div className="form-field">
+                  <label className="form-label">Unit Type</label>
+                  <IonSelect
+                    className="form-select"
+                    value={formData.unit}
+                    onIonChange={(e) => handleInputChange("unit", e.detail.value)}
+                  >
+                    {units.map((unit) => (
+                      <IonSelectOption key={unit} value={unit}>
+                        {unit}
+                      </IonSelectOption>
+                    ))}
+                  </IonSelect>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
+
+          {/* Pack/Carton Pricing */}
+          {(formData.saleType === "pack" || formData.saleType === "both") && (
+            <IonCard>
+              <IonCardHeader>
+                <IonCardTitle>
+                  <IonIcon icon={layersOutline} style={{marginRight: '8px'}} />
+                  Pack/Carton Pricing & Inventory
+                </IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <div className="form-field">
+                  <label className="form-label required">Pack/Carton Price</label>
+                  <IonInput
+                    className="form-input"
+                    type="number"
+                    value={formData.packPrice}
+                    onIonInput={(e) =>
+                      handleInputChange("packPrice", e.detail.value!)
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label required">Units per Pack/Carton</label>
+                  <IonInput
+                    className="form-input"
+                    type="number"
+                    value={formData.packSize}
+                    onIonInput={(e) =>
+                      handleInputChange("packSize", e.detail.value!)
+                    }
+                    placeholder="e.g., 12 (items per pack)"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label required">Initial Packs/Cartons in Stock</label>
+                  <IonInput
+                    className="form-input"
+                    type="number"
+                    value={formData.packQuantity}
+                    onIonInput={(e) =>
+                      handleInputChange("packQuantity", e.detail.value!)
+                    }
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label className="form-label">Pack Unit Type</label>
+                  <IonSelect
+                    className="form-select"
+                    value={formData.packUnit}
+                    onIonChange={(e) => handleInputChange("packUnit", e.detail.value)}
+                  >
+                    <IonSelectOption value="packs">Packs</IonSelectOption>
+                    <IonSelectOption value="cartons">Cartons</IonSelectOption>
+                    <IonSelectOption value="cases">Cases</IonSelectOption>
+                    <IonSelectOption value="boxes">Boxes</IonSelectOption>
+                    <IonSelectOption value="bundles">Bundles</IonSelectOption>
+                  </IonSelect>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
 
           <IonCard>
             <IonCardHeader>
@@ -1310,7 +1149,7 @@ Otherwise, provide specific extracted information in JSON format.`;
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}
           message={toastMessage}
-          duration={2000}
+          duration={3000}
           position="top"
         />
 
@@ -1400,8 +1239,8 @@ Otherwise, provide specific extracted information in JSON format.`;
             role: "cancel",
           },
         ]}
-        header="Add Product Image"
-        subHeader="Choose how you'd like to add a product image"
+        header={`Add ${currentImageType === 'individual' ? 'Individual Item' : 'Pack/Carton'} Image`}
+        subHeader={`Choose how you'd like to add a ${currentImageType} image`}
       />
 
       <IonFooter mode="ios">

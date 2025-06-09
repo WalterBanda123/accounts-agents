@@ -309,3 +309,18 @@
   width: 36px;
   height: 36px;
 }
+
+/* Miscellaneous Activity Card */
+.container.misc-activity-card {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.container.misc-activity-card:hover {
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
+  border-color: #d97706;
+}
+
+.container.misc-activity-card ion-icon {
+  color: #f59e0b;
+}
