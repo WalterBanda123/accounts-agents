@@ -44,6 +44,7 @@ import "@ionic/react/css/palettes/dark.system.css";
 /* Theme variables */
 import "./theme/variables.css";
 import Chat from "./pages/Chat";
+import MiscActivities from "./pages/MiscActivities";
 import Transactions from "./pages/Transactions";
 import Stocks from "./pages/Stocks";
 import NewProduct from "./pages/NewProduct";
@@ -115,6 +116,9 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute path="/my_assistant">
             <Chat />
+          </ProtectedRoute>
+          <ProtectedRoute path="/misc-activities">
+            <MiscActivities />
           </ProtectedRoute>
           <ProtectedRoute path="/receipts">
             <Transactions />

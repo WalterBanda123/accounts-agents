@@ -11,8 +11,15 @@ import {
   IonTextarea,
   IonTitle,
   IonToolbar,
+  IonSpinner,
 } from "@ionic/react";
-import { add, send } from "ionicons/icons";
+import {
+  add,
+  send,
+  documentText,
+  downloadOutline,
+  checkmarkCircle,
+} from "ionicons/icons";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ProfilePopover from "../components/ProfilePopover";
 import DateSeparator from "../components/DateSeparator";
@@ -24,16 +31,103 @@ import { MessageGroup } from "../interfaces/message";
 import { groupMessagesByDate } from "../utils/messageUtils";
 import { getTimeString } from "../utils/dateUtils";
 import { parseBasicMarkdown } from "../utils/markdownUtils";
+import {
+  extractDownloadableContent,
+  downloadFile,
+  formatFileSize,
+  generateReportPDF,
+  downloadFileFromBase64,
+  downloadPDF,
+} from "../utils/downloadUtils";
 
 interface Message {
   id: string;
   text: string;
   isBot: boolean;
   timestamp: string;
+  pdfData?: {
+    pdf_base64: string;
+    pdf_size: number;
+    direct_download_url: string;
+  };
 }
 
-const MessageBubble: React.FC<{ message: Message }> = React.memo(
-  ({ message }) => (
+// Enhanced MessageBubble component with download functionality
+const MessageBubble: React.FC<{
+  message: Message;
+  userId?: string;
+  sessionId?: string;
+}> = React.memo(({ message, userId, sessionId }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+
+  // Check if this message contains downloadable content
+  const downloadableFile = message.isBot
+    ? extractDownloadableContent(message.text, message.pdfData)
+    : null;
+
+  const handleDownload = async () => {
+    if (!downloadableFile || !userId || !sessionId) return;
+
+    setIsDownloading(true);
+
+    try {
+      let success = false;
+
+      // Debug logging to see what data we have
+      console.log('Download attempt:', {
+        downloadableFile,
+        messagePdfData: message.pdfData,
+        hasBase64Data: !!downloadableFile.base64Data,
+        hasUrl: !!downloadableFile.url
+      });
+
+      // If we have the complete PDF data from the backend, use the exact recommended method
+      if (message.pdfData && message.pdfData.pdf_base64) {
+        console.log('Using complete backend PDF data');
+        downloadPDF({
+          pdf_data: message.pdfData,
+          data: { filename: downloadableFile.filename }
+        });
+        success = true;
+      }
+      // If we have base64 PDF data from backend, use it
+      else if (downloadableFile.base64Data) {
+        console.log('Using extracted base64 data');
+        success = downloadFileFromBase64(
+          downloadableFile.base64Data,
+          downloadableFile.filename,
+          'application/pdf'
+        );
+      } else if (downloadableFile.url) {
+        // Use direct download URL if available
+        console.log('Using direct download URL');
+        success = await downloadFile(downloadableFile.url, downloadableFile.filename);
+      } else if (downloadableFile.content) {
+        // Fallback to generating PDF from text content
+        console.log('Using fallback PDF generation');
+        const pdfUrl = generateReportPDF(
+          downloadableFile.content,
+          userId,
+          sessionId,
+          "general"
+        );
+        success = await downloadFile(pdfUrl, downloadableFile.filename);
+        window.URL.revokeObjectURL(pdfUrl);
+      }
+
+      if (success) {
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error("Download failed:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
     <div className={`message-group ${message.isBot ? "" : "client"}`}>
       <div className={message.isBot ? "bot_message" : "client_message"}>
         {message.id === "typing-indicator" ? (
@@ -43,17 +137,63 @@ const MessageBubble: React.FC<{ message: Message }> = React.memo(
             <span></span>
           </div>
         ) : (
-          <div className="message-content">
-            {parseBasicMarkdown(message.text)}
-          </div>
+          <>
+            <div className="message-content">
+              {parseBasicMarkdown(message.text)}
+            </div>
+            {downloadableFile && (
+              <div className="message-attachment">
+                <div className="attachment-info">
+                  <IonIcon icon={documentText} className="attachment-icon" />
+                  <div className="attachment-details">
+                    <div className="attachment-filename">
+                      {downloadableFile.filename}
+                    </div>
+                    {downloadableFile.size && (
+                      <div className="attachment-size">
+                        {formatFileSize(downloadableFile.size)}
+                      </div>
+                    )}
+                    <div className="pdf-preview-text">PDF Report</div>
+                  </div>
+                </div>
+                <IonButton
+                  size="small"
+                  fill="solid"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className={`download-button ${
+                    isDownloading ? "downloading" : ""
+                  } ${downloadSuccess ? "download-success" : ""}`}
+                >
+                  {isDownloading ? (
+                    <>
+                      <IonSpinner name="crescent" />
+                      Downloading...
+                    </>
+                  ) : downloadSuccess ? (
+                    <>
+                      <IonIcon icon={checkmarkCircle} />
+                      Downloaded
+                    </>
+                  ) : (
+                    <>
+                      <IonIcon icon={downloadOutline} />
+                      Download
+                    </>
+                  )}
+                </IonButton>
+              </div>
+            )}
+          </>
         )}
       </div>
       {message.id !== "typing-indicator" && (
         <div className="message-timestamp">{message.timestamp}</div>
       )}
     </div>
-  )
-);
+  );
+});
 
 MessageBubble.displayName = "MessageBubble";
 
@@ -189,7 +329,7 @@ const Chat: React.FC = () => {
   };
 
   const addMessage = useCallback(
-    async (text: string, isBot: boolean = false) => {
+    async (text: string, isBot: boolean = false, pdfData?: { pdf_base64: string; pdf_size: number; direct_download_url: string }) => {
       // Create a more unique ID to prevent duplicate keys
       const timestamp = performance.now(); // More precise than Date.now()
       const randomId = Math.random().toString(36).substr(2, 9);
@@ -205,6 +345,7 @@ const Chat: React.FC = () => {
         isBot,
         timestamp: new Date(),
         messageOrder: 1, // Will be updated when saved
+        ...(pdfData && { pdfData }) // Add PDF data if available
       };
 
       // Update the message groups by adding the new message to today's group
@@ -353,8 +494,20 @@ const Chat: React.FC = () => {
 
       if (botResponse) {
         let responseText: string = "";
+        let pdfData: { pdf_base64: string; pdf_size: number; direct_download_url: string } | undefined;
 
-        if (typeof botResponse === "string") {
+        // Handle backend response format: {status, message, data, pdf_data}
+        if (typeof botResponse === "object" && botResponse !== null && 'message' in botResponse) {
+          const response = botResponse as { 
+            message: string; 
+            pdfData?: { pdf_base64: string; pdf_size: number; direct_download_url: string };
+            pdf_data?: { pdf_base64: string; pdf_size: number; direct_download_url: string };
+            data?: unknown;
+          };
+          responseText = response.message;
+          // PDF data can be in either 'pdfData' or 'pdf_data' field
+          pdfData = response.pdfData || response.pdf_data;
+        } else if (typeof botResponse === "string") {
           responseText = botResponse;
         } else if (typeof botResponse === "object" && botResponse !== null) {
           const response = botResponse as Record<string, unknown>;
@@ -364,12 +517,16 @@ const Chat: React.FC = () => {
             String(response.text || "") ||
             String(response.data || "") ||
             JSON.stringify(botResponse);
+          // Also check for pdf_data in general object response
+          if (response.pdf_data && typeof response.pdf_data === 'object') {
+            pdfData = response.pdf_data as { pdf_base64: string; pdf_size: number; direct_download_url: string };
+          }
         } else {
           responseText = "I received an unexpected response format.";
         }
 
         if (responseText.trim()) {
-          await addMessage(responseText, true);
+          await addMessage(responseText, true, pdfData);
         } else {
           await addMessage(
             "I apologize, but I couldn't process your request at the moment. Please try again.",
@@ -484,6 +641,8 @@ const Chat: React.FC = () => {
                         ? "typing"
                         : getTimeString(msg.timestamp),
                   }}
+                  userId={user?.id || undefined}
+                  sessionId={currentSessionId || undefined}
                 />
               ))}
             </React.Fragment>

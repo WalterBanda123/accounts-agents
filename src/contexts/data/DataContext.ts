@@ -20,6 +20,11 @@ export interface DataContextInterface {
     currentSessionId: string | null,
     deactivateSession: (sessionId: string) => Promise<void>,
     deactivateAllUserSessions: (userId: string) => Promise<void>,
+    // Miscellaneous Activities Session Management
+    getMiscActivitiesSession: () => Promise<unknown>,
+    createMiscActivitiesSession: () => Promise<string>,
+    miscActivitiesSessionId: string | null,
+    loadMiscActivitiesMessages: () => Promise<ChatMessage[]>,
     getUserProfile: () => Promise<ProfileInterface | null>,
     createUserProfile: (userData: {
         businessName: string;
@@ -58,6 +63,11 @@ const DataContext = React.createContext<DataContextInterface>({
     currentSessionId: null,
     deactivateSession: async () => Promise.resolve(),
     deactivateAllUserSessions: async () => Promise.resolve(),
+    // Miscellaneous Activities Session Management
+    getMiscActivitiesSession: async () => { },
+    createMiscActivitiesSession: async () => Promise.resolve(''),
+    miscActivitiesSessionId: null,
+    loadMiscActivitiesMessages: async () => Promise.resolve([]),
     getUserProfile: async () => Promise.resolve(null),
     createUserProfile: async () => Promise.resolve(null),
     // Message management function defaults

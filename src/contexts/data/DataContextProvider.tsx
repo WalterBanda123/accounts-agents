@@ -47,6 +47,17 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     }
   );
 
+  // Independent session ID for miscellaneous activities
+  const [miscActivitiesSessionId, setMiscActivitiesSessionId] = useState<
+    string | null
+  >(() => {
+    // Initialize from sessionStorage if available
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("miscActivitiesSessionId") || null;
+    }
+    return null;
+  });
+
   // Persist session ID to sessionStorage when it changes
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -57,6 +68,20 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     }
   }, [currentSessionId]);
+
+  // Persist miscellaneous activities session ID to sessionStorage when it changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (miscActivitiesSessionId) {
+        sessionStorage.setItem(
+          "miscActivitiesSessionId",
+          miscActivitiesSessionId
+        );
+      } else {
+        sessionStorage.removeItem("miscActivitiesSessionId");
+      }
+    }
+  }, [miscActivitiesSessionId]);
 
   // Helper function to check if a store_id matches the user's profile
   const isUserStore = useCallback(
@@ -548,19 +573,37 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         setError(null);
         setIsChatLoading(false);
 
-        // Extract response text from various possible response structures
+        // Handle backend response structure: {status, message, data, pdf_data}
+        let responseText: string;
+        let pdfData: { pdf_base64: string; pdf_size: number; direct_download_url: string } | null = null;
+
         if (typeof botResponse === "string") {
-          return botResponse;
+          responseText = botResponse;
+        } else if (botResponse && typeof botResponse === "object") {
+          // Handle the specific backend response format
+          if (botResponse.status === "success" && botResponse.message) {
+            responseText = botResponse.message;
+            pdfData = botResponse.pdf_data || null;
+          } else {
+            // Fallback to other possible response structures
+            responseText = (
+              botResponse?.message ||
+              botResponse?.response ||
+              botResponse?.text ||
+              botResponse?.content ||
+              JSON.stringify(botResponse)
+            );
+            pdfData = botResponse?.pdf_data || null;
+          }
+        } else {
+          responseText = "I received an unexpected response format.";
         }
 
-        // Handle different response formats
-        return (
-          botResponse?.response ||
-          botResponse?.message ||
-          botResponse?.text ||
-          botResponse?.content ||
-          JSON.stringify(botResponse)
-        );
+        // Return both message and PDF data if available
+        return {
+          message: responseText,
+          pdfData: pdfData
+        };
       } catch (error) {
         setError(error);
         setIsChatLoading(false);
@@ -777,6 +820,169 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [user?.id]);
 
+  // Miscellaneous Activities Session Management Functions
+  const getMiscActivitiesSession = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      if (!user?.id) {
+        setIsLoading(false);
+        return null;
+      }
+
+      const sessionsRef = collection(fStore, "sessions");
+      const q = query(
+        sessionsRef,
+        where("profileId", "==", user.id),
+        where("appName", "==", "misc_activities") // Only get misc activities sessions
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      setIsLoading(false);
+      setError(null);
+
+      if (querySnapshot.empty) {
+        return null;
+      }
+
+      // Sort sessions by createdAt in JavaScript to get the most recent
+      const sessions = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        data: doc.data(),
+        ref: doc.ref,
+      }));
+
+      // Sort by createdAt descending (most recent first)
+      sessions.sort((a, b) => {
+        const aTime = a.data.createdAt?.toDate?.()?.getTime() || 0;
+        const bTime = b.data.createdAt?.toDate?.()?.getTime() || 0;
+        return bTime - aTime;
+      });
+
+      // Get the most recent session (first document) - we'll reuse it regardless of active status
+      const sessionDoc = sessions[0];
+      const sessionDocData = sessionDoc.data;
+      const sessionData = { sessionId: sessionDoc.id, ...sessionDocData };
+
+      // Reactivate the session if it's not active
+      if (!sessionDocData.isActive) {
+        await updateDoc(sessionDoc.ref, {
+          isActive: true,
+          updatedAt: new Date(),
+        });
+      }
+
+      // Update misc activities session ID
+      setMiscActivitiesSessionId(sessionDoc.id);
+
+      return sessionData;
+    } catch (error) {
+      console.error("Error getting misc activities session:", error);
+      setError(error);
+      setIsLoading(false);
+      return null;
+    }
+  }, [user?.id]);
+
+  const createMiscActivitiesSession = useCallback(async (): Promise<string> => {
+    try {
+      setIsChatLoading(true);
+
+      const userId = user?.id;
+
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      // Always check for existing session first
+      const existingSession = await getMiscActivitiesSession();
+      if (existingSession && existingSession.sessionId) {
+        setIsChatLoading(false);
+        return existingSession.sessionId;
+      }
+
+      // Only create a new session if no session exists at all
+      const sessionData = {
+        profileId: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        appName: "misc_activities",
+        isActive: true,
+      };
+
+      const sessionDocRef = await addDoc(
+        collection(fStore, "sessions"),
+        sessionData
+      );
+
+      const sessionId = sessionDocRef.id;
+
+      setMiscActivitiesSessionId(sessionId);
+      setError(null);
+      setIsChatLoading(false);
+
+      return sessionId;
+    } catch (error) {
+      setError(error);
+      setIsChatLoading(false);
+      console.error("Error creating misc activities session:", error);
+      throw error;
+    }
+  }, [user?.id, getMiscActivitiesSession]);
+
+  const loadMiscActivitiesMessages = useCallback(async (): Promise<
+    ChatMessage[]
+  > => {
+    try {
+      setIsChatLoading(true);
+
+      if (!user?.id || !miscActivitiesSessionId) {
+        setIsChatLoading(false);
+        return [];
+      }
+
+      // Only load messages for the specific misc activities session
+      const messagesRef = collection(fStore, "messages");
+      const q = query(
+        messagesRef,
+        where("profileId", "==", user.id),
+        where("sessionId", "==", miscActivitiesSessionId)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      const allMessages: ChatMessage[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        allMessages.push({
+          id: doc.id,
+          profileId: data.profileId,
+          sessionId: data.sessionId,
+          text: data.text,
+          isBot: data.isBot,
+          timestamp: data.timestamp.toDate(),
+          messageOrder: data.messageOrder,
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        });
+      });
+
+      // Sort messages by timestamp
+      allMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+      setError(null);
+      setIsChatLoading(false);
+
+      return allMessages;
+    } catch (error) {
+      setError(error);
+      setIsChatLoading(false);
+      console.error("Error loading misc activities messages:", error);
+      throw error;
+    }
+  }, [user?.id, miscActivitiesSessionId]);
+
   const contextValue = useMemo(
     () => ({
       addNewProduct,
@@ -795,6 +1001,11 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       currentSessionId,
       deactivateSession,
       deactivateAllUserSessions,
+      // Miscellaneous Activities Session Management
+      getMiscActivitiesSession,
+      createMiscActivitiesSession,
+      miscActivitiesSessionId,
+      loadMiscActivitiesMessages,
       getUserProfile,
       createUserProfile,
       saveMessage,
@@ -819,6 +1030,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       currentSessionId,
       deactivateSession,
       deactivateAllUserSessions,
+      getMiscActivitiesSession,
+      createMiscActivitiesSession,
+      miscActivitiesSessionId,
+      loadMiscActivitiesMessages,
       getUserProfile,
       createUserProfile,
       saveMessage,

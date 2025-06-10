@@ -472,3 +472,88 @@
 .message-content code {
   display: inline;
 }
+
+/* Download attachment styles */
+.message-attachment {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.bot_message .message-attachment {
+  background: rgba(52, 152, 219, 0.05);
+  border-color: rgba(52, 152, 219, 0.2);
+}
+
+.client_message .message-attachment {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.attachment-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.attachment-icon {
+  width: 24px;
+  height: 24px;
+  color: #e74c3c;
+}
+
+.attachment-details {
+  flex: 1;
+}
+
+.attachment-filename {
+  font-weight: 600;
+  font-size: 14px;
+  color: inherit;
+  margin-bottom: 2px;
+}
+
+.attachment-size {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.download-button {
+  --background: #3498db;
+  --background-activated: #2980b9;
+  --background-hover: #2980b9;
+  --color: white;
+  --border-radius: 6px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --height: 36px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.download-button ion-icon {
+  margin-right: 6px;
+}
+
+.downloading {
+  --background: #95a5a6;
+  --background-activated: #7f8c8d;
+  pointer-events: none;
+}
+
+.download-success {
+  --background: #27ae60;
+  --background-activated: #229954;
+}
+
+/* PDF preview indicator */
+.pdf-preview-text {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+  font-style: italic;
+}

@@ -1,0 +1,236 @@
+/* Miscellaneous Activities Chat Styling */
+.misc-activities-theme {
+  background: linear-gradient(to bottom, #fef7e0 0%, #ffffff 100%);
+}
+
+.misc-activities-theme .messages_container {
+  background: linear-gradient(to bottom, #fef7e0 0%, #ffffff 100%);
+}
+
+/* Override bot message styling for amber theme */
+.misc-activities-theme .bot_message {
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border: 1px solid #ffcc02;
+  color: #e65100;
+  box-shadow: 0 2px 12px rgba(255, 193, 7, 0.2);
+}
+
+.misc-activities-theme .bot_message::before {
+  border-right: 8px solid #ffecb3;
+}
+
+/* Client message with complementary orange theme */
+.misc-activities-theme .client_message {
+  background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 100%);
+  color: white;
+  box-shadow: 0 2px 12px rgba(255, 143, 0, 0.3);
+}
+
+.misc-activities-theme .client_message::before {
+  border-left: 8px solid #ff6f00;
+}
+
+/* Header styling */
+.misc-activities-theme ion-header ion-toolbar {
+  --background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  --color: #e65100;
+}
+
+.misc-activities-theme ion-title {
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* Footer input styling */
+.misc-activities-theme ion-footer ion-toolbar {
+  --background: #fff8e1;
+  border-top: 1px solid #ffcc02;
+}
+
+.misc-activities-theme .message-input {
+  --background: #ffffff;
+  --border-color: #ffcc02;
+  border: 1px solid #ffcc02;
+  border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+.misc-activities-theme .send-button {
+  --color: #ff8f00;
+  --background: transparent;
+}
+
+.misc-activities-theme .send-button:hover {
+  --background: rgba(255, 143, 0, 0.1);
+}
+
+/* Loading and error banners */
+.misc-activities-theme .loading-banner,
+.misc-activities-theme .error-banner {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 1px solid #ffcc02;
+  color: #e65100;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+/* Typing indicator with amber theme */
+.misc-activities-theme .typing-indicator span {
+  background-color: #ffcc02;
+}
+
+/* Date separator with amber styling */
+.misc-activities-theme .date-separator {
+  background: rgba(255, 204, 2, 0.1);
+  color: #e65100;
+  border: 1px solid rgba(255, 204, 2, 0.3);
+}
+
+/* Input container styling */
+.input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fff8e1;
+}
+
+.message-input {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #ffcc02;
+  padding: 8px 16px;
+}
+
+.send-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.send-button {
+  --border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  --color: #ff8f00;
+}
+
+.send-button:hover:not(.button-disabled) {
+  --background: rgba(255, 143, 0, 0.1);
+}
+
+.send-button.button-disabled {
+  --color: #bdbdbd;
+}
+
+/* Profile avatar styling */
+.header-avatar {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #ffcc02;
+}
+
+/* Message content enhancements */
+.misc-activities-theme .message-content {
+  line-height: 1.5;
+}
+
+.misc-activities-theme .message-content h1,
+.misc-activities-theme .message-content h2,
+.misc-activities-theme .message-content h3 {
+  color: #e65100;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.misc-activities-theme .message-content ul,
+.misc-activities-theme .message-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.misc-activities-theme .message-content li {
+  margin: 4px 0;
+}
+
+.misc-activities-theme .message-content strong {
+  color: #e65100;
+  font-weight: 600;
+}
+
+.misc-activities-theme .message-content code {
+  background: rgba(255, 204, 2, 0.2);
+  color: #e65100;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+}
+
+/* Animation for message appearance */
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.misc-activities-theme .bot_message,
+.misc-activities-theme .client_message {
+  animation: messageAppear 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .input-container {
+    padding: 8px 12px;
+  }
+
+  .message-input {
+    min-height: 40px;
+  }
+
+  .send-button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  .misc-activities-theme {
+    background: linear-gradient(to bottom, #2d1810 0%, #1a1a1a 100%);
+  }
+
+  .misc-activities-theme .messages_container {
+    background: linear-gradient(to bottom, #2d1810 0%, #1a1a1a 100%);
+  }
+
+  .misc-activities-theme .bot_message {
+    background: linear-gradient(135deg, #3d2914 0%, #2d1810 100%);
+    border: 1px solid #ff8f00;
+    color: #ffab40;
+  }
+
+  .misc-activities-theme .message-input {
+    --background: #2d2d2d;
+    --color: #ffffff;
+    border: 1px solid #ff8f00;
+  }
+
+  .misc-activities-theme ion-footer ion-toolbar {
+    --background: #2d1810;
+    border-top: 1px solid #ff8f00;
+  }
+}

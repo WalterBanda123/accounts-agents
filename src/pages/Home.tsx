@@ -17,17 +17,6 @@ import {
   IonTitle,
   IonToolbar,
   IonAvatar,
-  IonModal,
-  IonInput,
-  IonTextarea,
-  IonSelect,
-  IonSelectOption,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonToast,
-  IonSpinner,
 } from "@ionic/react";
 import {
   cameraOutline,
@@ -35,14 +24,11 @@ import {
   cubeOutline,
   documentAttachOutline,
   cashOutline,
-  checkmarkCircleOutline,
-  closeOutline,
 } from "ionicons/icons";
 import RecentTransactionCard from "../components/RecentTransactionCard";
 import ReceiptModal from "../components/ReceiptModal";
 import ProfilePopover from "../components/ProfilePopover";
 import ToastComponent from "../components/ToastComponent";
-import { useDataContext } from "../contexts/data/UseDataContext";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
 import "../components/RecentTransactionCard.css";
 import "./Home.css";
@@ -56,22 +42,8 @@ const Home: React.FC = () => {
   const [profilePopoverEvent, setProfilePopoverEvent] = useState<
     Event | undefined
   >(undefined);
-  
-  // Miscellaneous activity states
-  const [showMiscModal, setShowMiscModal] = useState<boolean>(false);
-  const [miscActivityData, setMiscActivityData] = useState({
-    type: "cash_withdrawal", // cash_withdrawal, petty_purchase, payment, other
-    amount: "",
-    description: "",
-    purpose: "",
-    recipient: ""
-  });
-  const [isProcessingMisc, setIsProcessingMisc] = useState<boolean>(false);
-  const [miscToastMessage, setMiscToastMessage] = useState<string>("");
-  const [showMiscToast, setShowMiscToast] = useState<boolean>(false);
-  
+
   const history = useHistory();
-  const { askAiAssistant, currentSessionId } = useDataContext();
 
   const takePhoto = async () => {
     try {
@@ -139,63 +111,7 @@ const Home: React.FC = () => {
 
   // Miscellaneous activity handlers
   const handleMiscActivityOpen = () => {
-    setShowMiscModal(true);
-  };
-
-  const handleMiscActivityClose = () => {
-    setShowMiscModal(false);
-    setMiscActivityData({
-      type: "cash_withdrawal",
-      amount: "",
-      description: "",
-      purpose: "",
-      recipient: ""
-    });
-  };
-
-  const handleMiscInputChange = (field: string, value: string) => {
-    setMiscActivityData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleMiscActivitySubmit = async () => {
-    if (!miscActivityData.amount || !miscActivityData.description) {
-      setMiscToastMessage("Please fill in amount and description");
-      setShowMiscToast(true);
-      return;
-    }
-
-    setIsProcessingMisc(true);
-    
-    try {
-      const activityMessage = `Record miscellaneous activity:
-Type: ${miscActivityData.type.replace('_', ' ')}
-Amount: $${miscActivityData.amount}
-Description: ${miscActivityData.description}
-${miscActivityData.purpose ? `Purpose: ${miscActivityData.purpose}` : ''}
-${miscActivityData.recipient ? `Recipient: ${miscActivityData.recipient}` : ''}
-
-Please log this activity and update the registry accordingly. Provide a confirmation with the activity details and current registry status.`;
-
-      await askAiAssistant(activityMessage, currentSessionId || undefined);
-      
-      setMiscToastMessage("✅ Activity recorded successfully! Check chat for details.");
-      setShowMiscToast(true);
-      
-      // Close modal after successful submission
-      setTimeout(() => {
-        handleMiscActivityClose();
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Error recording misc activity:", error);
-      setMiscToastMessage("❌ Failed to record activity. Please try again.");
-      setShowMiscToast(true);
-    } finally {
-      setIsProcessingMisc(false);
-    }
+    history.push("/misc-activities");
   };
 
   return (
@@ -307,14 +223,19 @@ Please log this activity and update the registry accordingly. Provide a confirma
             </IonRow>
             <IonRow>
               <IonCol>
-                <div className="container misc-activity-card" onClick={handleMiscActivityOpen}>
+                <div
+                  className="container misc-activity-card"
+                  onClick={handleMiscActivityOpen}
+                >
                   <IonCol size="2">
                     <IonIcon icon={cashOutline} size="large" />
                   </IonCol>
                   <IonCol size="10">
                     <IonLabel>
                       <h2>Record Activity</h2>
-                      <p className="action-subtitle">Log cash withdrawals & misc expenses</p>
+                      <p className="action-subtitle">
+                        Log cash withdrawals & misc expenses
+                      </p>
                     </IonLabel>
                   </IonCol>
                 </div>
@@ -386,107 +307,6 @@ Please log this activity and update the registry accordingly. Provide a confirma
             isOpen={showReceiptModal}
             onDidDismiss={handleModalDismiss}
             cartImage={capturedImage}
-          />
-
-          {/* Miscellaneous Activity Modal */}
-          <IonModal isOpen={showMiscModal} onDidDismiss={handleMiscActivityClose}>
-            <IonHeader>
-              <IonToolbar>
-                <IonTitle>Record Miscellaneous Activity</IonTitle>
-                <IonButtons slot="end">
-                  <IonButton fill="clear" onClick={handleMiscActivityClose}>
-                    <IonIcon icon={closeOutline} />
-                  </IonButton>
-                </IonButtons>
-              </IonToolbar>
-            </IonHeader>
-            <IonContent className="ion-padding">
-              <IonCard>
-                <IonCardHeader>
-                  <IonCardTitle>Activity Details</IonCardTitle>
-                </IonCardHeader>
-                <IonCardContent>
-                  <div style={{ marginBottom: "16px" }}>
-                    <IonLabel>Activity Type</IonLabel>
-                    <IonSelect
-                      value={miscActivityData.type}
-                      onIonChange={(e) => handleMiscInputChange("type", e.detail.value)}
-                      interface="popover"
-                    >
-                      <IonSelectOption value="cash_withdrawal">Cash Withdrawal</IonSelectOption>
-                      <IonSelectOption value="petty_purchase">Petty Purchase</IonSelectOption>
-                      <IonSelectOption value="payment">Payment</IonSelectOption>
-                      <IonSelectOption value="other">Other</IonSelectOption>
-                    </IonSelect>
-                  </div>
-
-                  <div style={{ marginBottom: "16px" }}>
-                    <IonLabel>Amount ($)</IonLabel>
-                    <IonInput
-                      type="number"
-                      value={miscActivityData.amount}
-                      onIonInput={(e) => handleMiscInputChange("amount", e.detail.value!)}
-                      placeholder="Enter amount"
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: "16px" }}>
-                    <IonLabel>Description</IonLabel>
-                    <IonTextarea
-                      value={miscActivityData.description}
-                      onIonInput={(e) => handleMiscInputChange("description", e.detail.value!)}
-                      placeholder="Describe the activity..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: "16px" }}>
-                    <IonLabel>Purpose (Optional)</IonLabel>
-                    <IonInput
-                      value={miscActivityData.purpose}
-                      onIonInput={(e) => handleMiscInputChange("purpose", e.detail.value!)}
-                      placeholder="What was this for?"
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: "16px" }}>
-                    <IonLabel>Recipient (Optional)</IonLabel>
-                    <IonInput
-                      value={miscActivityData.recipient}
-                      onIonInput={(e) => handleMiscInputChange("recipient", e.detail.value!)}
-                      placeholder="Who received the payment/purchase?"
-                    />
-                  </div>
-
-                  <IonButton 
-                    expand="block" 
-                    onClick={handleMiscActivitySubmit}
-                    disabled={isProcessingMisc || !miscActivityData.amount || !miscActivityData.description}
-                  >
-                    {isProcessingMisc ? (
-                      <>
-                        <IonSpinner name="crescent" />
-                        &nbsp;Recording...
-                      </>
-                    ) : (
-                      <>
-                        <IonIcon icon={checkmarkCircleOutline} slot="start" />
-                        Record Activity
-                      </>
-                    )}
-                  </IonButton>
-                </IonCardContent>
-              </IonCard>
-            </IonContent>
-          </IonModal>
-
-          {/* Misc Activity Toast */}
-          <IonToast
-            isOpen={showMiscToast}
-            onDidDismiss={() => setShowMiscToast(false)}
-            message={miscToastMessage}
-            duration={3000}
-            position="top"
           />
 
           <ProfilePopover

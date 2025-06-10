@@ -8,6 +8,17 @@ export interface ChatMessage {
     messageOrder: number;
     createdAt?: Date;
     updatedAt?: Date;
+    attachment?: {
+        type: 'pdf' | 'image' | 'document';
+        url: string;
+        filename: string;
+        size?: number;
+    };
+    pdfData?: {
+        pdf_base64: string;
+        pdf_size: number;
+        direct_download_url: string;
+    };
 }
 
 export interface MessageData {
