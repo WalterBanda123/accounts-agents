@@ -13,7 +13,13 @@ import {
   IonCardContent,
   IonIcon,
 } from "@ionic/react";
-import { sparklesOutline } from "ionicons/icons";
+import { 
+  sparklesOutline, 
+  cameraOutline, 
+  createOutline, 
+  saveOutline,
+  cogOutline 
+} from "ionicons/icons";
 import AddProductByImage from "../components/AddProductByImage";
 import "./AddProductByImageDemo.css";
 
@@ -47,17 +53,17 @@ const AddProductByImageDemo: React.FC = () => {
           <IonCardContent>
             <ol className="instructions-list">
               <li>
-                📸 <strong>Capture or select</strong> a product image
+                <IonIcon icon={cameraOutline} /> <strong>Capture or select</strong> a product image
               </li>
               <li>
-                🤖 <strong>AI analyzes</strong> the image to extract product
+                <IonIcon icon={cogOutline} /> <strong>AI analyzes</strong> the image to extract product
                 details
               </li>
               <li>
-                ✏️ <strong>Review and edit</strong> the extracted information
+                <IonIcon icon={createOutline} /> <strong>Review and edit</strong> the extracted information
               </li>
               <li>
-                💾 <strong>Save</strong> the product to your inventory
+                <IonIcon icon={saveOutline} /> <strong>Save</strong> the product to your inventory
               </li>
             </ol>
             <p className="instructions-note">

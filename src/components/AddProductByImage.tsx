@@ -4,10 +4,6 @@ import {
   IonSpinner,
   IonInput,
   IonContent,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
   IonIcon,
   IonActionSheet,
   IonToast,
@@ -30,7 +26,7 @@ import "./AddProductByImage.css";
 
 interface ProductDocument {
   userId: string;
-  title: string;
+  name: string;
   brand: string;
   size: string;
   unit: string;
@@ -40,7 +36,7 @@ interface ProductDocument {
   unitPrice: number;
   quantity: number;
   supplier: string;
-  imageUrl: string;
+  image: string;
   createdAt: ReturnType<typeof serverTimestamp>;
   barcode?: string;
   confidence?: number;
@@ -48,7 +44,7 @@ interface ProductDocument {
 }
 
 interface ProductData {
-  title: string;
+  name: string;
   brand: string;
   size: string;
   unit: string;
@@ -67,7 +63,22 @@ interface BackendResponse {
   message: string;
   status: string;
   data: {
-    product: ProductData;
+    product: {
+      title?: string;
+      name?: string;
+      brand?: string;
+      size?: string;
+      unit?: string;
+      category?: string;
+      subcategory?: string;
+      description?: string;
+      unitPrice?: string;
+      quantity?: string;
+      supplier?: string;
+      barcode?: string;
+      confidence?: number;
+      processing_time?: number;
+    };
     processing_method: string;
   };
   session_id: string | null;
@@ -87,7 +98,7 @@ const AddProductByImage: React.FC = () => {
 
   // Form data state
   const [formData, setFormData] = useState<ProductData>({
-    title: "",
+    name: "",
     brand: "",
     size: "",
     unit: "",
@@ -190,7 +201,7 @@ const AddProductByImage: React.FC = () => {
 
   const processImageWithAI = async (imageDataUrl: string) => {
     setIsProcessing(true);
-    showMessage("🤖 AI is analyzing your image...", "warning");
+    showMessage("AI is analyzing your image...", "warning");
 
     try {
       const currentUser = auth.currentUser;
@@ -233,7 +244,7 @@ const AddProductByImage: React.FC = () => {
         const { product } = backendResponse.data;
 
         setFormData({
-          title: product.title || "",
+          name: product.title || product.name || "",
           brand: product.brand || "",
           size: product.size || "",
           unit: product.unit || "",
@@ -252,7 +263,7 @@ const AddProductByImage: React.FC = () => {
           ? ` (${Math.round(product.confidence * 100)}% confidence)`
           : "";
         showMessage(
-          `✅ Product details extracted successfully${confidenceText}`,
+          `Product details extracted successfully${confidenceText}`,
           "success"
         );
       } else {
@@ -287,7 +298,7 @@ const AddProductByImage: React.FC = () => {
 
   const validateForm = () => {
     return (
-      formData.title &&
+      formData.name &&
       formData.brand &&
       formData.category &&
       formData.subcategory &&
@@ -354,7 +365,7 @@ const AddProductByImage: React.FC = () => {
       // Save product data to Firestore
       const productDoc: Partial<ProductDocument> = {
         userId: currentUser.uid,
-        title: formData.title,
+        name: formData.name,
         brand: formData.brand,
         size: formData.size,
         unit: formData.unit,
@@ -364,7 +375,7 @@ const AddProductByImage: React.FC = () => {
         unitPrice: parseFloat(formData.unitPrice || "0"),
         quantity: parseInt(formData.quantity || "0"),
         supplier: formData.supplier,
-        imageUrl: downloadURL,
+        image: downloadURL,
         createdAt: serverTimestamp(),
       };
 
@@ -383,12 +394,12 @@ const AddProductByImage: React.FC = () => {
 
       await addDoc(collection(db, "products"), productDoc);
 
-      showMessage("✅ Product saved successfully!", "success");
+      showMessage("Product saved successfully!", "success");
 
       // Reset form
       setCapturedImage(null);
       setFormData({
-        title: "",
+        name: "",
         brand: "",
         size: "",
         unit: "",
@@ -411,401 +422,308 @@ const AddProductByImage: React.FC = () => {
 
   return (
     <IonContent className="add-product-content">
-      {/* Image Capture Section */}
-      <IonCard className="image-capture-card">
-        <IonCardHeader>
-          <IonCardTitle>
-            {isProcessing ? (
-              <>
-                <IonSpinner name="dots" color="primary" />
-                Processing Image...
-              </>
-            ) : (
-              <>
-                <IonIcon icon={cameraOutline} />
-                Product Image
-              </>
-            )}
-          </IonCardTitle>
-        </IonCardHeader>
-        <IonCardContent>
-          {capturedImage ? (
-            <div className="image-preview">
-              <img src={capturedImage} alt="Product" />
-              {formData.confidence && (
-                <div
-                  className={`confidence-indicator ${
-                    formData.confidence > 0.7
-                      ? "confidence-high"
-                      : formData.confidence > 0.4
-                      ? "confidence-medium"
-                      : "confidence-low"
-                  }`}
-                >
-                  <IonIcon icon={sparklesOutline} />
-                  AI Confidence: {Math.round(formData.confidence * 100)}%
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="image-placeholder">
-              <IonIcon
-                icon={cameraOutline}
-                style={{
-                  fontSize: "48px",
-                  color: "var(--ion-color-primary)",
-                  marginBottom: "16px",
-                }}
-              />
-              <h3
-                style={{ margin: "0 0 8px 0", color: "var(--ion-color-dark)" }}
-              >
-                Capture Product Image
-              </h3>
-              <p
-                style={{
-                  color: "var(--ion-color-medium)",
-                  margin: "0",
-                  lineHeight: "1.5",
-                }}
-              >
-                Take a photo or select from gallery to get AI-powered product
-                details
-              </p>
-            </div>
-          )}
+      {/* Header */}
+      <div className="minimal-header">
+        <IonButton 
+          fill="clear" 
+          className="back-button"
+          onClick={() => window.history.back()}
+        >
+          <IonIcon icon={imagesOutline} />
+        </IonButton>
+        <h1>Add New Product</h1>
+      </div>
 
-          <IonButton
-            expand="block"
-            fill={capturedImage ? "outline" : "solid"}
-            onClick={() => setShowActionSheet(true)}
-            disabled={isProcessing}
-            style={{ marginTop: "16px" }}
-          >
-            <IonIcon icon={cameraOutline} slot="start" />
-            {capturedImage ? "Change Image" : "Add Image"}
-          </IonButton>
-        </IonCardContent>
-      </IonCard>
+      {/* Image Upload Section */}
+      <div className="image-upload-card">
+        {capturedImage ? (
+          <div className="image-preview">
+            <img src={capturedImage} alt="Product" />
+            {formData.confidence && (
+              <div
+                className={`confidence-indicator ${
+                  formData.confidence > 0.7
+                    ? "confidence-high"
+                    : formData.confidence > 0.4
+                    ? "confidence-medium"
+                    : "confidence-low"
+                }`}
+              >
+                <IonIcon icon={sparklesOutline} />
+                {Math.round(formData.confidence * 100)}%
+              </div>
+            )}
+            <IonButton
+              expand="block"
+              fill="outline"
+              className="change-image-button"
+              onClick={() => setShowActionSheet(true)}
+              disabled={isProcessing}
+            >
+              <IonIcon icon={cameraOutline} slot="start" />
+              Change Image
+            </IonButton>
+          </div>
+        ) : (
+          <div className="image-placeholder" onClick={() => setShowActionSheet(true)}>
+            <div className="placeholder-content">
+              <IonIcon icon={cameraOutline} className="placeholder-icon" />
+              <h3>Add Product Photo</h3>
+              <p>Take a photo and AI will extract product details automatically</p>
+            </div>
+            <IonButton
+              expand="block"
+              className="upload-button"
+              onClick={() => setShowActionSheet(true)}
+              disabled={isProcessing}
+            >
+              <IonIcon icon={cameraOutline} slot="start" />
+              Add Image
+            </IonButton>
+          </div>
+        )}
+      </div>
+
+      {/* Processing Indicator */}
+      {isProcessing && (
+        <div className="processing-banner">
+          <div className="processing-content">
+            <IonSpinner name="dots" color="primary" />
+            <div className="processing-text">
+              <h3>Analyzing image with AI...</h3>
+              <p>This may take a few seconds</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Product Details Form */}
       {capturedImage && (
         <>
+          {/* AI Info Banner */}
+          <div className="ai-success-banner">
+            <div className="ai-success-content">
+              <IonIcon icon={sparklesOutline} className="success-icon" />
+              <div className="success-text">
+                <h3>AI Analysis Complete</h3>
+                <p>Review and complete the extracted details below</p>
+              </div>
+            </div>
+          </div>
+
           {/* Basic Information */}
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Basic Information</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="form-field">
-                <label className="form-label required">
-                  Product Name
-                  {formData.title && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonInput
-                  className="form-input"
-                  value={formData.title}
-                  onIonInput={(e) =>
-                    handleInputChange("title", e.detail.value!)
-                  }
-                  placeholder="Enter product name"
-                />
-              </div>
+          <div className="form-card">
+            <h2 className="form-card-title">Basic Information</h2>
+            
+            <div className={`form-field ${formData.name ? 'ai-populated-field' : ''}`}>
+              <label className="form-label required">
+                Product Name
+                {formData.name && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonInput
+                className="form-input"
+                value={formData.name}
+                onIonInput={(e) => handleInputChange("name", e.detail.value!)}
+                placeholder="Enter product name"
+              />
+            </div>
 
-              <div className="form-field">
-                <label className="form-label required">
-                  Brand
-                  {formData.brand && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonInput
-                  className="form-input"
-                  value={formData.brand}
-                  onIonInput={(e) =>
-                    handleInputChange("brand", e.detail.value!)
-                  }
-                  placeholder="Enter brand name"
-                />
-              </div>
+            <div className={`form-field ${formData.brand ? 'ai-populated-field' : ''}`}>
+              <label className="form-label required">
+                Brand
+                {formData.brand && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonInput
+                className="form-input"
+                value={formData.brand}
+                onIonInput={(e) => handleInputChange("brand", e.detail.value!)}
+                placeholder="Enter brand name"
+              />
+            </div>
 
-              <div className="form-field">
-                <label className="form-label">
-                  Description
-                  {formData.description && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonTextarea
-                  className="form-textarea"
-                  value={formData.description}
-                  onIonInput={(e) =>
-                    handleInputChange("description", e.detail.value!)
-                  }
-                  placeholder="Enter product description"
-                  rows={3}
-                />
-              </div>
+            <div className={`form-field ${formData.description ? 'ai-populated-field' : ''}`}>
+              <label className="form-label">
+                Description
+                {formData.description && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonTextarea
+                className="form-textarea"
+                value={formData.description}
+                onIonInput={(e) => handleInputChange("description", e.detail.value!)}
+                placeholder="Enter product description"
+                rows={3}
+              />
+            </div>
 
-              <div className="form-field">
-                <label className="form-label">
-                  Size
-                  {formData.size && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonInput
-                  className="form-input"
-                  value={formData.size}
-                  onIonInput={(e) => handleInputChange("size", e.detail.value!)}
-                  placeholder="e.g., 2L, 500ml, 250g"
-                />
-              </div>
-            </IonCardContent>
-          </IonCard>
+            <div className={`form-field ${formData.size ? 'ai-populated-field' : ''}`}>
+              <label className="form-label">
+                Size
+                {formData.size && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonInput
+                className="form-input"
+                value={formData.size}
+                onIonInput={(e) => handleInputChange("size", e.detail.value!)}
+                placeholder="e.g., 2L, 500ml, 250g"
+              />
+            </div>
+          </div>
 
           {/* Category */}
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Category</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="form-field">
-                <label className="form-label required">
-                  Category
-                  {formData.category && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonSelect
-                  className="form-select"
-                  value={formData.category}
-                  onIonChange={(e) => {
-                    handleInputChange("category", e.detail.value);
-                    handleInputChange("subcategory", ""); // Reset subcategory
-                  }}
-                  placeholder="Select category"
-                >
-                  {categories.map((category) => (
-                    <IonSelectOption
-                      key={category.value}
-                      value={category.value}
-                    >
-                      {category.value}
-                    </IonSelectOption>
-                  ))}
-                </IonSelect>
-              </div>
+          <div className="form-card">
+            <h2 className="form-card-title">Category</h2>
+            
+            <div className={`form-field ${formData.category ? 'ai-populated-field' : ''}`}>
+              <label className="form-label required">
+                Category
+                {formData.category && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonSelect
+                className="form-select"
+                value={formData.category}
+                onIonChange={(e) => {
+                  handleInputChange("category", e.detail.value);
+                  handleInputChange("subcategory", "");
+                }}
+                placeholder="Select category"
+              >
+                {categories.map((category) => (
+                  <IonSelectOption key={category.value} value={category.value}>
+                    {category.value}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            </div>
 
-              <div className="form-field">
-                <label className="form-label required">
-                  Subcategory
-                  {formData.subcategory && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonSelect
-                  className="form-select"
-                  value={formData.subcategory}
-                  onIonChange={(e) =>
-                    handleInputChange("subcategory", e.detail.value)
-                  }
-                  placeholder="Select subcategory"
-                  disabled={!formData.category}
-                >
-                  {getSubcategories().map((subcategory) => (
-                    <IonSelectOption key={subcategory} value={subcategory}>
-                      {subcategory}
-                    </IonSelectOption>
-                  ))}
-                </IonSelect>
-              </div>
-            </IonCardContent>
-          </IonCard>
+            <div className={`form-field ${formData.subcategory ? 'ai-populated-field' : ''}`}>
+              <label className="form-label required">
+                Subcategory
+                {formData.subcategory && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonSelect
+                className="form-select"
+                value={formData.subcategory}
+                onIonChange={(e) => handleInputChange("subcategory", e.detail.value)}
+                placeholder="Select subcategory"
+                disabled={!formData.category}
+              >
+                {getSubcategories().map((subcategory) => (
+                  <IonSelectOption key={subcategory} value={subcategory}>
+                    {subcategory}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            </div>
+          </div>
 
           {/* Pricing & Inventory */}
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Pricing & Inventory</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="form-field">
-                <label className="form-label required">Unit Price</label>
-                <IonInput
-                  className="form-input"
-                  type="number"
-                  value={formData.unitPrice}
-                  onIonInput={(e) =>
-                    handleInputChange("unitPrice", e.detail.value!)
-                  }
-                  placeholder="0.00"
-                />
-              </div>
+          <div className="form-card">
+            <h2 className="form-card-title">Pricing & Inventory</h2>
+            
+            <div className="form-field">
+              <label className="form-label required">Unit Price</label>
+              <IonInput
+                className="form-input"
+                type="number"
+                value={formData.unitPrice}
+                onIonInput={(e) => handleInputChange("unitPrice", e.detail.value!)}
+                placeholder="0.00"
+              />
+            </div>
 
-              <div className="form-field">
-                <label className="form-label required">Initial Quantity</label>
-                <IonInput
-                  className="form-input"
-                  type="number"
-                  value={formData.quantity}
-                  onIonInput={(e) =>
-                    handleInputChange("quantity", e.detail.value!)
-                  }
-                  placeholder="0"
-                />
-              </div>
+            <div className="form-field">
+              <label className="form-label required">Initial Quantity</label>
+              <IonInput
+                className="form-input"
+                type="number"
+                value={formData.quantity}
+                onIonInput={(e) => handleInputChange("quantity", e.detail.value!)}
+                placeholder="0"
+              />
+            </div>
 
-              <div className="form-field">
-                <label className="form-label">
-                  Unit Type
-                  {formData.unit && (
-                    <IonIcon
-                      icon={sparklesOutline}
-                      style={{
-                        marginLeft: "8px",
-                        color: "var(--ion-color-primary)",
-                        fontSize: "14px",
-                      }}
-                      title="Auto-filled by AI"
-                    />
-                  )}
-                </label>
-                <IonSelect
-                  className="form-select"
-                  value={formData.unit}
-                  onIonChange={(e) => handleInputChange("unit", e.detail.value)}
-                  placeholder="Select unit"
-                >
-                  {units.map((unit) => (
-                    <IonSelectOption key={unit} value={unit}>
-                      {unit}
-                    </IonSelectOption>
-                  ))}
-                </IonSelect>
-              </div>
-            </IonCardContent>
-          </IonCard>
+            <div className={`form-field ${formData.unit ? 'ai-populated-field' : ''}`}>
+              <label className="form-label">
+                Unit Type
+                {formData.unit && (
+                  <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                )}
+              </label>
+              <IonSelect
+                className="form-select"
+                value={formData.unit}
+                onIonChange={(e) => handleInputChange("unit", e.detail.value)}
+                placeholder="Select unit"
+              >
+                {units.map((unit) => (
+                  <IonSelectOption key={unit} value={unit}>
+                    {unit}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            </div>
+          </div>
 
           {/* Additional Information */}
-          <IonCard>
-            <IonCardHeader>
-              <IonCardTitle>Additional Information</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="form-field">
-                <label className="form-label required">Supplier</label>
-                <IonInput
-                  className="form-input"
-                  value={formData.supplier}
-                  onIonInput={(e) =>
-                    handleInputChange("supplier", e.detail.value!)
-                  }
-                  placeholder="Enter supplier name"
-                />
-              </div>
+          <div className="form-card">
+            <h2 className="form-card-title">Additional Information</h2>
+            
+            <div className="form-field">
+              <label className="form-label required">Supplier</label>
+              <IonInput
+                className="form-input"
+                value={formData.supplier}
+                onIonInput={(e) => handleInputChange("supplier", e.detail.value!)}
+                placeholder="Enter supplier name"
+              />
+            </div>
 
-              <div className="form-field">
-                <label className="form-label">Barcode (Optional)</label>
-                <IonInput
-                  className="form-input"
-                  value={formData.barcode}
-                  onIonInput={(e) =>
-                    handleInputChange("barcode", e.detail.value!)
-                  }
-                  placeholder="Enter barcode"
-                />
-              </div>
-            </IonCardContent>
-          </IonCard>
+            <div className="form-field">
+              <label className="form-label">Barcode (Optional)</label>
+              <IonInput
+                className="form-input"
+                value={formData.barcode}
+                onIonInput={(e) => handleInputChange("barcode", e.detail.value!)}
+                placeholder="Enter barcode"
+              />
+            </div>
+          </div>
 
           {/* AI Processing Info */}
           {formData.processing_time && (
-            <IonCard>
-              <IonCardContent>
-                <div style={{ textAlign: "center", padding: "8px 0" }}>
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginRight: "8px",
-                      color: "var(--ion-color-primary)",
-                    }}
-                  />
-                  <small style={{ color: "var(--ion-color-medium)" }}>
-                    AI processed in {formData.processing_time}s
-                    {formData.confidence &&
-                      ` • ${Math.round(formData.confidence * 100)}% confidence`}
-                  </small>
-                </div>
-              </IonCardContent>
-            </IonCard>
+            <div className="ai-info-card">
+              <div className="ai-stats">
+                <IonIcon icon={sparklesOutline} />
+                <span>
+                  AI processed in {formData.processing_time}s
+                  {formData.confidence && ` • ${Math.round(formData.confidence * 100)}% confidence`}
+                </span>
+              </div>
+            </div>
           )}
         </>
       )}
 
       {/* Upload Progress */}
       {isUploading && (
-        <IonCard>
-          <IonCardContent className="upload-progress-card">
-            <IonSpinner
-              name="crescent"
-              color="primary"
-              style={{ marginBottom: "16px" }}
-            />
-            <h3>Uploading Product...</h3>
-            <p>{Math.round(uploadProgress)}% complete</p>
-            <IonProgressBar value={uploadProgress / 100} />
-          </IonCardContent>
-        </IonCard>
+        <div className="upload-progress-card">
+          <IonSpinner name="crescent" color="primary" style={{ marginBottom: "16px" }} />
+          <h3>Uploading Product...</h3>
+          <p>{Math.round(uploadProgress)}% complete</p>
+          <IonProgressBar value={uploadProgress / 100} />
+        </div>
       )}
 
       {/* Save Button */}

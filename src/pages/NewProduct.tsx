@@ -21,17 +21,11 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonFooter,
-  IonSpinner,
-  IonActionSheet,
 } from "@ionic/react";
 import {
   saveOutline,
-  cameraOutline,
-  imagesOutline,
   sparklesOutline,
-  checkmarkCircleOutline,
 } from "ionicons/icons";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { StockItem } from "../mock/stocks";
 import ProfilePopover from "../components/ProfilePopover";
 import { useDataContext } from "../contexts/data/UseDataContext";
@@ -47,8 +41,7 @@ const NewProduct: React.FC = () => {
   const history = useHistory();
   const isEditMode = location.state?.editMode || false;
   const existingProduct = location.state?.productData;
-  const { addNewProduct, isProductsLoading, askAiAssistant, currentSessionId } =
-    useDataContext();
+  const { addNewProduct, isProductsLoading } = useDataContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -70,11 +63,6 @@ const NewProduct: React.FC = () => {
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
-  const [showActionSheet, setShowActionSheet] = useState(false);
-  const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [imageProcessingSuccess, setImageProcessingSuccess] = useState(false);
-  const [aiPopulatedFields, setAiPopulatedFields] = useState<string[]>([]);
 
   // Simplified categories
   const categories = [
@@ -127,9 +115,6 @@ const NewProduct: React.FC = () => {
         barcode: existingProduct.barcode || "",
         imageUrl: existingProduct.image || "",
       });
-      if (existingProduct.image) {
-        setCapturedImage(existingProduct.image);
-      }
     }
   }, [isEditMode, existingProduct]);
 
@@ -225,9 +210,6 @@ const NewProduct: React.FC = () => {
             barcode: "",
             imageUrl: "",
           });
-          setCapturedImage(null);
-          setAiPopulatedFields([]);
-          setImageProcessingSuccess(false);
         }, 1000);
 
         setTimeout(() => {
@@ -255,240 +237,8 @@ const NewProduct: React.FC = () => {
     setShowProfilePopover(true);
   };
 
-  const handleImageUpload = () => {
-    setShowActionSheet(true);
-  };
-
-  const isFieldPopulatedByAI = (fieldName: string): boolean => {
-    return aiPopulatedFields.some((field) =>
-      field.toLowerCase().includes(fieldName.toLowerCase())
-    );
-  };
-
-  const captureImage = async (source: CameraSource) => {
-    try {
-      const image = await Camera.getPhoto({
-        quality: 80,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: source,
-      });
-
-      if (image.dataUrl) {
-        setCapturedImage(image.dataUrl);
-        setFormData((prev) => ({ ...prev, imageUrl: image.dataUrl! }));
-        setShowActionSheet(false);
-        await processImageWithAI(image.dataUrl);
-      }
-    } catch (error) {
-      console.error("Error capturing image:", error);
-      setToastMessage("Failed to capture image");
-      setShowToast(true);
-    }
-  };
-
-  const processImageWithAI = async (imageDataUrl: string) => {
-    setIsProcessingImage(true);
-    setImageProcessingSuccess(false);
-
-    setToastMessage("🤖 AI is analyzing your image...");
-    setShowToast(true);
-
-    try {
-      // Convert base64 dataUrl to File object properly
-      const response = await fetch(imageDataUrl);
-      const blob = await response.blob();
-
-      // Create a File object from the blob
-      const file = new File([blob], "product-image.jpg", {
-        type: blob.type || "image/jpeg",
-      });
-
-      const message = `Analyze this product image and extract detailed product information. 
-
-IMPORTANT INSTRUCTIONS:
-- Look closely at labels, packaging, text, and visual details in the image
-- Extract ACTUAL information visible in the image, not generic placeholders
-- If you can't read specific details, say "Not clearly visible" rather than guessing
-- Provide accurate size/weight information if visible on packaging
-- Identify the specific brand name shown on the product
-- Determine the most appropriate category and subcategory based on the product type
-
-Return ONLY a JSON object in this exact format:
-{
-  "name": "actual product name from packaging",
-  "brand": "actual brand name visible on product", 
-  "size": "actual size/weight shown on packaging",
-  "category": "most appropriate category from: Food, Beverages, Dairy, Household, Health & Beauty",
-  "subcategory": "specific subcategory based on product type",
-  "description": "detailed description of what you can see in the image",
-  "image_url": ""
-}`;
-
-      const aiResponse = await askAiAssistant(
-        message,
-        currentSessionId || undefined,
-        file // Pass the File object instead of blob
-      );
-
-      // Parse AI response
-      let data;
-      try {
-        data =
-          typeof aiResponse === "string" ? JSON.parse(aiResponse) : aiResponse;
-      } catch {
-        if (typeof aiResponse === "string") {
-          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            try {
-              data = JSON.parse(jsonMatch[0]);
-            } catch {
-              setToastMessage(
-                "AI responded but could not parse product data. Please fill in details manually."
-              );
-              setShowToast(true);
-              return;
-            }
-          } else {
-            setToastMessage(
-              "AI analyzed the image but returned unexpected format. Please fill in details manually."
-            );
-            setShowToast(true);
-            return;
-          }
-        } else {
-          setToastMessage(
-            "Received AI response but could not process it. Please fill in details manually."
-          );
-          setShowToast(true);
-          return;
-        }
-      }
-
-      // Handle multiple response formats
-      let product;
-      if (data && data.success && data.product) {
-        product = data.product;
-      } else if (data && data.product) {
-        product = data.product;
-      } else if (data && (data.name || data.brand)) {
-        product = data;
-      } else if (data && data.data && data.data.product) {
-        product = data.data.product;
-      } else {
-        throw new Error(
-          "Failed to extract product information from AI response structure"
-        );
-      }
-
-      if (product) {
-        const populatedFields: Partial<typeof formData> = {};
-
-        if (
-          product.name &&
-          typeof product.name === "string" &&
-          product.name.trim()
-        ) {
-          populatedFields.name = product.name.trim();
-        }
-
-        if (
-          product.brand &&
-          typeof product.brand === "string" &&
-          product.brand.trim()
-        ) {
-          populatedFields.brand = product.brand.trim();
-        }
-
-        if (
-          product.size &&
-          typeof product.size === "string" &&
-          product.size.trim()
-        ) {
-          populatedFields.size = product.size.trim();
-        }
-
-        if (
-          product.category &&
-          typeof product.category === "string" &&
-          product.category.trim()
-        ) {
-          const categoryValue = product.category.trim();
-          const matchedCategory = categories.find(
-            (cat) =>
-              cat.value.toLowerCase() === categoryValue.toLowerCase() ||
-              cat.subcategories.some(
-                (sub) => sub.toLowerCase() === categoryValue.toLowerCase()
-              )
-          );
-
-          if (matchedCategory) {
-            populatedFields.category = matchedCategory.value;
-
-            if (
-              product.subcategory &&
-              typeof product.subcategory === "string" &&
-              product.subcategory.trim()
-            ) {
-              const subcategoryValue = product.subcategory.trim();
-              const matchedSubcategory = matchedCategory.subcategories.find(
-                (sub) => sub.toLowerCase() === subcategoryValue.toLowerCase()
-              );
-              if (matchedSubcategory) {
-                populatedFields.subcategory = matchedSubcategory;
-              }
-            }
-          }
-        }
-
-        if (
-          product.description &&
-          typeof product.description === "string" &&
-          product.description.trim()
-        ) {
-          populatedFields.description = product.description.trim();
-        }
-
-        const fieldNames = Object.keys(populatedFields).map((key) => {
-          return key.charAt(0).toUpperCase() + key.slice(1);
-        });
-        setAiPopulatedFields(fieldNames);
-
-        setFormData((prev) => ({
-          ...prev,
-          ...populatedFields,
-        }));
-
-        setImageProcessingSuccess(true);
-
-        const populatedCount = Object.keys(populatedFields).length;
-        if (populatedCount > 0) {
-          const fieldsList = fieldNames.join(", ");
-          setToastMessage(
-            `✅ AI extracted ${populatedCount} fields from image: ${fieldsList}. Review and complete remaining fields.`
-          );
-        } else {
-          setToastMessage(
-            `⚠️ AI processed the image but could not extract specific product details. Please fill in manually.`
-          );
-        }
-        setShowToast(true);
-      } else {
-        throw new Error("No valid product data found in AI response");
-      }
-    } catch (error) {
-      console.error("Error processing image with AI:", error);
-      setToastMessage(
-        "Failed to process image with AI. Please fill in details manually or try again."
-      );
-      setShowToast(true);
-    } finally {
-      setIsProcessingImage(false);
-    }
-  };
-
   return (
-    <IonPage>
+    <IonPage className="NewProduct">
       <IonHeader mode="ios">
         <IonToolbar>
           <IonButtons slot="start">
@@ -513,136 +263,36 @@ Return ONLY a JSON object in this exact format:
         </IonHeader>
 
         {/* AI-Powered Product Creation */}
-        {!isEditMode && !capturedImage && (
-          <IonCard className="ai-info-card">
+        {!isEditMode && (
+          <IonCard className="ai-promotion-card">
             <IonCardHeader>
               <IonCardTitle>
                 <IonIcon icon={sparklesOutline} />
-                Try AI-Powered Product Creation
+                AI-Powered Product Creation
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
               <p>
                 Save time! Let AI extract product details automatically from a
-                single photo.
+                single photo. Simply take a picture and watch the magic happen.
               </p>
               <IonButton
-                fill="outline"
+                expand="block"
+                fill="solid"
                 routerLink="/add-product-by-image"
                 routerDirection="forward"
+                className="ai-cta-button"
               >
                 <IonIcon icon={sparklesOutline} slot="start" />
                 Use AI Assistant
               </IonButton>
+              
+              <div className="or-divider">
+                <span>or continue with manual entry below</span>
+              </div>
             </IonCardContent>
           </IonCard>
         )}
-
-        {/* Product Image Section */}
-        <IonCard
-          className={`image-upload-card ${
-            isProcessingImage ? "processing" : ""
-          }`}
-        >
-          <IonCardHeader>
-            <IonCardTitle className="image-card-title">
-              {isProcessingImage ? (
-                <>
-                  <IonSpinner name="dots" color="primary" />
-                  Processing Image...
-                </>
-              ) : (
-                <>
-                  <IonIcon icon={cameraOutline} className="ai-icon" />
-                  Product Image
-                </>
-              )}
-              {imageProcessingSuccess &&
-                !isProcessingImage &&
-                capturedImage && (
-                  <IonIcon
-                    icon={checkmarkCircleOutline}
-                    className="success-icon"
-                  />
-                )}
-            </IonCardTitle>
-            <p className="image-card-subtitle">
-              {isProcessingImage
-                ? "AI is analyzing your image and extracting product information..."
-                : "Capture or select an image to get AI assistance with product details"}
-            </p>
-          </IonCardHeader>
-          <IonCardContent>
-            <div className="image-upload-section">
-              {capturedImage ? (
-                <div className="image-preview">
-                  <img
-                    src={capturedImage}
-                    alt="Product"
-                    className="preview-image"
-                  />
-                  {isProcessingImage && (
-                    <div className="processing-overlay">
-                      <IonSpinner name="crescent" color="light" />
-                      <p>Extracting product info...</p>
-                      <small>This may take a few seconds</small>
-                    </div>
-                  )}
-                  {!isProcessingImage && (
-                    <div className="image-overlay">
-                      <IonButton
-                        fill="clear"
-                        className="retake-button"
-                        onClick={handleImageUpload}
-                      >
-                        <IonIcon icon={cameraOutline} />
-                        Retake
-                      </IonButton>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="image-placeholder">
-                  <IonIcon icon={cameraOutline} size="large" />
-                  <h3>Add Product Image</h3>
-                  <p>Get product details automatically with AI</p>
-                  <div className="ai-features">
-                    <small>
-                      ✨ AI can extract: Name • Brand • Size • Category •
-                      Description
-                    </small>
-                  </div>
-                  <div className="upload-buttons">
-                    <IonButton
-                      fill="solid"
-                      className="primary-upload-button"
-                      onClick={handleImageUpload}
-                      disabled={isProcessingImage}
-                    >
-                      <IonIcon icon={cameraOutline} slot="start" />
-                      Take Photo
-                    </IonButton>
-                    <IonButton
-                      fill="outline"
-                      className="secondary-upload-button"
-                      onClick={handleImageUpload}
-                      disabled={isProcessingImage}
-                    >
-                      <IonIcon icon={imagesOutline} slot="start" />
-                      Choose Image
-                    </IonButton>
-                  </div>
-                  <div className="image-tips">
-                    <small>
-                      💡 Tips: Use good lighting, show product labels clearly,
-                      avoid blurry images
-                    </small>
-                  </div>
-                </div>
-              )}
-            </div>
-          </IonCardContent>
-        </IonCard>
 
         {/* Basic Information */}
         <IonCard>
@@ -653,17 +303,6 @@ Return ONLY a JSON object in this exact format:
             <div className="form-field">
               <label className="form-label required">
                 Product Name
-                {isFieldPopulatedByAI("name") && (
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginLeft: "8px",
-                      color: "var(--ion-color-primary)",
-                      fontSize: "14px",
-                    }}
-                    title="Auto-filled by AI"
-                  />
-                )}
               </label>
               <IonInput
                 className="form-input"
@@ -676,17 +315,6 @@ Return ONLY a JSON object in this exact format:
             <div className="form-field">
               <label className="form-label required">
                 Brand
-                {isFieldPopulatedByAI("brand") && (
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginLeft: "8px",
-                      color: "var(--ion-color-primary)",
-                      fontSize: "14px",
-                    }}
-                    title="Auto-filled by AI"
-                  />
-                )}
               </label>
               <IonInput
                 className="form-input"
@@ -699,17 +327,6 @@ Return ONLY a JSON object in this exact format:
             <div className="form-field">
               <label className="form-label">
                 Description
-                {isFieldPopulatedByAI("description") && (
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginLeft: "8px",
-                      color: "var(--ion-color-primary)",
-                      fontSize: "14px",
-                    }}
-                    title="Auto-filled by AI"
-                  />
-                )}
               </label>
               <IonTextarea
                 className="form-textarea"
@@ -725,17 +342,6 @@ Return ONLY a JSON object in this exact format:
             <div className="form-field">
               <label className="form-label">
                 Size
-                {isFieldPopulatedByAI("size") && (
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginLeft: "8px",
-                      color: "var(--ion-color-primary)",
-                      fontSize: "14px",
-                    }}
-                    title="Auto-filled by AI"
-                  />
-                )}
               </label>
               <IonInput
                 className="form-input"
@@ -756,17 +362,6 @@ Return ONLY a JSON object in this exact format:
             <div className="form-field">
               <label className="form-label required">
                 Category
-                {isFieldPopulatedByAI("category") && (
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginLeft: "8px",
-                      color: "var(--ion-color-primary)",
-                      fontSize: "14px",
-                    }}
-                    title="Auto-filled by AI"
-                  />
-                )}
               </label>
               <IonSelect
                 className="form-select"
@@ -785,17 +380,6 @@ Return ONLY a JSON object in this exact format:
             <div className="form-field">
               <label className="form-label required">
                 Subcategory
-                {isFieldPopulatedByAI("subcategory") && (
-                  <IonIcon
-                    icon={sparklesOutline}
-                    style={{
-                      marginLeft: "8px",
-                      color: "var(--ion-color-primary)",
-                      fontSize: "14px",
-                    }}
-                    title="Auto-filled by AI"
-                  />
-                )}
               </label>
               <IonSelect
                 className="form-select"
@@ -910,30 +494,6 @@ Return ONLY a JSON object in this exact format:
         isOpen={showProfilePopover}
         event={profilePopoverEvent || undefined}
         onDidDismiss={() => setShowProfilePopover(false)}
-      />
-
-      <IonActionSheet
-        isOpen={showActionSheet}
-        onDidDismiss={() => setShowActionSheet(false)}
-        buttons={[
-          {
-            text: "Take Photo",
-            icon: cameraOutline,
-            handler: () => captureImage(CameraSource.Camera),
-          },
-          {
-            text: "Choose from Gallery",
-            icon: imagesOutline,
-            handler: () => captureImage(CameraSource.Photos),
-          },
-          {
-            text: "Cancel",
-            role: "cancel",
-          },
-        ]}
-        header="Add Product Image"
-        subHeader="Choose how you'd like to add an image"
-        mode="ios"
       />
 
       <IonFooter mode="ios">
