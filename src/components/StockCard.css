@@ -8,7 +8,7 @@
     position: relative;
     transition: all 0.2s ease;
     background-color: white;
-    border-radius: 12px;
+    border-radius: 0;
     margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border-left: 4px solid transparent;
@@ -98,7 +98,7 @@
 .stock-size-badge {
     font-size: 0.7rem;
     padding: 2px 6px;
-    border-radius: 8px;
+    border-radius: 0;
     font-weight: 600;
 }
 

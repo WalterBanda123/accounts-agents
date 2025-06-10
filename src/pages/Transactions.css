@@ -4,7 +4,7 @@
 .transactions-header {
   padding: 20px 16px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 16px;
+  border-radius: 0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
@@ -18,7 +18,7 @@
   border: 1px solid var(--ion-color-dark);
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,7 +78,7 @@
 
 .filter-chip {
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: 0;
   background-color: #f1f3f4;
   color: var(--ion-color-dark);
   font-size: 0.85rem;
@@ -100,7 +100,7 @@
 /* Gmail-Style Transaction List */
 .transaction-list {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   margin: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   overflow: hidden;
@@ -208,7 +208,7 @@
 .status-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 0;
   display: block;
 }
 
@@ -269,7 +269,7 @@
   font-style: italic;
   background: white;
   margin: 16px;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .no-transactions p {
@@ -379,7 +379,7 @@
 
 .search-bar {
   --background: white;
-  --border-radius: 24px;
+  --border-radius: 0;
   --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   --color: var(--ion-color-dark);
   --placeholder-color: var(--ion-color-medium);

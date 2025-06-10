@@ -8,7 +8,7 @@
   text-align: center;
   padding: 60px 20px;
   background: var(--ion-color-light);
-  border-radius: 16px;
+  border-radius: 0;
   margin: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -34,7 +34,7 @@
   max-height: 200px;
   overflow: hidden;
   margin: 16px auto 24px auto;
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: block;
 }
@@ -44,7 +44,7 @@
   height: 200px;
   object-fit: cover;
   object-position: center;
-  border-radius: 12px;
+  border-radius: 0;
   display: block;
 }
 
@@ -55,7 +55,7 @@
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(15px);
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -79,7 +79,7 @@
   background: white;
   width: 100%;
   padding: 35px 30px;
-  border-radius: 16px;
+  border-radius: 0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   font-family: "Courier New", monospace;
   position: relative;
@@ -100,7 +100,7 @@
 .receipt-action-btn {
   --background: rgba(255, 255, 255, 0.9);
   --color: var(--ion-color-primary);
-  --border-radius: 8px;
+  --border-radius: 0;
   --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   --padding-start: 8px;
   --padding-end: 8px;
@@ -133,7 +133,7 @@
     rgba(0, 0, 0, 0.02) 4px
   );
   pointer-events: none;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 /* Receipt Header */

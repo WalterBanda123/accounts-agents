@@ -14,7 +14,7 @@
   text-align: center;
   margin-bottom: 30px;
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 30px 20px;
   border: 1px solid #e0e0e0;
 }
@@ -36,7 +36,7 @@
   bottom: -5px;
   right: -5px;
   background: var(--ion-color-primary);
-  border-radius: 50%;
+  border-radius: 0;
   width: 36px;
   height: 36px;
   --padding-start: 0;
@@ -64,7 +64,7 @@
 /* Profile Information Section */
 .profile-info-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e0e0e0;
   margin-bottom: 20px;
   overflow: hidden;
@@ -77,9 +77,9 @@
 
 .profile-item {
   margin-bottom: 16px;
-  border-radius: 8px;
+  border-radius: 0;
   --background: #f8f9fa;
-  --border-radius: 8px;
+  --border-radius: 0;
   --border-width: 1px;
   --border-color: #e0e0e0;
   --inner-padding-start: 16px;
@@ -144,7 +144,7 @@
 /* Stats Section */
 .stats-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e0e0e0;
   padding: 20px;
   margin-bottom: 20px;
@@ -167,7 +167,7 @@
   text-align: center;
   padding: 16px;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e0e0e0;
 }
 
@@ -187,14 +187,14 @@
 /* Actions Section */
 .actions-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e0e0e0;
   padding: 20px;
 }
 
 .actions-section ion-button {
   margin-bottom: 12px;
-  --border-radius: 8px;
+  --border-radius: 0;
   height: 44px;
   font-weight: 500;
 }

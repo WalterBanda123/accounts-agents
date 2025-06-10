@@ -18,7 +18,7 @@
     --background: var(--ion-color-base);
     --color: var(--ion-color-dark);
     --placeholder-color: var(--ion-color-medium);
-    --border-radius: 8px;
+    --border-radius: 0;
 }
 
 /* Notifications List */
@@ -30,7 +30,7 @@
 
 .notification-item {
     background: var(--ion-color-base);
-    border-radius: 8px;
+    border-radius: 0;
     padding: 16px;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -59,7 +59,7 @@
     align-items: center;
     justify-content: center;
     background: var(--ion-color-light);
-    border-radius: 50%;
+    border-radius: 0;
     margin-top: 4px;
 }
 
@@ -88,7 +88,7 @@
     width: 8px;
     height: 8px;
     background: var(--ion-color-primary);
-    border-radius: 50%;
+    border-radius: 0;
     flex-shrink: 0;
 }
 
@@ -179,7 +179,7 @@
 
 .notification-item {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e0e0e0;
   padding: 16px;
   cursor: pointer;
@@ -220,7 +220,7 @@
   width: 36px;
   height: 36px;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 0;
   flex-shrink: 0;
 }
 
@@ -248,7 +248,7 @@
   width: 8px;
   height: 8px;
   background: var(--ion-color-primary);
-  border-radius: 50%;
+  border-radius: 0;
   flex-shrink: 0;
 }
 

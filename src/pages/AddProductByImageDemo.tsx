@@ -12,6 +12,8 @@ import {
   IonCardTitle,
   IonCardContent,
   IonIcon,
+  IonFooter,
+  IonButton,
 } from "@ionic/react";
 import { 
   sparklesOutline, 
@@ -76,6 +78,27 @@ const AddProductByImageDemo: React.FC = () => {
         {/* Add Product Component */}
         <AddProductByImage />
       </IonContent>
+
+      {/* Fixed Footer */}
+      <IonFooter mode="ios">
+        <div className="demo-footer">
+          <IonButton
+            expand="block"
+            className="get-started-button"
+            onClick={() => {
+              // Scroll to the AddProductByImage component or focus on image upload
+              const imageUploadCard = document.querySelector('.image-upload-card');
+              if (imageUploadCard) {
+                imageUploadCard.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            size="large"
+          >
+            <IonIcon icon={cameraOutline} slot="start" />
+            Get Started
+          </IonButton>
+        </div>
+      </IonFooter>
     </IonPage>
   );
 };

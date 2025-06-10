@@ -34,7 +34,7 @@
 
 .register-form {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 24px;
   border: 1px solid #e0e0e0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -45,9 +45,9 @@
 
 .register-item {
   margin-bottom: 16px;
-  border-radius: 8px;
+  border-radius: 0;
   --background: #f8f9fa;
-  --border-radius: 8px;
+  --border-radius: 0;
   --border-width: 1px;
   --border-color: #e0e0e0;
   --inner-padding-start: 16px;
@@ -63,7 +63,7 @@
 
 .register-button {
   margin: 20px 0 16px 0;
-  --border-radius: 8px;
+  --border-radius: 0;
   height: 44px;
   font-weight: 500;
 }
@@ -92,7 +92,7 @@
 .signin-link {
   text-align: center;
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 16px;
   border: 1px solid #e0e0e0;
   margin-left: 5px;
