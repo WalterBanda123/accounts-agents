@@ -511,23 +511,33 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         const headers: Record<string, string> = {};
 
         if (imageFile) {
-          // Use separate endpoint for image analysis
-          endpoint = `http://127.0.0.1:8003/analyze-image`;
+          // Use the new image analysis endpoint
+          endpoint = `http://localhost:8000/analyze_image`;
 
-          // Use FormData for image uploads
-          const formData = new FormData();
-          formData.append("message", message);
-          formData.append("session_id", activeSessionId);
-          formData.append("user_id", userId);
-          formData.append("image", imageFile, "product-image.jpg");
+          // Convert File/Blob to base64 for the new API format
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              // Remove data:image/...;base64, prefix
+              const base64 = result.split(",")[1];
+              resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(imageFile);
+          });
 
-          requestBody = formData;
-          // Don't set Content-Type header, let browser set it with boundary
+          // Use JSON format for the new endpoint
+          requestBody = JSON.stringify({
+            message,
+            image_data: base64Data,
+            is_url: false,
+            user_id: userId,
+          });
+          headers["Content-Type"] = "application/json";
         } else {
-          // Use separate endpoint for text-only AI requests
-          endpoint = `http://127.0.0.1:8003/run`;
+          endpoint = `http://localhost:8003/run`;
 
-          // Use JSON for text-only requests
           requestBody = JSON.stringify({
             message,
             context: {
@@ -550,7 +560,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           if (response.status === 404) {
             throw new Error(
               `${endpointType} endpoint not found. Please check if the backend server is running and the ${
-                imageFile ? "/analyze-image" : "/askAI"
+                imageFile ? "/analyze_image" : "/run"
               } endpoint is available.`
             );
           } else if (response.status === 500) {
@@ -575,7 +585,11 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         // Handle backend response structure: {status, message, data, pdf_data}
         let responseText: string;
-        let pdfData: { pdf_base64: string; pdf_size: number; direct_download_url: string } | null = null;
+        let pdfData: {
+          pdf_base64: string;
+          pdf_size: number;
+          direct_download_url: string;
+        } | null = null;
 
         if (typeof botResponse === "string") {
           responseText = botResponse;
@@ -586,13 +600,12 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
             pdfData = botResponse.pdf_data || null;
           } else {
             // Fallback to other possible response structures
-            responseText = (
+            responseText =
               botResponse?.message ||
               botResponse?.response ||
               botResponse?.text ||
               botResponse?.content ||
-              JSON.stringify(botResponse)
-            );
+              JSON.stringify(botResponse);
             pdfData = botResponse?.pdf_data || null;
           }
         } else {
@@ -602,7 +615,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         // Return both message and PDF data if available
         return {
           message: responseText,
-          pdfData: pdfData
+          pdfData: pdfData,
         };
       } catch (error) {
         setError(error);

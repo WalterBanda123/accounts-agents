@@ -48,6 +48,7 @@ import MiscActivities from "./pages/MiscActivities";
 import Transactions from "./pages/Transactions";
 import Stocks from "./pages/Stocks";
 import NewProduct from "./pages/NewProduct";
+import AddProductByImageDemo from "./pages/AddProductByImageDemo";
 import ReceiptDetail from "./pages/ReceiptDetail";
 import useAuthContext from "./contexts/auth/UseAuthContext";
 
@@ -131,6 +132,9 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute path="/new-product">
             <NewProduct />
+          </ProtectedRoute>
+          <ProtectedRoute path="/add-product-by-image">
+            <AddProductByImageDemo />
           </ProtectedRoute>
           <Route exact path="/">
             <Redirect to="/login" />

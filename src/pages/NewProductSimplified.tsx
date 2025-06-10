@@ -23,6 +23,8 @@ import {
   IonFooter,
   IonSpinner,
   IonActionSheet,
+  IonItem,
+  IonLabel,
 } from "@ionic/react";
 import {
   saveOutline,
@@ -295,14 +297,8 @@ const NewProduct: React.FC = () => {
     setShowToast(true);
 
     try {
-      // Convert base64 dataUrl to File object properly
       const response = await fetch(imageDataUrl);
       const blob = await response.blob();
-
-      // Create a File object from the blob
-      const file = new File([blob], "product-image.jpg", {
-        type: blob.type || "image/jpeg",
-      });
 
       const message = `Analyze this product image and extract detailed product information. 
 
@@ -328,7 +324,7 @@ Return ONLY a JSON object in this exact format:
       const aiResponse = await askAiAssistant(
         message,
         currentSessionId || undefined,
-        file // Pass the File object instead of blob
+        blob
       );
 
       // Parse AI response
@@ -514,20 +510,30 @@ Return ONLY a JSON object in this exact format:
 
         {/* AI-Powered Product Creation */}
         {!isEditMode && !capturedImage && (
-          <IonCard className="ai-info-card">
+          <IonCard
+            style={{
+              background:
+                "linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-secondary-tint))",
+              color: "white",
+              marginBottom: "20px",
+            }}
+          >
             <IonCardHeader>
-              <IonCardTitle>
+              <IonCardTitle
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <IonIcon icon={sparklesOutline} />
                 Try AI-Powered Product Creation
               </IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <p>
+              <p style={{ marginBottom: "16px" }}>
                 Save time! Let AI extract product details automatically from a
                 single photo.
               </p>
               <IonButton
                 fill="outline"
+                style={{ "--color": "white", "--border-color": "white" }}
                 routerLink="/add-product-by-image"
                 routerDirection="forward"
               >
@@ -539,11 +545,7 @@ Return ONLY a JSON object in this exact format:
         )}
 
         {/* Product Image Section */}
-        <IonCard
-          className={`image-upload-card ${
-            isProcessingImage ? "processing" : ""
-          }`}
-        >
+        <IonCard>
           <IonCardHeader>
             <IonCardTitle className="image-card-title">
               {isProcessingImage ? (
@@ -933,7 +935,6 @@ Return ONLY a JSON object in this exact format:
         ]}
         header="Add Product Image"
         subHeader="Choose how you'd like to add an image"
-        mode="ios"
       />
 
       <IonFooter mode="ios">
