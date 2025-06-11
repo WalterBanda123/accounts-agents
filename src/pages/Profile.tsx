@@ -39,6 +39,7 @@ const Profile: React.FC = () => {
   const [profileData, setProfileData] = useState<UserInterface | null>(user);
 
   const [editData, setEditData] = useState<UserInterface>({
+    id:"",
     name: profileData?.name || "",
     email: profileData?.email || "",
     businessName: profileData?.businessName || "",
@@ -49,6 +50,7 @@ const Profile: React.FC = () => {
   const handleEdit = () => {
     setIsEditing(true);
     setEditData({
+      id: "",
       name: profileData?.name || "",
       email: profileData?.email || "",
       businessName: profileData?.businessName || "",
@@ -67,6 +69,7 @@ const Profile: React.FC = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setEditData({
+      id: "",
       name: profileData?.name || "",
       email: profileData?.email || "",
       businessName: profileData?.businessName || "",

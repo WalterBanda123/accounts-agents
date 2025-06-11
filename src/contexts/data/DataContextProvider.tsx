@@ -27,7 +27,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const COLLECTION_NAMES = useMemo(
     () => ({
       products: "products",
-      profiles: "profiles",
+      profiles: "user_profiles",
     }),
     []
   );

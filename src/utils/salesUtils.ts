@@ -1,5 +1,4 @@
 import { StockItem } from '../mock/stocks';
-import { CartItem, TransactionReceiptInterface } from '../mock/transactions';
 
 // Interface for parsed sale items
 export interface ParsedSaleItem {
@@ -26,6 +25,25 @@ export interface SalesReceipt {
   total: number;
   isValid: boolean;
   errors: string[];
+}
+
+// Interface for transaction data
+export interface TransactionData {
+  transactionId: string;
+  customerEmail: string;
+  items: Array<{
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    stockItemId?: string;
+  }>;
+  subtotal: number;
+  tax: number;
+  taxRate: number;
+  total: number;
+  timestamp: string;
+  status: 'completed' | 'pending' | 'failed';
 }
 
 // Tax rate (configurable)
@@ -214,6 +232,36 @@ export function generateSalesReceipt(validatedItems: ValidatedSaleItem[]): Sales
     total,
     isValid: errors.length === 0,
     errors
+  };
+}
+
+/**
+ * Create transaction data from a sales receipt
+ */
+export function createTransactionFromReceipt(
+  receipt: SalesReceipt, 
+  customerEmail: string = "walk-in-customer@store.com"
+): TransactionData {
+  const validItems = receipt.items.filter(item => item.isValid);
+  
+  const transactionId = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  return {
+    transactionId,
+    customerEmail,
+    items: validItems.map(item => ({
+      productName: item.productName,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      stockItemId: item.stockItem?.id
+    })),
+    subtotal: receipt.subtotal,
+    tax: receipt.tax,
+    taxRate: receipt.taxRate,
+    total: receipt.total,
+    timestamp: new Date().toISOString(),
+    status: 'completed' as const
   };
 }
 
