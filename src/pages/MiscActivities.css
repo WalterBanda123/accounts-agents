@@ -104,9 +104,32 @@
   min-height: 44px;
   max-height: 120px;
   background: white;
-  border-radius: 0;
+  border-radius: 16px;
   border: 1px solid #ffcc02;
   padding: 8px 16px;
+  line-height: 1.4;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-size: 16px;
+  resize: none;
+  overflow-y: hidden;
+}
+
+.message-input textarea {
+  white-space: pre-wrap !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+  line-height: 1.4 !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.message-input textarea::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .send-button-container {
@@ -117,18 +140,52 @@
 }
 
 .send-button {
-  --border-radius: 0;
-  width: 44px;
-  height: 44px;
-  --color: #ff8f00;
+  --border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  --background: #333;
+  --background-hover: #555;
+  --background-activated: #000;
+  --color: white;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin: 0 0 0 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .send-button:hover:not(.button-disabled) {
-  --background: rgba(255, 143, 0, 0.1);
+  transform: scale(1.05);
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --background: #555;
+}
+}
+
+.send-button:active:not(.button-disabled) {
+  transform: scale(0.95);
+  --box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .send-button.button-disabled {
-  --color: #bdbdbd;
+  --background: #f0f0f0;
+  --color: #ccc;
+  --box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.send-button ion-icon {
+  font-size: 20px !important;
+  transition: transform 0.1s ease;
+  color: white !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.send-button:hover:not(.button-disabled) ion-icon {
+  transform: scale(1.1);
 }
 
 /* Profile avatar styling */

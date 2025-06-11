@@ -171,24 +171,24 @@ ion-item {
   .profile-container {
     padding: 16px 12px;
   }
-  
+
   .profile-header {
     padding: 16px;
   }
-  
+
   .color-options {
     gap: 6px;
   }
-  
+
   .color-option {
     width: 24px;
     height: 24px;
   }
-  
+
   .info-item {
     gap: 10px;
   }
-  
+
   .info-item ion-icon {
     font-size: 18px;
   }

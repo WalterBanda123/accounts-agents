@@ -55,32 +55,3 @@
     padding: 10px 12px;
   }
 }
-
-/* Demo Footer */
-.demo-footer {
-  background: white;
-  border-top: 1px solid #e5e5e5;
-  padding: 1rem 1.25rem;
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-}
-
-.get-started-button {
-  --background: #2563eb;
-  --background-activated: #1d4ed8;
-  --background-hover: #1e40af;
-  --border-radius: 0;
-  --color: white;
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-.get-started-button:hover:not(.button-disabled) {
-  --background: #1e40af;
-}
-
-/* Adjust content padding to account for fixed footer */
-ion-content {
-  --padding-bottom: 80px;
-}

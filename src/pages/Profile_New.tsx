@@ -36,12 +36,7 @@ import useAuthContext from "../contexts/auth/UseAuthContext";
 import { UserProfile } from "../interfaces/user";
 import { StoreProfile } from "../interfaces/store";
 import AvatarComponent from "../components/AvatarComponent";
-import { generateUserAvatar } from "../utils/avatarUtils";
-import {
-  saveUserProfile,
-  getUserProfile,
-  getStoreProfile,
-} from "../services/profileService";
+import { AVATAR_COLORS, generateUserAvatar } from "../utils/avatarUtils";
 
 const Profile: React.FC = () => {
   const history = useHistory();
@@ -57,75 +52,34 @@ const Profile: React.FC = () => {
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
 
   useEffect(() => {
-    const loadProfileData = async () => {
-      if (!user?.id) return;
+    // Load profiles from localStorage
+    const savedUserProfile = localStorage.getItem("userProfile");
+    const savedStoreProfile = localStorage.getItem("storeProfile");
 
-      // Try to load from Firestore first
-      try {
-        const firestoreUserProfile = await getUserProfile(user.id);
-        const firestoreStoreProfile = await getStoreProfile(user.id);
+    if (savedUserProfile) {
+      const parsed = JSON.parse(savedUserProfile);
+      setUserProfile(parsed);
+      setEditData(parsed);
+    } else if (user) {
+      // Fallback to basic user data if no profile setup completed
+      const fallbackProfile: Partial<UserProfile> = {
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        avatar: generateUserAvatar(user.id, user.name),
+        language_preference: "English",
+        preferred_currency: "USD",
+        country: "Zimbabwe",
+        business_owner: true,
+      };
+      setUserProfile(fallbackProfile as UserProfile);
+      setEditData(fallbackProfile);
+    }
 
-        if (firestoreUserProfile) {
-          setUserProfile(firestoreUserProfile);
-          setEditData(firestoreUserProfile);
-          // Update localStorage with Firestore data
-          localStorage.setItem(
-            "userProfile",
-            JSON.stringify(firestoreUserProfile)
-          );
-        } else {
-          // Fallback to localStorage
-          const savedUserProfile = localStorage.getItem("userProfile");
-          if (savedUserProfile) {
-            const parsed = JSON.parse(savedUserProfile);
-            setUserProfile(parsed);
-            setEditData(parsed);
-          } else {
-            // Create fallback profile with proper avatar
-            const fallbackProfile: Partial<UserProfile> = {
-              user_id: user.id,
-              name: user.name,
-              email: user.email,
-              phone: user.phone,
-              avatar: generateUserAvatar(user.id, user.name),
-              language_preference: "English",
-              preferred_currency: "USD",
-              country: "Zimbabwe",
-              business_owner: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              status: "active",
-            };
-            setUserProfile(fallbackProfile as UserProfile);
-            setEditData(fallbackProfile);
-          }
-        }
-
-        if (firestoreStoreProfile) {
-          setStoreProfile(firestoreStoreProfile);
-          localStorage.setItem(
-            "storeProfile",
-            JSON.stringify(firestoreStoreProfile)
-          );
-        } else {
-          const savedStoreProfile = localStorage.getItem("storeProfile");
-          if (savedStoreProfile) {
-            setStoreProfile(JSON.parse(savedStoreProfile));
-          }
-        }
-      } catch (error) {
-        console.error("Error loading profile from Firestore:", error);
-        // Fallback to localStorage on error
-        const savedUserProfile = localStorage.getItem("userProfile");
-        if (savedUserProfile) {
-          const parsed = JSON.parse(savedUserProfile);
-          setUserProfile(parsed);
-          setEditData(parsed);
-        }
-      }
-    };
-
-    loadProfileData();
+    if (savedStoreProfile) {
+      setStoreProfile(JSON.parse(savedStoreProfile));
+    }
   }, [user]);
 
   const handleEdit = () => {
@@ -133,7 +87,7 @@ const Profile: React.FC = () => {
     setEditData(userProfile || {});
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (userProfile && editData) {
       const updatedProfile = {
         ...userProfile,
@@ -142,31 +96,10 @@ const Profile: React.FC = () => {
       };
 
       setUserProfile(updatedProfile);
-
-      // Save to localStorage for immediate access
       localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-
-      // Save to Firestore database
-      try {
-        await saveUserProfile(updatedProfile);
-        console.log("Profile saved to Firestore successfully");
-
-        setIsEditing(false);
-        setToastMessage("Profile updated successfully and saved to database");
-        setShowToast(true);
-
-        // Dispatch a custom event to notify other components
-        window.dispatchEvent(
-          new CustomEvent("profileUpdated", { detail: updatedProfile })
-        );
-      } catch (error) {
-        console.error("Error saving to Firestore:", error);
-        setToastMessage(
-          "Profile updated locally. Database sync failed - please try again."
-        );
-        setShowToast(true);
-        setIsEditing(false);
-      }
+      setIsEditing(false);
+      setToastMessage("Profile updated successfully");
+      setShowToast(true);
     }
   };
 
@@ -175,26 +108,13 @@ const Profile: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleAvatarColorChange = async (color: string) => {
+  const handleAvatarColorChange = (color: string) => {
     if (userProfile && userProfile.avatar) {
       const updatedAvatar = { ...userProfile.avatar, color };
       const updatedProfile = { ...userProfile, avatar: updatedAvatar };
       setUserProfile(updatedProfile);
       setEditData(updatedProfile);
       localStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-
-      // Save to Firestore
-      try {
-        await saveUserProfile(updatedProfile);
-        console.log("Avatar color updated in Firestore");
-      } catch (error) {
-        console.error("Error updating avatar color in Firestore:", error);
-      }
-
-      // Dispatch a custom event to notify other components
-      window.dispatchEvent(
-        new CustomEvent("profileUpdated", { detail: updatedProfile })
-      );
     }
   };
 
@@ -268,24 +188,22 @@ const Profile: React.FC = () => {
                     <div className="color-picker">
                       <p>Tap to change color:</p>
                       <div className="color-options">
-                        {["#3498db", "#e74c3c", "#2ecc71", "#f39c12"].map(
-                          (color) => (
-                            <div
-                              key={color}
-                              className={`color-option ${
-                                userProfile.avatar?.color === color
-                                  ? "selected"
-                                  : ""
-                              }`}
-                              style={{ backgroundColor: color }}
-                              onClick={() => handleAvatarColorChange(color)}
-                            >
-                              {userProfile.avatar?.color === color && (
-                                <IonIcon icon={checkmark} />
-                              )}
-                            </div>
-                          )
-                        )}
+                        {AVATAR_COLORS.slice(0, 6).map((color) => (
+                          <div
+                            key={color}
+                            className={`color-option ${
+                              userProfile.avatar?.color === color
+                                ? "selected"
+                                : ""
+                            }`}
+                            style={{ backgroundColor: color }}
+                            onClick={() => handleAvatarColorChange(color)}
+                          >
+                            {userProfile.avatar?.color === color && (
+                              <IonIcon icon={checkmark} />
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

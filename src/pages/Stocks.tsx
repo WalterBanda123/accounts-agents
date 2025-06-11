@@ -1,5 +1,4 @@
 import {
-  IonAvatar,
   IonBackButton,
   IonButtons,
   IonContent,
@@ -33,9 +32,12 @@ import { useHistory } from "react-router-dom";
 import { StockItem } from "../mock/stocks";
 import StockCard from "../components/StockCard";
 import ProfilePopover from "../components/ProfilePopover";
+import AvatarComponent from "../components/AvatarComponent";
+import { UserProfile } from "../interfaces/user";
 import "../components/StockCard.css";
 import "./Stocks.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 
 const Stocks: React.FC = () => {
   const [selectedStock, setSelectedStock] = useState<Partial<StockItem> | null>(
@@ -45,9 +47,38 @@ const Stocks: React.FC = () => {
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
   const modal = useRef<HTMLIonModalElement>(null);
   const history = useHistory();
+  const { user } = useAuthContext();
   const { getAllProducts, inventory, isProductsLoading } = useDataContext();
+
+  // Load user profile
+  useEffect(() => {
+    const loadProfile = () => {
+      const savedUserProfile = localStorage.getItem('userProfile');
+      if (savedUserProfile) {
+        try {
+          setUserProfile(JSON.parse(savedUserProfile));
+        } catch (error) {
+          console.error('Error parsing user profile from localStorage:', error);
+        }
+      }
+    };
+
+    loadProfile();
+
+    const handleProfileUpdate = () => {
+      loadProfile();
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -137,9 +168,13 @@ const Stocks: React.FC = () => {
           </IonButtons>
           <IonTitle>Stock Overview</IonTitle>
           <IonButtons slot="end">
-            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-              <img src="https://picsum.photos/100" alt="Profile" />
-            </IonAvatar>
+            <AvatarComponent
+              initials={userProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
+              color={userProfile?.avatar?.color || '#3498db'}
+              size="small"
+              className="header-avatar"
+              onClick={() => handleProfileClick({} as React.MouseEvent)}
+            />
             <IonButton
               fill="clear"
               color="primary"

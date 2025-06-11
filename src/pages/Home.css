@@ -1,7 +1,7 @@
 /* Main Navigation Cards - Minimal Style */
 .container {
   border: 1px solid #e0e0e0;
-  border-radius: 0;
+  border-radius: 16px;
   padding: 16px 20px;
   display: flex;
   flex-direction: row;
@@ -24,12 +24,14 @@
   border-color: var(--ion-color-primary);
 }
 
-.container.scan-cart-highlighted {
+.container.scan-cart-highlighted,
+.container.transaction-chat-highlighted {
   border: 2px solid var(--ion-color-primary);
   background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
 }
 
-.container.scan-cart-highlighted:hover {
+.container.scan-cart-highlighted:hover,
+.container.transaction-chat-highlighted:hover {
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
   border-color: var(--ion-color-primary-shade);
 }
@@ -62,7 +64,7 @@
 .today-summary {
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   border: 1px solid #e3e8ff;
-  border-radius: 0;
+  border-radius: 20px;
   padding: 20px;
   margin: 16px 0 24px 0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -98,7 +100,7 @@
   text-align: center;
   background: white;
   padding: 16px 12px;
-  border-radius: 0;
+  border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #f0f0f0;
   transition: all 0.2s ease;
@@ -136,7 +138,7 @@
 .sales-summary-minimal {
   background: white;
   border: 1px solid #e8ecef;
-  border-radius: 0;
+  border-radius: 16px;
   padding: 16px;
   margin: 16px 0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
@@ -173,7 +175,7 @@
 /* Recent Transactions Container */
 .recent-transactions-container {
   background: white;
-  border-radius: 0;
+  border-radius: 16px;
   padding: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   margin-top: 8px;
@@ -183,7 +185,7 @@
 .clickable-transaction {
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 0;
+  border-radius: 12px;
   margin: 2px 0;
 }
 
@@ -198,7 +200,7 @@
   margin: 24px 16px 16px 16px;
   padding: 16px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 0;
+  border-radius: 16px;
   border-left: 4px solid var(--ion-color-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
@@ -291,6 +293,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid var(--ion-color-light);
+  border-radius: 50%;
   transition: all 0.2s ease;
 }
 

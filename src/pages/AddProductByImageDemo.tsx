@@ -12,15 +12,13 @@ import {
   IonCardTitle,
   IonCardContent,
   IonIcon,
-  IonFooter,
-  IonButton,
 } from "@ionic/react";
-import { 
-  sparklesOutline, 
-  cameraOutline, 
-  createOutline, 
+import {
+  sparklesOutline,
+  cameraOutline,
+  createOutline,
   saveOutline,
-  cogOutline 
+  cogOutline,
 } from "ionicons/icons";
 import AddProductByImage from "../components/AddProductByImage";
 import "./AddProductByImageDemo.css";
@@ -55,17 +53,20 @@ const AddProductByImageDemo: React.FC = () => {
           <IonCardContent>
             <ol className="instructions-list">
               <li>
-                <IonIcon icon={cameraOutline} /> <strong>Capture or select</strong> a product image
+                <IonIcon icon={cameraOutline} />{" "}
+                <strong>Capture or select</strong> a product image
               </li>
               <li>
-                <IonIcon icon={cogOutline} /> <strong>AI analyzes</strong> the image to extract product
-                details
+                <IonIcon icon={cogOutline} /> <strong>AI analyzes</strong> the
+                image to extract product details
               </li>
               <li>
-                <IonIcon icon={createOutline} /> <strong>Review and edit</strong> the extracted information
+                <IonIcon icon={createOutline} />{" "}
+                <strong>Review and edit</strong> the extracted information
               </li>
               <li>
-                <IonIcon icon={saveOutline} /> <strong>Save</strong> the product to your inventory
+                <IonIcon icon={saveOutline} /> <strong>Save</strong> the product
+                to your inventory
               </li>
             </ol>
             <p className="instructions-note">
@@ -78,27 +79,6 @@ const AddProductByImageDemo: React.FC = () => {
         {/* Add Product Component */}
         <AddProductByImage />
       </IonContent>
-
-      {/* Fixed Footer */}
-      <IonFooter mode="ios">
-        <div className="demo-footer">
-          <IonButton
-            expand="block"
-            className="get-started-button"
-            onClick={() => {
-              // Scroll to the AddProductByImage component or focus on image upload
-              const imageUploadCard = document.querySelector('.image-upload-card');
-              if (imageUploadCard) {
-                imageUploadCard.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-            size="large"
-          >
-            <IonIcon icon={cameraOutline} slot="start" />
-            Get Started
-          </IonButton>
-        </div>
-      </IonFooter>
     </IonPage>
   );
 };
