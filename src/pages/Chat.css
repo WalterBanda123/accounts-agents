@@ -4,7 +4,7 @@
   gap: 16px;
   padding: 20px 16px;
   overflow-y: auto;
-  border-radius: 20px;
+  border-radius: 0;
   margin-bottom: 16px;
   background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
   min-height: calc(100vh - 200px);
@@ -15,7 +15,7 @@
 .client_message {
   max-width: 85%;
   padding: 14px 18px;
-  border-radius: 20px;
+  border-radius: 0;
   word-wrap: break-word;
   position: relative;
   font-size: 15px;
@@ -30,7 +30,7 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border: 1px solid #e9ecef;
   margin-right: auto;
-  border-bottom-left-radius: 8px;
+  border-bottom-left-radius: 6px;
   color: #2c3e50;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   letter-spacing: 0.2px;
@@ -108,7 +108,7 @@
   --padding-end: 16px;
   --padding-top: 12px;
   --padding-bottom: 12px;
-  --border-radius: 16px;
+  --border-radius: 0;
   --border-width: 1px;
   --border-color: lightgray;
   --background: #f8f9fa;
@@ -116,31 +116,20 @@
   font-size: 14px;
   resize: none;
   overflow-y: hidden;
-  min-height: 44px;
+  min-height: 40px;
   max-height: 120px;
-  line-height: 1.4;
 }
 
 .chat_input textarea {
   resize: none !important;
   overflow-y: hidden !important;
   overflow-x: hidden !important;
-  min-height: 44px !important;
+  min-height: 40px !important;
   max-height: 120px !important;
   line-height: 1.4 !important;
-  white-space: pre-wrap !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
 }
-
-.chat_input textarea::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
 .chat_input {
-  --min-height: 44px;
+  --min-height: 40px;
   --max-height: 120px;
 }
 
@@ -150,65 +139,34 @@
 }
 
 .add_media_button {
-  --color: var(--ion-color-medium);
-  --border-radius: 20px;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --background: #f8f9fa;
-  --border: 1px solid #e9ecef;
-  min-width: 48px;
-  min-height: 48px;
+  --color: var(--ion-color-dark);
+  --border-radius: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  min-width: 40px;
+  min-height: 40px;
   margin-bottom: 4px;
-  transition: all 0.3s ease;
 }
 
 .add_media_button:hover {
-  --color: var(--ion-color-primary);
-  --background: #f0f8ff;
-  --border: 1px solid var(--ion-color-primary);
-  transform: scale(1.05);
+  --color: var(--ion-color-dark);
 }
 
 .send_button {
-  --border-radius: 50%;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --background: #333;
-  --background-hover: #555;
-  --background-activated: #000;
-  --color: white;
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  min-width: 48px;
-  min-height: 48px;
-  margin: 0 0 4px 8px;
-  transition: all 0.2s ease;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-/* Ensure button content is visible */
-.send_button .button-inner {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  height: 100% !important;
+  --border-radius: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  min-width: 40px;
+  min-height: 40px;
+  margin-bottom: 4px;
 }
 
 .send_button.button-disabled {
-  --opacity: 1;
-  --background: #f0f0f0;
-  --color: #ccc;
-  --box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
+  --opacity: 0.5;
 }
 
 /* Loading spinner for send button */
@@ -217,7 +175,7 @@
   height: 16px;
   border: 2px solid transparent;
   border-top: 2px solid currentColor;
-  border-radius: 50%;
+  border-radius: 0;
   animation: spin 1s linear infinite;
 }
 
@@ -231,36 +189,18 @@
 }
 
 .send_button.loading {
-  --background: #555;
-  opacity: 0.8;
+  opacity: 0.7;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 /* Enhanced send button states */
-.send_button:not(.loading):not(.button-disabled):hover {
+.send_button:not(.loading):hover {
   transform: scale(1.05);
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --background: #555;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.send_button:not(.loading):not(.button-disabled):active {
+.send_button:not(.loading):active {
   transform: scale(0.95);
-  --box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-.send_button ion-icon {
-  font-size: 20px !important;
-  transition: transform 0.1s ease;
-  color: white !important;
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.send_button:not(.loading):not(.button-disabled):hover ion-icon {
-  transform: scale(1.1);
 }
 
 /* Message grouping and timestamps */
@@ -328,7 +268,7 @@
 .typing-indicator span {
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: 0;
   background-color: var(--ion-color-medium);
   animation: typingAnimation 1.4s infinite ease-in-out;
   opacity: 0.4;
@@ -369,7 +309,7 @@
 
 .messages_container::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 /* Header Profile Avatar */
@@ -398,7 +338,7 @@
 .error-content {
   background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
   border: 1px solid #feb2b2;
-  border-radius: 16px;
+  border-radius: 0;
   padding: 12px 16px;
   max-width: 85%;
   color: #c53030;
@@ -463,7 +403,7 @@
   background: #f8f9fa;
   color: #6c757d;
   padding: 6px 14px;
-  border-radius: 16px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
@@ -491,7 +431,7 @@
 .message-content code {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 0;
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
     "Courier New", monospace;
   font-size: 0.85em;
@@ -538,7 +478,7 @@
   margin-top: 12px;
   padding: 12px;
   background: rgba(0, 0, 0, 0.03);
-  border-radius: 12px;
+  border-radius: 0;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -586,7 +526,7 @@
   --background-activated: #2980b9;
   --background-hover: #2980b9;
   --color: white;
-  --border-radius: 16px;
+  --border-radius: 0;
   --padding-start: 16px;
   --padding-end: 16px;
   --height: 36px;
@@ -610,52 +550,6 @@
   --background-activated: #229954;
 }
 
-/* Sales Examples Section */
-.sales-examples {
-  margin: 16px;
-  padding: 16px;
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #e9ecef;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.sales-examples h4 {
-  margin: 0 0 12px 0;
-  color: #2c3e50;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.example-item {
-  padding: 10px 14px;
-  margin: 8px 0;
-  background: #f8f9ff;
-  border: 1px solid #e3e8ff;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
-    "Courier New", monospace;
-  font-size: 14px;
-  color: #3880ff;
-}
-
-.example-item:hover {
-  background: #e8f0ff;
-  border-color: #3880ff;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(56, 128, 255, 0.15);
-}
-
-.example-description {
-  font-size: 11px;
-  color: #6c757d;
-  margin-top: 4px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-style: italic;
-}
-
 /* PDF preview indicator */
 .pdf-preview-text {
   font-size: 12px;
@@ -669,7 +563,7 @@
   font-family: "Courier New", monospace;
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 16px;
   margin: 8px 0;
   line-height: 1.6;
@@ -702,7 +596,7 @@
   color: #dc3545;
   background: #f8d7da;
   border: 1px solid #f5c6cb;
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 12px;
   margin: 8px 0;
 }
@@ -711,7 +605,7 @@
 .sales-examples {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 16px;
   margin: 16px;
   font-size: 14px;
@@ -727,7 +621,7 @@
 .sales-examples .example-item {
   background: white;
   border: 1px solid #dee2e6;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 10px 12px;
   margin: 8px 0;
   font-family: "Courier New", monospace;

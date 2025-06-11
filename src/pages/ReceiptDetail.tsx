@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import {
+  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -24,9 +25,6 @@ import {
 } from "ionicons/icons";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
 import ProfilePopover from "../components/ProfilePopover";
-import AvatarComponent from "../components/AvatarComponent";
-import { UserProfile } from "../interfaces/user";
-import useAuthContext from "../contexts/auth/UseAuthContext";
 import "./ReceiptDetail.css";
 
 interface RouteParams {
@@ -36,40 +34,12 @@ interface RouteParams {
 const ReceiptDetail: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const history = useHistory();
-  const { user } = useAuthContext();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-  // Load user profile
-  useEffect(() => {
-    const loadProfile = () => {
-      const savedUserProfile = localStorage.getItem('userProfile');
-      if (savedUserProfile) {
-        try {
-          setUserProfile(JSON.parse(savedUserProfile));
-        } catch (error) {
-          console.error('Error parsing user profile from localStorage:', error);
-        }
-      }
-    };
-
-    loadProfile();
-
-    const handleProfileUpdate = () => {
-      loadProfile();
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    
-    return () => {
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, []);
 
   const receipt = ALL_TRANSACTIONS.find((t) => t.id === id);
 
@@ -154,13 +124,9 @@ const ReceiptDetail: React.FC = () => {
           </IonButtons>
           <IonTitle>Receipt Details</IonTitle>
           <IonButtons slot="end">
-            <AvatarComponent
-              initials={userProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
-              color={userProfile?.avatar?.color || '#3498db'}
-              size="small"
-              className="header-avatar"
-              onClick={() => handleProfileClick({} as React.MouseEvent)}
-            />
+            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+              <img src="https://picsum.photos/100" alt="Profile" />
+            </IonAvatar>
           </IonButtons>
         </IonToolbar>
       </IonHeader>

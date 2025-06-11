@@ -9,7 +9,6 @@ import { IonReactRouter } from "@ionic/react-router";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ProfileSetup from "./pages/ProfileSetup";
 import Profile from "./pages/Profile";
 import AccountSettings from "./pages/AccountSettings";
 import Notifications from "./pages/Notifications";
@@ -45,13 +44,13 @@ import "@ionic/react/css/palettes/dark.system.css";
 /* Theme variables */
 import "./theme/variables.css";
 import Chat from "./pages/Chat";
+import TransactionChat from "./pages/TransactionChat";
 import MiscActivities from "./pages/MiscActivities";
 import Transactions from "./pages/Transactions";
 import Stocks from "./pages/Stocks";
 import NewProduct from "./pages/NewProduct";
 import AddProductByImageDemo from "./pages/AddProductByImageDemo";
 import ReceiptDetail from "./pages/ReceiptDetail";
-import TransactionChat from "./pages/TransactionChat";
 import useAuthContext from "./contexts/auth/UseAuthContext";
 
 setupIonicReact();
@@ -102,9 +101,6 @@ const App: React.FC = () => {
           <Route exact path="/register">
             {isLoggedIn ? <Redirect to="/home" /> : <Register />}
           </Route>
-          <ProtectedRoute path="/profile-setup">
-            <ProfileSetup />
-          </ProtectedRoute>
           <ProtectedRoute path="/profile">
             <Profile />
           </ProtectedRoute>
@@ -123,6 +119,9 @@ const App: React.FC = () => {
           <ProtectedRoute path="/my_assistant">
             <Chat />
           </ProtectedRoute>
+          <ProtectedRoute path="/transaction-chat">
+            <TransactionChat />
+          </ProtectedRoute>
           <ProtectedRoute path="/misc-activities">
             <MiscActivities />
           </ProtectedRoute>
@@ -140,9 +139,6 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute path="/add-product-by-image">
             <AddProductByImageDemo />
-          </ProtectedRoute>
-          <ProtectedRoute path="/transaction-chat">
-            <TransactionChat />
           </ProtectedRoute>
           <Route exact path="/">
             <Redirect to="/login" />

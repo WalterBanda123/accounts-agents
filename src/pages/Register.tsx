@@ -48,11 +48,11 @@ const Register: React.FC = () => {
       setTimeout(() => {
         if (isLoggedIn && !error) {
           setToastMessage(
-            `Welcome to Account Manager, ${businessName}! Let's set up your profile.`
+            `Welcome to Account Manager, ${businessName}! Your account has been created successfully.`
           );
           setShowSuccessToast(true);
           setTimeout(() => {
-            history.push("/profile-setup");
+            history.push("/home");
           }, 2000);
         } else if (error) {
           setToastMessage(

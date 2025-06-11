@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
+  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -15,8 +16,6 @@ import {
 import { send } from "ionicons/icons";
 import ProfilePopover from "../components/ProfilePopover";
 import DateSeparator from "../components/DateSeparator";
-import AvatarComponent from "../components/AvatarComponent";
-import { UserProfile } from "../interfaces/user";
 import "./MiscActivities.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
 import useAuthContext from "../contexts/auth/UseAuthContext";
@@ -69,37 +68,10 @@ const MiscActivities: React.FC = () => {
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const contentRef = useRef<HTMLIonContentElement>(null);
   const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
   const messagesLoadedRef = useRef<boolean>(false);
   const sendingMessageRef = useRef<boolean>(false);
-
-  // Load user profile
-  useEffect(() => {
-    const loadProfile = () => {
-      const savedUserProfile = localStorage.getItem('userProfile');
-      if (savedUserProfile) {
-        try {
-          setUserProfile(JSON.parse(savedUserProfile));
-        } catch (error) {
-          console.error('Error parsing user profile from localStorage:', error);
-        }
-      }
-    };
-
-    loadProfile();
-
-    const handleProfileUpdate = () => {
-      loadProfile();
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    
-    return () => {
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, []);
 
   // Initial helpful message for miscellaneous activities
   const initialMessage: ChatMessage = {
@@ -346,19 +318,8 @@ User request: ${userMessage}`;
         let responseText: string = "";
 
         // Handle new response format with message and pdfData
-        if (
-          typeof aiResponse === "object" &&
-          aiResponse !== null &&
-          "message" in aiResponse
-        ) {
-          const response = aiResponse as {
-            message: string;
-            pdfData?: {
-              pdf_base64: string;
-              pdf_size: number;
-              direct_download_url: string;
-            };
-          };
+        if (typeof aiResponse === "object" && aiResponse !== null && 'message' in aiResponse) {
+          const response = aiResponse as { message: string; pdfData?: { pdf_base64: string; pdf_size: number; direct_download_url: string } };
           responseText = response.message;
           // Note: MiscActivities doesn't currently support PDF downloads, but the message will be displayed
         } else if (typeof aiResponse === "string") {
@@ -523,6 +484,13 @@ User request: ${userMessage}`;
     }
   }, [message, miscActivitiesSessionId, askAiAssistant, saveMessage, user?.id]);
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   const handleProfileClick = (event: React.MouseEvent) => {
     setProfilePopoverEvent(event.nativeEvent as unknown as CustomEvent);
     setShowProfilePopover(true);
@@ -543,12 +511,12 @@ User request: ${userMessage}`;
           <IonTitle>Miscellaneous Activities</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleProfileClick}>
-              <AvatarComponent
-                initials={userProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
-                color={userProfile?.avatar?.color || '#3498db'}
-                size="small"
-                className="header-avatar"
-              />
+              <IonAvatar className="header-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+                  alt="Profile"
+                />
+              </IonAvatar>
             </IonButton>
           </IonButtons>
         </IonToolbar>
@@ -593,21 +561,21 @@ User request: ${userMessage}`;
             <IonTextarea
               value={message}
               onIonInput={(e) => setMessage(e.detail.value!)}
+              onKeyDown={handleKeyPress}
               placeholder="Describe the activity you want to record..."
               rows={1}
               autoGrow
-              maxlength={2000}
+              maxlength={1000}
               className="message-input"
               disabled={chatLoading || !sessionInitialized}
-              wrap="soft"
             />
             <div className="send-button-container">
               <IonButton
                 onClick={sendMessage}
                 disabled={!message.trim() || chatLoading || !sessionInitialized}
                 className="send-button"
-                fill="solid"
-                shape="round"
+                fill="clear"
+                size="large"
               >
                 <IonIcon icon={send} />
               </IonButton>

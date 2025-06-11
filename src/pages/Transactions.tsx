@@ -1,48 +1,17 @@
-import { IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
+import { IonAvatar, IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
 import { receiptOutline, checkmarkCircle, timeOutline, closeCircle } from "ionicons/icons";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { ALL_TRANSACTIONS, TransactionReceiptInterface } from "../mock/transactions";
 import ProfilePopover from "../components/ProfilePopover";
-import AvatarComponent from "../components/AvatarComponent";
-import { UserProfile } from "../interfaces/user";
-import useAuthContext from "../contexts/auth/UseAuthContext";
 import './Transactions.css'
 
 const Transactions: React.FC = () => {
     const [searchText, setSearchText] = useState<string>('');
     const [showProfilePopover, setShowProfilePopover] = useState(false);
     const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const history = useHistory();
-    const { user } = useAuthContext();
     const totalReceipts = ALL_TRANSACTIONS.length;
-
-    // Load user profile
-    useEffect(() => {
-        const loadProfile = () => {
-            const savedUserProfile = localStorage.getItem('userProfile');
-            if (savedUserProfile) {
-                try {
-                    setUserProfile(JSON.parse(savedUserProfile));
-                } catch (error) {
-                    console.error('Error parsing user profile from localStorage:', error);
-                }
-            }
-        };
-
-        loadProfile();
-
-        const handleProfileUpdate = () => {
-            loadProfile();
-        };
-
-        window.addEventListener('profileUpdated', handleProfileUpdate);
-        
-        return () => {
-            window.removeEventListener('profileUpdated', handleProfileUpdate);
-        };
-    }, []);
 
     const filteredTransactions = ALL_TRANSACTIONS.filter(transaction =>
         transaction.description.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -108,13 +77,9 @@ const Transactions: React.FC = () => {
                     </IonButtons>
                     <IonTitle>All Receipts</IonTitle>
                     <IonButtons slot="end">
-                        <AvatarComponent
-                            initials={userProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
-                            color={userProfile?.avatar?.color || '#3498db'}
-                            size="small"
-                            className="header-avatar"
-                            onClick={() => handleProfileClick({} as React.MouseEvent)}
-                        />
+                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+                            <img src="https://picsum.photos/100" alt="Profile" />
+                        </IonAvatar>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>

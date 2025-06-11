@@ -11,7 +11,7 @@
   margin-bottom: 24px;
   padding: 16px;
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid #e9ecef;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
@@ -27,10 +27,8 @@
   margin: 4px 8px 4px 0;
   --background: #f8f9ff;
   --color: #3880ff;
-  --border-radius: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 20px;
 }
 
 .example-chip:hover {
@@ -48,7 +46,7 @@
 .message-bubble {
   max-width: 85%;
   padding: 14px 18px;
-  border-radius: 20px;
+  border-radius: 18px;
   word-wrap: break-word;
   position: relative;
   animation: messageSlideIn 0.3s ease-out;
@@ -59,7 +57,7 @@
   align-self: flex-end;
   background: linear-gradient(135deg, #3880ff 0%, #5260ff 100%);
   color: white;
-  border-bottom-right-radius: 8px;
+  border-bottom-right-radius: 6px;
 }
 
 .message-bubble.bot {
@@ -67,7 +65,7 @@
   background: white;
   border: 1px solid #e9ecef;
   color: #2c3e50;
-  border-bottom-left-radius: 8px;
+  border-bottom-left-radius: 6px;
 }
 
 .message-bubble.receipt {
@@ -112,18 +110,6 @@
   gap: 8px;
   color: #6c757d;
   font-style: italic;
-  padding: 8px 0;
-}
-
-.typing-indicator ion-spinner {
-  width: 20px;
-  height: 20px;
-  --color: #6c757d;
-}
-
-.typing-indicator span {
-  font-size: 14px;
-  color: #6c757d;
 }
 
 .chat-input-container {
@@ -145,152 +131,34 @@
   --padding-bottom: 12px;
   font-size: 16px;
   border: 1px solid #e9ecef;
-  border-radius: 20px;
   transition: all 0.2s ease;
-  resize: none;
-  overflow-y: hidden;
-  max-height: 120px;
-  min-height: 48px;
-  line-height: 1.4;
-}
-
-.transaction-input textarea {
-  white-space: pre-wrap !important;
-  overflow-y: hidden !important;
-  overflow-x: hidden !important;
-  line-height: 1.4 !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-.transaction-input textarea::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
 }
 
 .transaction-input:focus-within {
   --background: white;
-  border-color: #333;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  border-color: #3880ff;
+  box-shadow: 0 0 0 3px rgba(56, 128, 255, 0.1);
 }
 
 .send-button {
   --border-radius: 50%;
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --background: #333;
-  --background-hover: #555;
-  --background-activated: #000;
-  --color: white;
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  min-width: 48px;
-  min-height: 48px;
-  margin: 0 0 4px 8px;
+  width: 48px;
+  height: 48px;
+  --background: #3880ff;
+  --background-hover: #3171e0;
+  --background-activated: #2961d0;
+  margin: 0;
   transition: all 0.2s ease;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border: none !important;
-  padding: 0 !important;
 }
 
-/* Ensure button content is visible */
-.send-button .button-inner {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.send-button.button-disabled {
-  --opacity: 1;
-  --background: #f0f0f0;
-  --color: #ccc;
-  --box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Enhanced send button states */
-.send-button:not(.loading):not(.button-disabled):hover {
+.send-button:hover {
   transform: scale(1.05);
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --background: #555;
-  transition: all 0.2s ease;
-}
-
-.send-button:not(.loading):not(.button-disabled):active {
-  transform: scale(0.95);
-  --box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
-.send-button:hover:not(:disabled) {
-  transform: scale(1.05);
-  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --background: #555;
-  transition: all 0.2s ease;
-}
-
-.send-button:active:not(:disabled) {
-  transform: scale(0.95);
-  --box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .send-button:disabled {
-  --background: #f0f0f0;
-  --color: #ccc;
-  --box-shadow: none;
+  --background: #e9ecef;
+  --color: #6c757d;
   transform: none;
-  cursor: not-allowed;
-}
-
-.send-button ion-icon {
-  font-size: 20px !important;
-  transition: transform 0.1s ease;
-  color: white !important;
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.send-button:hover:not(:disabled) ion-icon {
-  transform: scale(1.1);
-}
-
-/* Loading spinner for send button */
-.loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.send-button.loading {
-  --background: #555;
-  opacity: 0.8;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.send-button ion-spinner {
-  width: 20px;
-  height: 20px;
-  --color: white !important;
 }
 
 /* Animations */
@@ -307,12 +175,11 @@
 
 /* Receipt-specific styles */
 .message-bubble.receipt .message-text {
-  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
-    "Courier New", monospace;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 14px;
   background: #f8fff9;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid #d4edda;
 }
 
@@ -330,12 +197,12 @@
   .transaction-chat-container {
     padding: 12px;
   }
-
+  
   .message-bubble {
     max-width: 90%;
     padding: 12px 16px;
   }
-
+  
   .chat-input-container {
     padding: 12px;
   }

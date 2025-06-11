@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import {
   IonButton,
@@ -15,6 +15,7 @@ import {
   IonRow,
   IonTitle,
   IonToolbar,
+  IonAvatar,
 } from "@ionic/react";
 import {
   chatbubbleOutline,
@@ -25,16 +26,7 @@ import {
 } from "ionicons/icons";
 import RecentTransactionCard from "../components/RecentTransactionCard";
 import ProfilePopover from "../components/ProfilePopover";
-import ProfileSetupBanner from "../components/ProfileSetupBanner";
-import AvatarComponent from "../components/AvatarComponent";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
-import {
-  checkProfileCompletion,
-  isNewUser as checkIsNewUser,
-} from "../utils/profileUtils";
-import { UserProfile } from "../interfaces/user";
-import { StoreProfile } from "../interfaces/store";
-import useAuthContext from "../contexts/auth/UseAuthContext";
 import "../components/RecentTransactionCard.css";
 import "./Home.css";
 
@@ -45,67 +37,7 @@ const Home: React.FC = () => {
     Event | undefined
   >(undefined);
 
-  // Profile setup banner state
-  const [showProfileBanner, setShowProfileBanner] = useState<boolean>(true);
-  const [bannerDismissed, setBannerDismissed] = useState<boolean>(false);
-
   const history = useHistory();
-  const { user } = useAuthContext();
-
-  // Get actual profile data from localStorage
-  const [actualUserProfile, setActualUserProfile] =
-    useState<UserProfile | null>(null);
-  const [actualStoreProfile, setActualStoreProfile] =
-    useState<StoreProfile | null>(null);
-
-  useEffect(() => {
-    // Load actual profiles from localStorage
-    const loadProfiles = () => {
-      const savedUserProfile = localStorage.getItem("userProfile");
-      const savedStoreProfile = localStorage.getItem("storeProfile");
-
-      if (savedUserProfile) {
-        setActualUserProfile(JSON.parse(savedUserProfile));
-      }
-
-      if (savedStoreProfile) {
-        setActualStoreProfile(JSON.parse(savedStoreProfile));
-      }
-    };
-
-    loadProfiles();
-
-    // Listen for profile updates
-    const handleProfileUpdate = () => {
-      loadProfiles();
-    };
-
-    window.addEventListener("profileUpdated", handleProfileUpdate);
-
-    return () => {
-      window.removeEventListener("profileUpdated", handleProfileUpdate);
-    };
-  }, []);
-
-  // Check profile completion status using actual data
-  const completionStatus = checkProfileCompletion(
-    actualUserProfile,
-    actualStoreProfile
-  );
-  const isUserNew = checkIsNewUser(actualUserProfile);
-
-  // Handle banner dismissal
-  const handleBannerDismiss = () => {
-    setBannerDismissed(true);
-    setShowProfileBanner(false);
-  };
-
-  // Show banner conditions
-  const shouldShowBanner =
-    showProfileBanner &&
-    !bannerDismissed &&
-    user &&
-    (!completionStatus.isFullyComplete || isUserNew);
 
   // Calculate today's sales metrics
   const todaysTransactions = ALL_TRANSACTIONS.filter((transaction) => {
@@ -166,12 +98,12 @@ const Home: React.FC = () => {
             <IonTitle>Dashboard</IonTitle>
             <IonButtons slot="end">
               <IonButton onClick={handleProfileClick}>
-                <AvatarComponent
-                  initials={actualUserProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
-                  color={actualUserProfile?.avatar?.color || '#3498db'}
-                  size="small"
-                  className="header-avatar"
-                />
+                <IonAvatar className="header-avatar">
+                  <img
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+                    alt="Profile"
+                  />
+                </IonAvatar>
               </IonButton>
             </IonButtons>
           </IonToolbar>
@@ -182,16 +114,6 @@ const Home: React.FC = () => {
               <IonTitle size="large">Welcome</IonTitle>
             </IonToolbar>
           </IonHeader>
-
-          {/* Profile Setup Banner */}
-          {shouldShowBanner && (
-            <ProfileSetupBanner
-              completionStatus={completionStatus}
-              isNewUser={isUserNew}
-              onDismiss={handleBannerDismiss}
-              showDismiss={true}
-            />
-          )}
 
           <IonGrid>
             <IonRow>
@@ -237,9 +159,7 @@ const Home: React.FC = () => {
                   <IonCol size="10">
                     <IonLabel>
                       <h2>Transaction Chat</h2>
-                      <p className="action-subtitle">
-                        Record sales by typing "3 bread @2.50, 1 milk @3.00"
-                      </p>
+                      <p className="action-subtitle">Record sales by typing "3 bread @2.50, 1 milk @3.00"</p>
                     </IonLabel>
                   </IonCol>
                 </div>

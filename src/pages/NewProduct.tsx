@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import {
+  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -27,10 +28,7 @@ import {
 } from "ionicons/icons";
 import { StockItem } from "../mock/stocks";
 import ProfilePopover from "../components/ProfilePopover";
-import AvatarComponent from "../components/AvatarComponent";
-import { UserProfile } from "../interfaces/user";
 import { useDataContext } from "../contexts/data/UseDataContext";
-import useAuthContext from "../contexts/auth/UseAuthContext";
 import "./NewProduct.css";
 
 interface LocationState {
@@ -41,7 +39,6 @@ interface LocationState {
 const NewProduct: React.FC = () => {
   const location = useLocation<LocationState>();
   const history = useHistory();
-  const { user } = useAuthContext();
   const isEditMode = location.state?.editMode || false;
   const existingProduct = location.state?.productData;
   const { addNewProduct, isProductsLoading } = useDataContext();
@@ -66,33 +63,6 @@ const NewProduct: React.FC = () => {
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-  // Load user profile
-  useEffect(() => {
-    const loadProfile = () => {
-      const savedUserProfile = localStorage.getItem('userProfile');
-      if (savedUserProfile) {
-        try {
-          setUserProfile(JSON.parse(savedUserProfile));
-        } catch (error) {
-          console.error('Error parsing user profile from localStorage:', error);
-        }
-      }
-    };
-
-    loadProfile();
-
-    const handleProfileUpdate = () => {
-      loadProfile();
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    
-    return () => {
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, []);
 
   // Simplified categories
   const categories = [
@@ -276,13 +246,9 @@ const NewProduct: React.FC = () => {
           </IonButtons>
           <IonTitle>{isEditMode ? "Edit Product" : "Add New Product"}</IonTitle>
           <IonButtons slot="end">
-            <AvatarComponent
-              initials={userProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
-              color={userProfile?.avatar?.color || '#3498db'}
-              size="small"
-              className="header-avatar"
-              onClick={() => handleProfileClick({} as React.MouseEvent)}
-            />
+            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
+              <img src="https://picsum.photos/100" alt="Profile" />
+            </IonAvatar>
           </IonButtons>
         </IonToolbar>
       </IonHeader>

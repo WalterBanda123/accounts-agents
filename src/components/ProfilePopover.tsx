@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   IonPopover,
   IonContent,
@@ -6,6 +6,7 @@ import {
   IonItem,
   IonIcon,
   IonLabel,
+  IonAvatar,
 } from "@ionic/react";
 import {
   settingsOutline,
@@ -15,8 +16,6 @@ import {
 } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 import useAuthContext from "../contexts/auth/UseAuthContext";
-import AvatarComponent from "./AvatarComponent";
-import { UserProfile } from "../interfaces/user";
 import "./ProfilePopover.css";
 
 interface ProfilePopoverProps {
@@ -31,31 +30,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
   onDidDismiss,
 }) => {
   const history = useHistory();
-  const { signOut, user } = useAuthContext();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    // Load user profile from localStorage
-    const loadProfile = () => {
-      const savedUserProfile = localStorage.getItem('userProfile');
-      if (savedUserProfile) {
-        setUserProfile(JSON.parse(savedUserProfile));
-      }
-    };
-
-    loadProfile();
-
-    // Listen for profile updates
-    const handleProfileUpdate = () => {
-      loadProfile();
-    };
-
-    window.addEventListener('profileUpdated', handleProfileUpdate);
-    
-    return () => {
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, []);
+  const { signOut } = useAuthContext();
 
   const handleAccountSettings = () => {
     history.push("/account-settings");
@@ -91,16 +66,15 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     >
       <IonContent>
         <div className="profile-header">
-          <div className="profile-avatar">
-            <AvatarComponent
-              initials={userProfile?.avatar?.initials || user?.name?.substring(0, 2).toUpperCase() || 'U'}
-              color={userProfile?.avatar?.color || '#3498db'}
-              size="medium"
+          <IonAvatar className="profile-avatar">
+            <img
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+              alt="Profile"
             />
-          </div>
+          </IonAvatar>
           <div className="profile-info">
-            <h3>{userProfile?.name || user?.name || 'User'}</h3>
-            <p>{userProfile?.email || user?.email || 'user@example.com'}</p>
+            <h3>John Doe</h3>
+            <p>john.doe@example.com</p>
           </div>
         </div>
 
