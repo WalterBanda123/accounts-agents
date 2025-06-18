@@ -39,6 +39,15 @@ import {
   downloadFileFromBase64,
   downloadPDF,
 } from "../utils/downloadUtils";
+import {
+  parseSalesText,
+  validateSaleItems,
+  generateSalesReceipt,
+  formatReceiptText,
+  createTransactionFromReceipt,
+  isSalesText,
+} from "../utils/salesUtils";
+import { ALL_STOCK_ITEMS } from "../mock/stocks";
 
 interface Message {
   id: string;
@@ -481,7 +490,89 @@ const Chat: React.FC = () => {
     addTypingIndicator();
 
     try {
+      // Check if this looks like a sales entry
+      if (isSalesText(userMessage)) {
+        console.log("Processing as sales entry:", userMessage);
+        
+        // Parse the sales text
+        const parsedItems = parseSalesText(userMessage);
+        console.log("Parsed items:", parsedItems);
+        
+        if (parsedItems.length > 0) {
+          // Validate against inventory
+          const validatedItems = validateSaleItems(parsedItems, ALL_STOCK_ITEMS);
+          
+          // Generate receipt
+          const receipt = generateSalesReceipt(validatedItems);
+          
+          // Format receipt text for display
+          const receiptText = formatReceiptText(receipt);
+          
+          // Remove typing indicator and show receipt
+          removeTypingIndicator();
+          setChatLoading(false);
+          
+          await addMessage(receiptText, true);
+          
+          // If successful, send to API for confirmation
+          if (receipt.isValid) {
+            console.log("Transaction successful:", receipt);
+            
+            // Create transaction ID
+            const transactionId = `TXN_${user?.id || 'user'}_${Date.now()}`;
+            
+            // Send transaction to API for processing
+            try {
+              const transactionData = createTransactionFromReceipt(receipt, user?.email || "Unknown");
+              
+              // Call the API to process the transaction
+              const apiResponse = await fetch('http://localhost:8003/run', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  message: `Record transaction: ${JSON.stringify(transactionData)}`,
+                  context: { user_id: user?.id || 'test_user' },
+                  session_id: currentSessionId || 'default_session'
+                })
+              });
+              
+              if (apiResponse.ok) {
+                const apiResult = await apiResponse.json();
+                console.log("Transaction recorded successfully:", apiResult);
+                
+                // Optionally show confirmation message
+                await addMessage(
+                  `✅ **Transaction Recorded Successfully**\n\nTransaction ID: ${transactionId}\n\nYour sale has been saved to the system.`,
+                  true
+                );
+              } else {
+                console.error("Failed to record transaction:", apiResponse.statusText);
+                await addMessage(
+                  "⚠️ **Transaction Generated** but could not be saved to the system. Please try again or contact support.",
+                  true
+                );
+              }
+            } catch (apiError) {
+              console.error("API Error:", apiError);
+              await addMessage(
+                "⚠️ **Transaction Generated** but could not connect to the system. The receipt is valid but not saved.",
+                true
+              );
+            }
+          }
+          
+          // Reset flag and return early
+          sendingMessageRef.current = false;
+          return;
+        }
+      }
+
+      // If not a sales entry, proceed with normal AI chat
+      console.log("Processing as regular chat message");
       console.log("agent info:", agent);
+      
       // Pass the current session ID to askAiAssistant
       const botResponse = await askAiAssistant(
         userMessage,
@@ -562,6 +653,8 @@ const Chat: React.FC = () => {
     askAiAssistant,
     agent,
     currentSessionId,
+    user?.email,
+    user?.id,
   ]);
 
   const handleKeyPress = useCallback(
@@ -623,6 +716,27 @@ const Chat: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <div className="messages_container">
+          {messageGroups.length === 0 && (
+            <div className="sales-examples">
+              <h4>💰 Record Sales Quickly</h4>
+              <div className="example-item" onClick={() => setMessage("3 bread @2.50, 1 milk @3.00")}>
+                3 bread @2.50, 1 milk @3.00
+                <div className="example-description">Record multiple items with quantities and prices</div>
+              </div>
+              <div className="example-item" onClick={() => setMessage("5 apples @0.30, 2 coke @1.75")}>
+                5 apples @0.30, 2 coke @1.75
+                <div className="example-description">Simple format: quantity product @price</div>
+              </div>
+              <div className="example-item" onClick={() => setMessage("1 soap @1.20")}>
+                1 soap @1.20
+                <div className="example-description">Single item transaction</div>
+              </div>
+              <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: '#6c757d' }}>
+                Or ask me anything about your business, inventory, or reports!
+              </p>
+            </div>
+          )}
+          
           {messageGroups.map((group) => (
             <React.Fragment key={group.date}>
               {/* Only show date separator if it's not the only group, or if it's not today */}
@@ -670,7 +784,7 @@ const Chat: React.FC = () => {
           <IonTextarea
             value={message}
             mode="ios"
-            placeholder="Type a message..."
+            placeholder="Type sales like '2 bread @2.50, 1 milk @3.00' or ask anything..."
             onIonInput={(e) => setMessage(e.detail.value!)}
             onKeyUp={handleKeyPress}
             className="chat_input"

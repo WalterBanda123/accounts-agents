@@ -73,31 +73,6 @@ const MiscActivities: React.FC = () => {
   const messagesLoadedRef = useRef<boolean>(false);
   const sendingMessageRef = useRef<boolean>(false);
 
-  // Initial helpful message for miscellaneous activities
-  const initialMessage: ChatMessage = {
-    id: "initial-helper",
-    profileId: user?.id || "system",
-    sessionId: miscActivitiesSessionId || "initial",
-    text: `👋 **Welcome to Miscellaneous Activities!**
-
-I'm here to help you record various business activities like:
-• **Cash withdrawals** from the register
-• **Petty purchases** and small expenses  
-• **Payments** to suppliers or vendors
-• **Other miscellaneous** transactions
-
-**How to get started:**
-Just tell me what activity you want to record! For example:
-- "I took $50 from the register for petty cash"
-- "Paid $25 for office supplies"
-- "Cash withdrawal of $100 for business expenses"
-
-I'll help you log it properly and update your registry. What would you like to record today?`,
-    isBot: true,
-    timestamp: new Date(),
-    messageOrder: 0,
-  };
-
   // Check if error exists and is a meaningful error
   const hasError = error !== null && error !== undefined;
 
@@ -204,6 +179,31 @@ I'll help you log it properly and update your registry. What would you like to r
 
           // Add initial helper message if no messages exist
           if (allMessages.length === 0) {
+            // Initial helpful message for miscellaneous activities
+            const initialMessage: ChatMessage = {
+              id: "initial-helper",
+              profileId: user?.id || "system",
+              sessionId: miscActivitiesSessionId || "initial",
+              text: `👋 **Welcome to Miscellaneous Activities!**
+
+I'm here to help you record various business activities like:
+• **Cash withdrawals** from the register
+• **Petty purchases** and small expenses  
+• **Payments** to suppliers or vendors
+• **Other miscellaneous** transactions
+
+**How to get started:**
+Just tell me what activity you want to record! For example:
+- "I took $50 from the register for petty cash"
+- "Paid $25 for office supplies"
+- "Cash withdrawal of $100 for business expenses"
+
+I'll help you log it properly and update your registry. What would you like to record today?`,
+              isBot: true,
+              timestamp: new Date(),
+              messageOrder: 0,
+            };
+            
             allMessages.unshift(initialMessage);
           }
 
@@ -224,7 +224,7 @@ I'll help you log it properly and update your registry. What would you like to r
     sessionInitialized,
     miscActivitiesSessionId,
     loadMiscActivitiesMessages,
-    initialMessage,
+    user?.id,
   ]);
 
   const sendMessage = useCallback(async () => {

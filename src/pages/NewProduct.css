@@ -1,491 +1,131 @@
-/* NewProduct.css */
+/* NewProduct.css - Minimal Design */
 
-/* Enhanced Image Upload Card */
-.image-upload-card {
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px dashed transparent;
-  transition: all 0.3s ease;
+/* Page Background */
+.NewProduct {
+  --background: #fafafa;
 }
 
-.image-upload-card:hover {
-  border-color: var(--ion-color-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+/* AI Promotion Card - Minimal Design */
+.ai-promotion-card {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.image-upload-card.processing {
-  border-color: var(--ion-color-primary);
-  box-shadow: 0 8px 25px rgba(var(--ion-color-primary-rgb), 0.2);
-  animation: processingPulse 2s ease-in-out infinite;
+.ai-promotion-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
-@keyframes processingPulse {
-  0%, 100% {
-    box-shadow: 0 8px 25px rgba(var(--ion-color-primary-rgb), 0.2);
-  }
-  50% {
-    box-shadow: 0 8px 25px rgba(var(--ion-color-primary-rgb), 0.4);
-  }
+.ai-promotion-card ion-card-header {
+  background: #f8f8f8;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 1.5rem;
 }
 
-.image-card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ion-color-dark);
-}
-
-.image-card-subtitle {
-  margin: 8px 0 0 0;
-  font-size: 14px;
-  color: var(--ion-color-medium);
-  line-height: 1.4;
-}
-
-.ai-icon {
-  color: var(--ion-color-primary);
-  font-size: 20px;
-}
-
-.ai-features {
-  margin: 10px 0;
-  padding: 8px 12px;
-  background: rgba(var(--ion-color-primary-rgb), 0.1);
-  border-radius: 8px;
-  text-align: center;
-}
-
-.ai-features small {
-  color: var(--ion-color-primary);
-  font-weight: 500;
-  font-size: 12px;
-}
-
-.image-tips {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.image-tips small {
-  color: var(--ion-color-medium);
-  font-size: 11px;
-  font-style: italic;
-}
-
-.success-icon {
-  color: var(--ion-color-success);
-  font-size: 18px;
-  margin-left: auto;
-}
-
-.image-upload-section {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  position: relative;
-}
-
-.image-placeholder {
-  text-align: center;
-  color: var(--ion-color-medium);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-}
-
-.image-placeholder h3 {
-  margin: 0;
-  font-size: 20px;
+.ai-promotion-card ion-card-title {
+  color: #111827;
   font-weight: 600;
-  color: var(--ion-color-dark);
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
 }
 
-.image-placeholder p {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--ion-color-medium);
-  max-width: 280px;
+.ai-promotion-card ion-card-title ion-icon {
+  color: #2563eb;
+  font-size: 1.5rem;
+}
+
+.ai-promotion-card ion-card-content {
+  padding: 1.5rem;
+}
+
+.ai-promotion-card p {
+  color: #6b7280;
+  font-size: 1rem;
   line-height: 1.5;
+  margin: 0 0 1.5rem 0;
 }
 
-.image-placeholder ion-icon {
-  color: var(--ion-color-primary);
-  opacity: 0.7;
+.ai-cta-button {
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
+  --color: white;
+  --border-radius: 0;
+  --padding-start: 1.5rem;
+  --padding-end: 1.5rem;
+  font-weight: 500;
+  height: 3rem;
+  margin-bottom: 1.5rem;
 }
 
-.upload-buttons {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.primary-upload-button {
-  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
-  --border-radius: 12px;
-  --padding-start: 20px;
-  --padding-end: 20px;
-  --box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb), 0.3);
-  font-weight: 600;
-  min-width: 140px;
-  transition: all 0.3s ease;
-}
-
-.primary-upload-button:disabled {
-  --background: linear-gradient(135deg, #ccc 0%, #bbb 100%);
-  --box-shadow: none;
-  opacity: 0.6;
-}
-
-.secondary-upload-button {
-  --border-color: var(--ion-color-primary);
-  --color: var(--ion-color-primary);
-  --border-radius: 12px;
-  --padding-start: 20px;
-  --padding-end: 20px;
-  font-weight: 600;
-  min-width: 140px;
-  transition: all 0.3s ease;
-}
-
-.secondary-upload-button:disabled {
-  --border-color: #ccc;
-  --color: #ccc;
-  opacity: 0.6;
-}
-
-/* Image Preview Styles */
-.image-preview {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  max-width: 300px;
-  max-height: 300px;
-}
-
-.preview-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.image-preview:hover .image-overlay {
-  opacity: 1;
-}
-
-.processing-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: white;
+.or-divider {
   text-align: center;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  z-index: 10;
-}
-
-.processing-overlay p {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.processing-overlay small {
-  margin: 0;
-  font-size: 12px;
-  opacity: 0.8;
-  font-weight: 400;
-}
-
-.processing-overlay ion-spinner {
-  --color: white;
-  width: 32px;
-  height: 32px;
-}
-  font-weight: 500;
-}
-
-.retake-button {
-  --color: white;
-  --background: rgba(0, 0, 0, 0.6);
-  --border-radius: 8px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  backdrop-filter: blur(4px);
-  font-weight: 500;
-}
-
-/* Guide Card Styles */
-.guide-card {
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
-  border: 1px solid #fbbf24;
-  border-radius: 16px;
-}
-
-.guide-content {
-  padding: 20px;
-}
-
-.guide-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.guide-header h4 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #92400e;
-}
-
-.guide-icon {
-  color: #f59e0b;
-  font-size: 22px;
-}
-
-.guide-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.guide-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.step-number {
-  background: #f59e0b;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.step-content {
-  flex: 1;
-}
-
-.step-content h5 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #92400e;
-}
-
-.step-content p {
-  margin: 0;
-  font-size: 13px;
-  color: #a16207;
-  line-height: 1.4;
-}
-
-
-@media (max-width: 768px) {
-  .guide-steps {
-    gap: 12px;
-  }
-  
-  .guide-step {
-    gap: 10px;
-  }
-  
-  .step-number {
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-  }
-  
-  .step-content h5 {
-    font-size: 13px;
-  }
-  
-  .step-content p {
-    font-size: 12px;
-  }
-}
-
-.save-footer {
-  padding: 16px 20px 24px 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.save-product-button {
-  --background: linear-gradient(
-    135deg,
-    var(--ion-color-primary) 0%,
-    var(--ion-color-primary-shade) 100%
-  );
-  --background-activated: linear-gradient(
-    135deg,
-    var(--ion-color-primary-shade) 0%,
-    var(--ion-color-primary-tint) 100%
-  );
-  --background-hover: linear-gradient(
-    135deg,
-    var(--ion-color-primary-tint) 0%,
-    var(--ion-color-primary) 100%
-  );
-  --border-radius: 16px;
-  --box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.3),
-    0 4px 12px rgba(0, 0, 0, 0.1);
-  --color: var(--ion-color-primary-contrast);
-  font-weight: 600;
-  font-size: 17px;
-  letter-spacing: -0.01em;
-  height: 56px;
   position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 1rem 0;
 }
 
-.save-product-button::before {
-  content: "";
+.or-divider::before {
+  content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: left 0.5s;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e5e5;
 }
 
-.save-product-button:hover::before {
-  left: 100%;
+.or-divider span {
+  background: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+  padding: 0 1rem;
+  position: relative;
 }
 
-.save-product-button:disabled {
-  --background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-  --color: #6c757d;
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.save-product-button:disabled::before {
-  display: none;
-}
-
-.save-product-button ion-icon {
-  margin-right: 8px;
-  font-size: 20px;
-  transition: transform 0.2s ease;
-}
-
-.save-product-button:not(:disabled):active ion-icon {
-  transform: scale(0.95);
-}
-
-/* Pulse animation for form validation state */
-@keyframes validationPulse {
-  0% {
-    --box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  50% {
-    --box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.5),
-      0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  100% {
-    --box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-}
-
-.save-product-button:not(:disabled) {
-  animation: validationPulse 2s ease-in-out infinite;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .save-footer {
-    background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .save-product-button:disabled {
-    --background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
-    --color: #8e8e93;
-  }
-}
-
-/* Enhanced Card styling improvements */
+/* Card styling - Minimal Design */
 ion-card {
-  margin: 20px 0;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin: 1.5rem 0;
   overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+ion-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
 ion-card-header {
-  padding: 20px 20px 12px 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: #f8f8f8;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 1.5rem;
 }
 
 ion-card-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ion-color-dark);
-  letter-spacing: -0.01em;
+  color: #111827;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.025em;
 }
 
 ion-card-content {
-  padding: 20px;
+  padding: 1.5rem;
 }
 
-/* Modern input field styling */
+/* Form field styling - Minimal Design */
 .form-field {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
   position: relative;
 }
 
@@ -495,286 +135,190 @@ ion-card-content {
 
 .form-label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin-bottom: 8px;
-  line-height: 1.2;
+  color: #111827;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  line-height: 1.25;
 }
 
 .form-label.required::after {
   content: " *";
-  color: var(--ion-color-danger);
+  color: #dc2626;
   font-weight: 500;
 }
 
 .form-input {
-  --background: #f8f9fa;
-  --border-radius: 12px;
+  --background: #f9f9f9;
+  --border-radius: 0;
   --border-width: 1px;
-  --border-color: #e8ecef;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
-  --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  font-size: 16px;
+  --border-color: #e5e5e5;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 0.875rem;
+  --padding-bottom: 0.875rem;
+  --color: #111827;
+  --placeholder-color: #6b7280;
+  font-size: 1rem;
   font-weight: 400;
-  min-height: 48px;
+  min-height: 3rem;
   transition: all 0.2s ease;
 }
 
 .form-input.ion-focused {
-  --border-color: var(--ion-color-primary);
-  --background: #ffffff;
-  --box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.1);
+  --border-color: #2563eb;
+  --background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-textarea {
-  --background: #f8f9fa;
-  --border-radius: 12px;
+  --background: #f9f9f9;
+  --border-radius: 0;
   --border-width: 1px;
-  --border-color: #e8ecef;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
-  --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  font-size: 16px;
+  --border-color: #e5e5e5;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 0.875rem;
+  --padding-bottom: 0.875rem;
+  --color: #111827;
+  --placeholder-color: #6b7280;
+  font-size: 1rem;
   font-weight: 400;
-  min-height: 48px;
+  min-height: 6rem;
   transition: all 0.2s ease;
 }
 
 .form-textarea.ion-focused {
-  --border-color: var(--ion-color-primary);
-  --background: #ffffff;
-  --box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.1);
+  --border-color: #2563eb;
+  --background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-select {
-  --background: #f8f9fa;
-  --border-radius: 12px;
+  --background: #f9f9f9;
+  --border-radius: 0;
   --border-width: 1px;
-  --border-color: #e8ecef;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
-  --color: var(--ion-color-dark);
-  --placeholder-color: var(--ion-color-medium);
-  font-size: 16px;
+  --border-color: #e5e5e5;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 0.875rem;
+  --padding-bottom: 0.875rem;
+  --color: #111827;
+  --placeholder-color: #6b7280;
+  font-size: 1rem;
   font-weight: 400;
-  min-height: 48px;
+  min-height: 3rem;
   transition: all 0.2s ease;
 }
 
 .form-select.ion-focused {
-  --border-color: var(--ion-color-primary);
-  --background: #ffffff;
-  --box-shadow: 0 0 0 3px rgba(var(--ion-color-primary-rgb), 0.1);
+  --border-color: #2563eb;
+  --background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.form-input[disabled],
-.form-textarea[disabled],
-.form-select[disabled] {
-  --background: #f0f0f0;
-  --color: var(--ion-color-medium);
+/* Save button and footer - Minimal Design */
+.save-footer {
+  background: white;
+  border-top: 1px solid #e5e5e5;
+  padding: 1rem 1.25rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.save-product-button {
+  --background: #2563eb;
+  --background-activated: #1d4ed8;
+  --background-hover: #1e40af;
+  --border-radius: 0;
+  --color: white;
+  font-weight: 500;
+  font-size: 1rem;
+  height: 3rem;
+  transition: all 0.2s ease;
+}
+
+.save-product-button:disabled {
+  --background: #9ca3af;
+  --color: white;
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* AI-populated field indicators */
-.form-label ion-icon {
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
+.save-product-button ion-icon {
+  margin-right: 0.5rem;
+  font-size: 1.125rem;
 }
 
-.form-label ion-icon:hover {
-  opacity: 1;
+/* Header Profile Avatar */
+.header-avatar {
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  margin-right: 0.5rem;
 }
 
-/* Enhanced form field styling for AI-populated fields */
-.form-field.ai-populated {
-  position: relative;
-}
-
-.form-field.ai-populated::before {
-  content: "";
-  position: absolute;
-  left: -4px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
-  border-radius: 1px;
-  opacity: 0.6;
-}
-
-/* Success state for AI processing */
-.image-upload-card.processing-success {
-  border-color: var(--ion-color-success);
-  background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
-}
-
-.image-upload-card.processing-success .image-card-title {
-  color: var(--ion-color-success);
-}
-
-/* Toast message enhancements */
-ion-toast.ai-success {
-  --background: var(--ion-color-success);
-  --color: white;
-}
-
-ion-toast.ai-warning {
-  --background: var(--ion-color-warning);
-  --color: white;
-}
-
-ion-toast.ai-error {
-  --background: var(--ion-color-danger);
-  --color: white;
-}
-
-/* Legacy support - minimal for backwards compatibility */
-ion-item {
-  --border-color: transparent;
-  --inner-border-width: 0;
-  --background: transparent;
-  --padding-start: 0;
-  --inner-padding-start: 0;
-  --inner-padding-end: 0;
-  --padding-end: 0;
-  margin-bottom: 0;
-}
-
-/* Remove legacy ion-item specific styles when using new form classes */
-.form-field ion-input,
-.form-field ion-textarea,
-.form-field ion-select {
-  /* Override any legacy styles */
-  --border-style: solid;
-  --border-width: 1px;
-}
-
-/* Required field indicator */
-ion-label[position="stacked"]:after {
-  content: "";
-}
-
-/* Add asterisk for required fields */
-ion-item:has(ion-label[position="stacked"]:contains("*")) ion-label:after {
-  content: " *";
-  color: var(--ion-color-danger);
-}
-
-/* Disabled state */
-ion-item[disabled] {
-  opacity: 0.6;
-}
-
-/* Success toast styling */
-ion-toast {
-  --border-radius: 8px;
-}
-
-/* Form validation styling */
-.form-error {
-  color: var(--ion-color-danger);
-  font-size: 12px;
-  margin-top: 4px;
+.header-avatar:hover {
+  border-color: #2563eb;
+  transform: scale(1.05);
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
   ion-card {
-    margin: 16px 0;
-    border-radius: 12px;
+    margin: 1rem 0;
+    border-radius: 0;
   }
 
   ion-card-header {
-    padding: 16px 16px 8px 16px;
+    padding: 1rem;
   }
 
   ion-card-content {
-    padding: 16px;
+    padding: 1rem;
   }
 
   .form-field {
-    margin-bottom: 16px;
+    margin-bottom: 1rem;
   }
 
   .form-input,
   .form-textarea,
   .form-select {
-    --padding-start: 14px;
-    --padding-end: 14px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
-    min-height: 44px;
-    font-size: 16px; /* Prevents zoom on iOS */
+    --padding-start: 0.75rem;
+    --padding-end: 0.75rem;
+    --padding-top: 0.75rem;
+    --padding-bottom: 0.75rem;
+    min-height: 2.75rem;
+    font-size: 1rem; /* Prevents zoom on iOS */
   }
 
-  .image-upload-section {
-    min-height: 150px;
-  }
-
-  .image-placeholder {
-    padding: 16px;
-    gap: 12px;
-  }
-
-  .image-placeholder h3 {
-    font-size: 18px;
-  }
-
-  .image-placeholder p {
-    font-size: 14px;
-    max-width: 250px;
-  }
-
-  .upload-buttons {
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-  }
-
-  .primary-upload-button,
-  .secondary-upload-button {
-    width: 100%;
-    max-width: 200px;
-    min-width: unset;
-  }
-
-  .preview-image {
-    height: 150px;
+  .form-textarea {
+    min-height: 5rem;
   }
 
   .save-footer {
-    padding: 12px 16px 20px 16px;
+    padding: 0.75rem 1rem;
   }
 
   .save-product-button {
-    height: 52px;
-    font-size: 16px;
-    --border-radius: 14px;
+    height: 2.75rem;
+    font-size: 0.875rem;
+    --border-radius: 0;
+  }
+
+  .ai-promotion-card ion-card-header,
+  .ai-promotion-card ion-card-content {
+    padding: 1rem;
+  }
+
+  .ai-cta-button {
+    height: 2.75rem;
+    font-size: 0.875rem;
   }
 }
 
-/* Header Profile Avatar */
-.header-avatar {
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
-  margin-right: 8px;
-}
-
-.header-avatar:hover {
-  border-color: #007bff;
-  transform: scale(1.05);
-}
+/* Remove unused styles */

@@ -25,7 +25,7 @@
   background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 12px 20px;
-  border-radius: 25px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -40,7 +40,7 @@
 /* Receipt Preview Card */
 .receipt-preview {
   margin: 16px;
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -135,7 +135,7 @@
 /* Customer Form */
 .receipt-modal-content ion-card {
   margin: 16px;
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -165,7 +165,7 @@
 .receipt-modal-content ion-input,
 .receipt-modal-content ion-select {
   --background: white;
-  --border-radius: 8px;
+  --border-radius: 0;
   --padding-start: 12px;
   --padding-end: 12px;
 }
@@ -182,7 +182,7 @@
   height: 50px;
   font-weight: 600;
   font-size: 1rem;
-  --border-radius: 12px;
+  --border-radius: 0;
 }
 
 /* Mobile Responsive */

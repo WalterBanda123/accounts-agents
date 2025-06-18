@@ -12,7 +12,7 @@
 
 .settings-card {
   margin-bottom: 16px;
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -131,7 +131,7 @@
   gap: 8px;
   padding: 8px 12px;
   background: var(--ion-color-light-shade);
-  border-radius: 8px;
+  border-radius: 0;
   margin-top: 8px;
 }
 
@@ -155,7 +155,7 @@
 .save-button {
   --background: var(--ion-color-primary);
   --color: var(--ion-color-primary-contrast);
-  --border-radius: 12px;
+  --border-radius: 0;
   height: 48px;
   font-weight: 600;
   font-size: 16px;
@@ -216,20 +216,20 @@
 
 /* iOS Specific Adjustments */
 .ios .settings-card {
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .ios .save-button {
-  --border-radius: 10px;
+  --border-radius: 0;
 }
 
 /* Material Design Adjustments */
 .md .settings-card {
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .md .save-button {
-  --border-radius: 4px;
+  --border-radius: 0;
 }
 
 /* Additional Visual Enhancements */

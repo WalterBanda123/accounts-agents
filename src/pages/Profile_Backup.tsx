@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IonBackButton,
   IonButton,
@@ -14,6 +14,12 @@ import {
   IonToolbar,
   IonAvatar,
   IonToast,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonSelect,
+  IonSelectOption,
 } from "@ionic/react";
 import {
   pencilOutline,
@@ -23,11 +29,15 @@ import {
   businessOutline,
   mailOutline,
   callOutline,
+  colorPalette,
 } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 import "./Profile.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
-import { UserInterface } from "../interfaces/user";
+import { UserInterface, UserProfile } from "../interfaces/user";
+import { StoreProfile } from "../interfaces/store";
+import AvatarComponent from "../components/AvatarComponent";
+import { AVATAR_COLORS, generateUserAvatar } from "../utils/avatarUtils";
 
 const Profile: React.FC = () => {
   const history = useHistory();
@@ -36,40 +46,107 @@ const Profile: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  const [profileData, setProfileData] = useState<UserInterface | null>(user);
+  // Load user and store profiles from localStorage (replace with API calls later)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [storeProfile, setStoreProfile] = useState<StoreProfile | null>(null);
 
-  const [editData, setEditData] = useState<UserInterface>({
-    id:"",
-    name: profileData?.name || "",
-    email: profileData?.email || "",
-    businessName: profileData?.businessName || "",
-    phone: profileData?.phone || "",
-    profileImage: profileData?.profileImage || "",
-  });
+  const [editData, setEditData] = useState<Partial<UserProfile>>({});
+
+  useEffect(() => {
+    // Load profiles from localStorage
+    const savedUserProfile = localStorage.getItem('userProfile');
+    const savedStoreProfile = localStorage.getItem('storeProfile');
+    
+    if (savedUserProfile) {
+      const parsed = JSON.parse(savedUserProfile);
+      setUserProfile(parsed);
+      setEditData(parsed);
+    } else if (user) {
+      // Fallback to basic user data if no profile setup completed
+      const fallbackProfile: Partial<UserProfile> = {
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        avatar: generateUserAvatar(user.id, user.name),
+        language_preference: 'English',
+        preferred_currency: 'USD',
+        country: 'Zimbabwe',
+        business_owner: true,
+      };
+      setUserProfile(fallbackProfile as UserProfile);
+      setEditData(fallbackProfile);
+    }
+
+    if (savedStoreProfile) {
+      setStoreProfile(JSON.parse(savedStoreProfile));
+    }
+  }, [user]);
 
   const handleEdit = () => {
     setIsEditing(true);
-    setEditData({
-      id: "",
-      name: profileData?.name || "",
-      email: profileData?.email || "",
-      businessName: profileData?.businessName || "",
-      phone: profileData?.phone || "",
-      profileImage: profileData?.profileImage || "",
-    });
+    setEditData(userProfile || {});
   };
 
   const handleSave = () => {
-    setProfileData({ ...editData });
-    setIsEditing(false);
-    setToastMessage("Profile updated successfully");
-    setShowToast(true);
+    if (userProfile && editData) {
+      const updatedProfile = {
+        ...userProfile,
+        ...editData,
+        updated_at: new Date().toISOString(),
+      };
+      
+      setUserProfile(updatedProfile);
+      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+      setIsEditing(false);
+      setToastMessage("Profile updated successfully");
+      setShowToast(true);
+    }
   };
 
   const handleCancel = () => {
+    setEditData(userProfile || {});
+    setIsEditing(false);
+  };
+
+  const handleAvatarColorChange = (color: string) => {
+    if (userProfile && userProfile.avatar) {
+      const updatedAvatar = { ...userProfile.avatar, color };
+      const updatedProfile = { ...userProfile, avatar: updatedAvatar };
+      setUserProfile(updatedProfile);
+      setEditData(updatedProfile);
+      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    }
+  };
+
+  const goToProfileSetup = () => {
+    history.push('/profile-setup');
+  };
+
+  if (!userProfile) {
+    return (
+      <IonPage>
+        <IonHeader mode="ios">
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/home" />
+            </IonButtons>
+            <IonTitle>Profile</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="profile-content">
+          <div className="profile-setup-prompt">
+            <p>Complete your profile setup to get started!</p>
+            <IonButton expand="block" onClick={goToProfileSetup}>
+              Complete Profile Setup
+            </IonButton>
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
     setIsEditing(false);
     setEditData({
-      id: "",
       name: profileData?.name || "",
       email: profileData?.email || "",
       businessName: profileData?.businessName || "",

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import {
   IonButton,
   IonButtons,
@@ -19,49 +18,26 @@ import {
   IonAvatar,
 } from "@ionic/react";
 import {
-  cameraOutline,
+  chatbubbleOutline,
   chatbubblesOutline,
   cubeOutline,
   documentAttachOutline,
   cashOutline,
 } from "ionicons/icons";
 import RecentTransactionCard from "../components/RecentTransactionCard";
-import ReceiptModal from "../components/ReceiptModal";
 import ProfilePopover from "../components/ProfilePopover";
-import ToastComponent from "../components/ToastComponent";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
 import "../components/RecentTransactionCard.css";
 import "./Home.css";
 
 const Home: React.FC = () => {
   // Existing state
-  const [toastError, setToastError] = useState<string>("");
-  const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
-  const [capturedImage, setCapturedImage] = useState<string>("");
   const [showProfilePopover, setShowProfilePopover] = useState<boolean>(false);
   const [profilePopoverEvent, setProfilePopoverEvent] = useState<
     Event | undefined
   >(undefined);
 
   const history = useHistory();
-
-  const takePhoto = async () => {
-    try {
-      const photo = await Camera.getPhoto({
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        quality: 90,
-      });
-
-      if (photo.webPath) {
-        setCapturedImage(photo.webPath);
-        setShowReceiptModal(true);
-      }
-    } catch (error: unknown) {
-      console.error(error);
-      setToastError("Failed to take photo");
-    }
-  };
 
   // Calculate today's sales metrics
   const todaysTransactions = ALL_TRANSACTIONS.filter((transaction) => {
@@ -94,9 +70,9 @@ const Home: React.FC = () => {
     history.push("/stock-overview");
   };
 
-  const handleModalDismiss = () => {
-    setShowReceiptModal(false);
-    setCapturedImage("");
+  // Navigate to transaction chat
+  const navigateToTransactionChat = () => {
+    history.push("/transaction-chat");
   };
 
   const handleProfileClick = (event: React.MouseEvent) => {
@@ -174,16 +150,16 @@ const Home: React.FC = () => {
             <IonRow>
               <IonCol>
                 <div
-                  className="container scan-cart-highlighted"
-                  onClick={takePhoto}
+                  className="container transaction-chat-highlighted"
+                  onClick={navigateToTransactionChat}
                 >
                   <IonCol size="2">
-                    <IonIcon icon={cameraOutline} size="large" />
+                    <IonIcon icon={chatbubbleOutline} size="large" />
                   </IonCol>
                   <IonCol size="10">
                     <IonLabel>
-                      <h2>Scan Cart</h2>
-                      <p className="action-subtitle">Process new transaction</p>
+                      <h2>Transaction Chat</h2>
+                      <p className="action-subtitle">Record sales by typing "3 bread @2.50, 1 milk @3.00"</p>
                     </IonLabel>
                   </IonCol>
                 </div>
@@ -296,19 +272,6 @@ const Home: React.FC = () => {
               <IonIcon icon={chatbubblesOutline} />
             </IonFabButton>
           </IonFab>
-          <ToastComponent
-            message={toastError}
-            duration={3000}
-            isError={!!toastError}
-            isOpen={!!toastError}
-          />
-
-          <ReceiptModal
-            isOpen={showReceiptModal}
-            onDidDismiss={handleModalDismiss}
-            cartImage={capturedImage}
-          />
-
           <ProfilePopover
             isOpen={showProfilePopover}
             event={profilePopoverEvent}

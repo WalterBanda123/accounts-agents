@@ -1,0 +1,209 @@
+/* Transaction Chat Styles */
+.transaction-chat-container {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  min-height: 100%;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+}
+
+.sales-examples {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sales-examples h3 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.example-chip {
+  margin: 4px 8px 4px 0;
+  --background: #f8f9ff;
+  --color: #3880ff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.example-chip:hover {
+  --background: #e8f0ff;
+  transform: translateY(-1px);
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.message-bubble {
+  max-width: 85%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  word-wrap: break-word;
+  position: relative;
+  animation: messageSlideIn 0.3s ease-out;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.message-bubble.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #3880ff 0%, #5260ff 100%);
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.message-bubble.bot {
+  align-self: flex-start;
+  background: white;
+  border: 1px solid #e9ecef;
+  color: #2c3e50;
+  border-bottom-left-radius: 6px;
+}
+
+.message-bubble.receipt {
+  border: 2px solid #28a745;
+  background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
+}
+
+.receipt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+  color: #28a745;
+  font-weight: 600;
+}
+
+.message-content {
+  margin-bottom: 8px;
+}
+
+.message-text {
+  line-height: 1.4;
+  font-size: 15px;
+}
+
+.message-text strong {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.message-timestamp {
+  font-size: 12px;
+  opacity: 0.6;
+  text-align: right;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.chat-input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-top: 1px solid #e9ecef;
+}
+
+.transaction-input {
+  flex: 1;
+  --background: #f8f9fa;
+  --border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-size: 16px;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.transaction-input:focus-within {
+  --background: white;
+  border-color: #3880ff;
+  box-shadow: 0 0 0 3px rgba(56, 128, 255, 0.1);
+}
+
+.send-button {
+  --border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  --background: #3880ff;
+  --background-hover: #3171e0;
+  --background-activated: #2961d0;
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.send-button:hover {
+  transform: scale(1.05);
+}
+
+.send-button:disabled {
+  --background: #e9ecef;
+  --color: #6c757d;
+  transform: none;
+}
+
+/* Animations */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Receipt-specific styles */
+.message-bubble.receipt .message-text {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 14px;
+  background: #f8fff9;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d4edda;
+}
+
+/* Success/Error indicators */
+.message-text:has(.success) {
+  color: #28a745;
+}
+
+.message-text:has(.error) {
+  color: #dc3545;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .transaction-chat-container {
+    padding: 12px;
+  }
+  
+  .message-bubble {
+    max-width: 90%;
+    padding: 12px 16px;
+  }
+  
+  .chat-input-container {
+    padding: 12px;
+  }
+}
