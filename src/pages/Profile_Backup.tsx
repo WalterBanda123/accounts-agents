@@ -14,12 +14,12 @@ import {
   IonToolbar,
   IonAvatar,
   IonToast,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonSelect,
-  IonSelectOption,
+  // IonCard,
+  // IonCardContent,
+  // IonCardHeader,
+  // IonCardTitle,
+  // IonSelect,
+  // IonSelectOption,
 } from "@ionic/react";
 import {
   pencilOutline,
@@ -29,15 +29,36 @@ import {
   businessOutline,
   mailOutline,
   callOutline,
-  colorPalette,
+  // colorPalette,
 } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 import "./Profile.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
-import { UserInterface, UserProfile } from "../interfaces/user";
-import { StoreProfile } from "../interfaces/store";
-import AvatarComponent from "../components/AvatarComponent";
-import { AVATAR_COLORS, generateUserAvatar } from "../utils/avatarUtils";
+import { UserInterface } from "../interfaces/user";
+// import { StoreProfile } from "../interfaces/store";
+// import AvatarComponent from "../components/AvatarComponent";
+// import { AVATAR_COLORS, generateUserAvatar } from "../utils/avatarUtils";
+
+// Local interfaces for this backup file
+interface UserProfile extends UserInterface {
+  user_id?: string;
+  avatar?: { color: string };
+  language_preference?: string;
+  preferred_currency?: string;
+  country?: string;
+  business_owner?: boolean;
+  updated_at?: string;
+}
+
+// interface StoreProfile {
+//   id: string;
+//   name: string;
+// }
+
+// Simple avatar generator function
+const generateUserAvatar = () => ({
+  color: '#' + Math.floor(Math.random()*16777215).toString(16)
+});
 
 const Profile: React.FC = () => {
   const history = useHistory();
@@ -48,7 +69,7 @@ const Profile: React.FC = () => {
 
   // Load user and store profiles from localStorage (replace with API calls later)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [storeProfile, setStoreProfile] = useState<StoreProfile | null>(null);
+  // const [storeProfile, setStoreProfile] = useState<StoreProfile | null>(null);
 
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
 
@@ -68,7 +89,7 @@ const Profile: React.FC = () => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        avatar: generateUserAvatar(user.id, user.name),
+        avatar: generateUserAvatar(),
         language_preference: 'English',
         preferred_currency: 'USD',
         country: 'Zimbabwe',
@@ -79,7 +100,7 @@ const Profile: React.FC = () => {
     }
 
     if (savedStoreProfile) {
-      setStoreProfile(JSON.parse(savedStoreProfile));
+      // setStoreProfile(JSON.parse(savedStoreProfile));
     }
   }, [user]);
 
@@ -109,15 +130,15 @@ const Profile: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleAvatarColorChange = (color: string) => {
-    if (userProfile && userProfile.avatar) {
-      const updatedAvatar = { ...userProfile.avatar, color };
-      const updatedProfile = { ...userProfile, avatar: updatedAvatar };
-      setUserProfile(updatedProfile);
-      setEditData(updatedProfile);
-      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-    }
-  };
+  // const handleAvatarColorChange = (color: string) => {
+  //   if (userProfile && userProfile.avatar) {
+  //     const updatedAvatar = { ...userProfile.avatar, color };
+  //     const updatedProfile = { ...userProfile, avatar: updatedAvatar };
+  //     setUserProfile(updatedProfile);
+  //     setEditData(updatedProfile);
+  //     localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+  //   }
+  // };
 
   const goToProfileSetup = () => {
     history.push('/profile-setup');
@@ -145,15 +166,6 @@ const Profile: React.FC = () => {
       </IonPage>
     );
   }
-    setIsEditing(false);
-    setEditData({
-      name: profileData?.name || "",
-      email: profileData?.email || "",
-      businessName: profileData?.businessName || "",
-      phone: profileData?.phone || "",
-      profileImage: profileData?.profileImage || "",
-    });
-  };
 
   const handleInputChange = (field: string, value: string) => {
     setEditData({ ...editData, [field]: value });
@@ -203,7 +215,7 @@ const Profile: React.FC = () => {
           <div className="profile-image-section">
             <div className="avatar-container">
               <IonAvatar className="profile-avatar-large">
-                <img src={profileData?.profileImage} alt="Profile" />
+                <img src={userProfile?.profileImage} alt="Profile" />
               </IonAvatar>
               {isEditing && (
                 <IonButton
@@ -218,8 +230,8 @@ const Profile: React.FC = () => {
 
             {!isEditing && (
               <div className="profile-name">
-                <h2>{profileData?.name}</h2>
-                <p>{profileData?.businessName}</p>
+                <h2>{userProfile?.name}</h2>
+                <p>{userProfile?.businessName}</p>
               </div>
             )}
           </div>
@@ -288,7 +300,7 @@ const Profile: React.FC = () => {
                   </div>
                   <div className="info-content">
                     <label>Full Name</label>
-                    <p>{profileData?.name}</p>
+                    <p>{userProfile?.name}</p>
                   </div>
                 </div>
 
@@ -298,7 +310,7 @@ const Profile: React.FC = () => {
                   </div>
                   <div className="info-content">
                     <label>Business Name</label>
-                    <p>{profileData?.businessName}</p>
+                    <p>{userProfile?.businessName}</p>
                   </div>
                 </div>
 
@@ -308,7 +320,7 @@ const Profile: React.FC = () => {
                   </div>
                   <div className="info-content">
                     <label>Email</label>
-                    <p>{profileData?.email}</p>
+                    <p>{userProfile?.email}</p>
                   </div>
                 </div>
 
@@ -318,7 +330,7 @@ const Profile: React.FC = () => {
                   </div>
                   <div className="info-content">
                     <label>Phone Number</label>
-                    <p>{profileData?.phone}</p>
+                    <p>{userProfile?.phone}</p>
                   </div>
                 </div>
               </div>
