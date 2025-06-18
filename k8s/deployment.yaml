@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: accounts-agents
-        image: ghcr.io/walterbanda/accounts-agents:latest
+        image: ghcr.io/WalterBanda123/accounts-agents:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
