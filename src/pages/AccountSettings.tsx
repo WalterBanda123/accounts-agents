@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IonBackButton,
   IonButtons,
@@ -36,6 +36,8 @@ import {
 import "./AccountSettings.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
 import { StoreSettings } from "../interfaces/store";
+import settingsService from "../services/settingsService";
+import { migrateLocalStorageSettings } from "../utils/settingsInitializer";
 
 const CURRENCIES = [
   { code: "ZWL", name: "Zimbabwean Dollar", symbol: "Z$" },
@@ -55,47 +57,51 @@ const LANGUAGES = [
 const AccountSettings: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
   const { user, updateUserProfile, isLoading } = useAuthContext();
 
-  const [settings, setSettings] = useState<StoreSettings>({
-    // Currency Settings
-    primaryCurrency: "USD",
-    secondaryCurrency: "ZWL",
-    manualExchangeRate: 5000,
-    showDualCurrency: true,
+  const [settings, setSettings] = useState<StoreSettings>(
+    settingsService.getDefaultSettings(user || undefined)
+  );
 
-    // Store Information
-    storeName: user?.businessName || "My Store",
-    storeAddress: "123 Main Street, Harare, Zimbabwe",
-    storePhone: user?.phone || "+263 77 123 4567",
-    storeEmail: user?.email || "store@example.com",
-    businessLicense: "BL2024001",
+  // Load existing settings on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user?.id) return;
 
-    // Tax Settings
-    vatEnabled: true,
-    vatRate: 14.5,
-    vatNumber: "VAT123456789",
+      try {
+        setIsLoadingSettings(true);
+        
+        // Try to migrate from localStorage first
+        await migrateLocalStorageSettings(user.id);
+        
+        // Get settings with fallback to backup
+        const existingSettings = await settingsService.getStoreSettingsWithFallback(user.id);
+        
+        if (existingSettings) {
+          setSettings(existingSettings);
+        } else {
+          // Create initial settings for new user
+          const defaultSettings = settingsService.getDefaultSettings(user || undefined);
+          setSettings(defaultSettings);
+          
+          // Save default settings to database
+          await settingsService.createStoreSettings(user.id, defaultSettings);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        setToastMessage('Error loading settings. Using defaults.');
+        setShowToast(true);
+        
+        // Fallback to default settings
+        setSettings(settingsService.getDefaultSettings(user || undefined));
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
 
-    // Receipt Settings
-    receiptLogo: true,
-    receiptFooter: "Thank you for shopping with us!",
-    printReceipts: true,
-    emailReceipts: false,
-
-    // Notification Preferences
-    lowStockAlerts: true,
-    dailyReports: true,
-    paymentAlerts: true,
-    systemUpdates: false,
-
-    // Display Preferences
-    language: "en",
-    theme: "auto",
-
-    // Security Settings
-    requirePin: false,
-    backupEnabled: true,
-  });
+    loadSettings();
+  }, [user]);
 
   const updateSetting = (
     key: keyof StoreSettings,
@@ -108,18 +114,30 @@ const AccountSettings: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!user?.id) {
+      setToastMessage("User not authenticated");
+      setShowToast(true);
+      return;
+    }
+
     try {
-      // Update Firebase user profile with business name
-      const success = await updateUserProfile(settings.storeName);
-
-      if (success) {
-        setToastMessage("Settings saved successfully!");
+      // Use enhanced save method with validation
+      const saveResult = await settingsService.updateStoreSettingsWithValidation(user.id, settings);
+      
+      if (saveResult.success) {
+        // Update Firebase user profile with business name (for backward compatibility)
+        const profileSuccess = await updateUserProfile(settings.storeName);
+        
+        if (profileSuccess) {
+          setToastMessage("Settings saved successfully!");
+        } else {
+          setToastMessage("Settings saved, but profile update had issues");
+        }
       } else {
-        setToastMessage("Settings saved locally, but profile update failed");
+        // Show validation errors
+        const errorMessage = saveResult.errors?.join(', ') || 'Error saving settings';
+        setToastMessage(errorMessage);
       }
-
-      // In a real app, this would also save other settings to backend/local storage
-      console.log("Saving all settings:", settings);
     } catch (error) {
       console.error("Save error:", error);
       setToastMessage("Error saving settings");
@@ -161,7 +179,13 @@ const AccountSettings: React.FC = () => {
             <IonTitle size="large">Settings</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <div className="settings-container">
+        
+        {isLoadingSettings ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+            <IonSpinner name="circular" />
+          </div>
+        ) : (
+          <div className="settings-container">
           {/* Currency Settings */}
           <IonCard className="settings-card">
             <IonCardHeader>
@@ -565,6 +589,7 @@ const AccountSettings: React.FC = () => {
             </IonButton>
           </div>
         </div>
+        )}
 
         <IonToast
           isOpen={showToast}

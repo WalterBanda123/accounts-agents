@@ -51,6 +51,7 @@ import Stocks from "./pages/Stocks";
 import NewProduct from "./pages/NewProduct";
 import AddProductByImageDemo from "./pages/AddProductByImageDemo";
 import ReceiptDetail from "./pages/ReceiptDetail";
+import DevSettingsSetup from "./pages/DevSettingsSetup";
 import useAuthContext from "./contexts/auth/UseAuthContext";
 
 setupIonicReact();
@@ -106,6 +107,9 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute path="/account-settings">
             <AccountSettings />
+          </ProtectedRoute>
+          <ProtectedRoute path="/dev-settings-setup">
+            <DevSettingsSetup />
           </ProtectedRoute>
           <ProtectedRoute path="/notifications">
             <Notifications />
