@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: accounts-agents-app
+  name: accounts-agents-app-local
   labels:
-    app: accounts-agents
+    app: accounts-agents-local
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: accounts-agents
+      app: accounts-agents-local
   template:
     metadata:
       labels:
-        app: accounts-agents
+        app: accounts-agents-local
     spec:
       containers:
       - name: accounts-agents
-        image: ghcr.io/walterbanda/accounts-agents:latest
-        imagePullPolicy: Always
+        image: accounts-agents:latest
+        imagePullPolicy: Never  # Use local image only
         ports:
         - containerPort: 80
         resources:
@@ -43,33 +43,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: accounts-agents-service
+  name: accounts-agents-service-local
   labels:
-    app: accounts-agents
+    app: accounts-agents-local
 spec:
   selector:
-    app: accounts-agents
+    app: accounts-agents-local
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: accounts-agents-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-spec:
-  rules:
-  - host: accounts-agents.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: accounts-agents-service
-            port:
-              number: 80
