@@ -1,7 +1,7 @@
-/* Main Navigation Cards - Minimal Style */
+/* Main Navigation Cards - Modern Rounded Style */
 .container {
   border: 1px solid #e0e0e0;
-  border-radius: 0;
+  border-radius: 16px;
   padding: 16px 20px;
   display: flex;
   flex-direction: row;
@@ -19,8 +19,8 @@
 .container:hover {
   background-color: #f8f9fa;
   cursor: pointer;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   border-color: var(--ion-color-primary);
 }
 
@@ -28,12 +28,14 @@
 .container.transaction-chat-highlighted {
   border: 2px solid var(--ion-color-primary);
   background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
 }
 
 .container.scan-cart-highlighted:hover,
 .container.transaction-chat-highlighted:hover {
   background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
   border-color: var(--ion-color-primary-shade);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
 }
 
 .container ion-col[size="2"] {
@@ -64,10 +66,12 @@
 .today-summary {
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   border: 1px solid #e3e8ff;
-  border-radius: 0;
+  border-radius: 20px;
   padding: 20px;
   margin: 16px 0 24px 0;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .summary-header {
@@ -80,6 +84,7 @@
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--ion-color-dark);
+  letter-spacing: -0.5px;
 }
 
 .summary-header p {
@@ -100,15 +105,16 @@
   text-align: center;
   background: white;
   padding: 16px 12px;
-  border-radius: 0;
+  border-radius: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid #f0f0f0;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 .metric-value {
@@ -124,7 +130,7 @@
   color: var(--ion-color-medium);
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .container ion-col[size="10"] h2 {
@@ -132,16 +138,17 @@
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--ion-color-dark);
+  letter-spacing: -0.3px;
 }
 
 /* Minimal Sales Summary */
 .sales-summary-minimal {
   background: white;
   border: 1px solid #e8ecef;
-  border-radius: 0;
+  border-radius: 16px;
   padding: 16px;
   margin: 16px 0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .sales-metrics {
@@ -175,17 +182,18 @@
 /* Recent Transactions Container */
 .recent-transactions-container {
   background: white;
-  border-radius: 0;
+  border-radius: 16px;
   padding: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   margin-top: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 /* Clickable Transaction Wrapper */
 .clickable-transaction {
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 0;
+  border-radius: 12px;
   margin: 2px 0;
 }
 
@@ -200,9 +208,9 @@
   margin: 24px 16px 16px 16px;
   padding: 16px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 0;
+  border-radius: 16px;
   border-left: 4px solid var(--ion-color-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .section-header h2 {
@@ -219,110 +227,107 @@
   font-weight: 400;
 }
 
-@media (max-width: 768px) {
-  .container {
-    margin: 6px 0;
-    padding: 14px 18px;
-    min-height: 55px;
-  }
+/* Enhanced styling improvements for modern look */
 
-  .container ion-col[size="10"] h2 {
-    font-size: 1rem;
-  }
+/* Add subtle animation to metric cards */
 
-  .action-subtitle {
-    font-size: 0.8rem;
-  }
+/* Improve container hover effects */
 
-  .today-summary {
-    margin: 12px 0 20px 0;
-    padding: 16px;
-  }
+/* Add subtle glow effect to highlighted containers */
 
-  .summary-header h3 {
-    font-size: 1.2rem;
-  }
-
-  .summary-metrics {
-    gap: 8px;
-  }
-
-  .metric-card {
-    padding: 12px 8px;
-  }
-
-  .metric-value {
-    font-size: 1.3rem;
-  }
-
-  .metric-label {
-    font-size: 0.75rem;
-  }
-
-  .section-header {
-    margin: 20px 12px 12px 12px;
-    padding: 12px;
-  }
-
-  .section-header h2 {
-    font-size: 1.2rem;
-  }
-
-  .recent-transactions-container {
-    margin: 8px 12px;
-    padding: 6px;
-  }
-
-  .clickable-transaction:hover {
-    transform: translateX(2px);
-  }
-
-  /* Mobile Sales Summary - removed as no longer used */
+/* Enhanced FAB styling */
+ion-fab-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --background-hover: var(--ion-color-primary-tint);
+  --border-radius: 16px;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s ease;
 }
 
-/* Sales info text under stock overview */
-.sales-info {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--ion-color-medium);
-  font-weight: 400;
-}
-
-/* Header Avatar Styling */
-.header-avatar {
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--ion-color-light);
-  transition: all 0.2s ease;
-}
-
-.header-avatar:hover {
-  border-color: var(--ion-color-primary);
+ion-fab-button:hover {
+  --box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
   transform: scale(1.05);
 }
 
-.header-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* Enhanced button styling */
+ion-button[fill="outline"] {
+  --border-radius: 12px;
+  --border-width: 2px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
-.large-header-avatar {
-  width: 36px;
-  height: 36px;
+ion-button[fill="outline"]:hover {
+  transform: translateY(-1px);
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Miscellaneous Activity Card */
-.container.misc-activity-card {
-  border: 2px solid #f59e0b;
-  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+/* Improved content spacing */
+ion-grid {
+  padding: 0 12px;
 }
 
-.container.misc-activity-card:hover {
-  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
-  border-color: #d97706;
+/* Enhanced responsive design */
+@media (max-width: 768px) {
+  .today-summary {
+    border-radius: 16px;
+    margin: 12px 8px 20px 8px;
+  }
+  
+  .container {
+    border-radius: 12px;
+    margin: 6px 8px;
+  }
+  
+  .section-header {
+    border-radius: 12px;
+    margin: 20px 8px 12px 8px;
+  }
+  
+  .recent-transactions-container {
+    border-radius: 12px;
+    margin: 8px 8px;
+  }
+  
+  ion-grid {
+    padding: 0 8px;
+  }
 }
 
-.container.misc-activity-card ion-icon {
-  color: #f59e0b;
+/* Add subtle backdrop blur effect to summary section */
+
+/* Enhanced metric card interactions */
+.metric-card:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* Add modern glass effect to containers */
+.container,
+.today-summary,
+.recent-transactions-container,
+.section-header {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Improved text contrast and spacing */
+.metric-label {
+  letter-spacing: 0.8px;
+}
+
+/* Add focus states for accessibility */
+.container:focus-visible,
+.metric-card:focus-visible {
+  outline: 2px solid var(--ion-color-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth page transitions */
+ion-content {
+  --background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
 }

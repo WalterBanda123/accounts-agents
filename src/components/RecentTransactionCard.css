@@ -1,4 +1,4 @@
-/* Recent Transaction Card - Minimal Gmail Style */
+/* Recent Transaction Card - Modern Rounded Style */
 .recent-transaction-card {
     display: flex;
     align-items: center;
@@ -8,15 +8,17 @@
     position: relative;
     transition: all 0.2s ease;
     background-color: white;
-    border-radius: 0;
+    border-radius: 12px;
     margin-bottom: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f5f5f5;
 }
 
 .recent-transaction-card:hover {
     background-color: #f8f9fa;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    border-color: var(--ion-color-primary-tint);
 }
 
 .recent-transaction-card:last-child {
