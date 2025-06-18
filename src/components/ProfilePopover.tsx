@@ -6,7 +6,6 @@ import {
   IonItem,
   IonIcon,
   IonLabel,
-  IonAvatar,
 } from "@ionic/react";
 import {
   settingsOutline,
@@ -16,6 +15,7 @@ import {
 } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 import useAuthContext from "../contexts/auth/UseAuthContext";
+import InitialsAvatar from "./InitialsAvatar";
 import "./ProfilePopover.css";
 
 interface ProfilePopoverProps {
@@ -30,7 +30,7 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
   onDidDismiss,
 }) => {
   const history = useHistory();
-  const { signOut } = useAuthContext();
+  const { signOut, user } = useAuthContext();
 
   const handleAccountSettings = () => {
     history.push("/account-settings");
@@ -66,15 +66,14 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = ({
     >
       <IonContent>
         <div className="profile-header">
-          <IonAvatar className="profile-avatar">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-              alt="Profile"
-            />
-          </IonAvatar>
+          <InitialsAvatar
+            name={user?.name || "User"}
+            size="medium"
+            className="profile-avatar"
+          />
           <div className="profile-info">
-            <h3>John Doe</h3>
-            <p>john.doe@example.com</p>
+            <h3>{user?.name || "User"}</h3>
+            <p>{user?.email || "user@example.com"}</p>
           </div>
         </div>
 

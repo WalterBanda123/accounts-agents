@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import {
-  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -25,6 +24,8 @@ import {
 } from "ionicons/icons";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 import "./ReceiptDetail.css";
 
 interface RouteParams {
@@ -34,6 +35,7 @@ interface RouteParams {
 const ReceiptDetail: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const history = useHistory();
+  const { user } = useAuthContext();
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -124,9 +126,13 @@ const ReceiptDetail: React.FC = () => {
           </IonButtons>
           <IonTitle>Receipt Details</IonTitle>
           <IonButtons slot="end">
-            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-              <img src="https://picsum.photos/100" alt="Profile" />
-            </IonAvatar>
+            <IonButton onClick={handleProfileClick}>
+              <InitialsAvatar
+                name={user?.name || "User"}
+                size="small"
+                className="header-avatar"
+              />
+            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>

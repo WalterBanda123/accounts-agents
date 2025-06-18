@@ -1,15 +1,18 @@
-import { IonAvatar, IonBackButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
+import { IonBackButton, IonButton, IonButtons, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonPage, IonRow, IonSearchbar, IonTitle, IonToolbar } from "@ionic/react";
 import { receiptOutline, checkmarkCircle, timeOutline, closeCircle } from "ionicons/icons";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { ALL_TRANSACTIONS, TransactionReceiptInterface } from "../mock/transactions";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 import './Transactions.css'
 
 const Transactions: React.FC = () => {
     const [searchText, setSearchText] = useState<string>('');
     const [showProfilePopover, setShowProfilePopover] = useState(false);
     const [profilePopoverEvent, setProfilePopoverEvent] = useState<CustomEvent | null>(null);
+    const { user } = useAuthContext();
     const history = useHistory();
     const totalReceipts = ALL_TRANSACTIONS.length;
 
@@ -77,9 +80,13 @@ const Transactions: React.FC = () => {
                     </IonButtons>
                     <IonTitle>All Receipts</IonTitle>
                     <IonButtons slot="end">
-                        <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-                            <img src="https://picsum.photos/100" alt="Profile" />
-                        </IonAvatar>
+                        <IonButton onClick={handleProfileClick}>
+                            <InitialsAvatar
+                                name={user?.name || "User"}
+                                size="small"
+                                className="header-avatar"
+                            />
+                        </IonButton>
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
-  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -15,6 +14,7 @@ import {
 } from "@ionic/react";
 import { send } from "ionicons/icons";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
 import DateSeparator from "../components/DateSeparator";
 import "./MiscActivities.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
@@ -511,12 +511,11 @@ User request: ${userMessage}`;
           <IonTitle>Miscellaneous Activities</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleProfileClick}>
-              <IonAvatar className="header-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-                  alt="Profile"
-                />
-              </IonAvatar>
+              <InitialsAvatar
+                name={user?.name || "User"}
+                size="small"
+                className="header-avatar"
+              />
             </IonButton>
           </IonButtons>
         </IonToolbar>

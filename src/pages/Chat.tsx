@@ -1,5 +1,4 @@
 import {
-  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -22,6 +21,7 @@ import {
 } from "ionicons/icons";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
 import DateSeparator from "../components/DateSeparator";
 import "./Chat.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
@@ -703,9 +703,13 @@ const Chat: React.FC = () => {
           </IonButtons>
           <IonTitle>Chat</IonTitle>
           <IonButtons slot="end">
-            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-              <img src="https://picsum.photos/100" alt="Profile" />
-            </IonAvatar>
+            <IonButton onClick={handleProfileClick}>
+              <InitialsAvatar
+                name={user?.name || "User"}
+                size="small"
+                className="header-avatar"
+              />
+            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>

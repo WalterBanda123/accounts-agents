@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import {
-  IonAvatar,
   IonBackButton,
   IonButton,
   IonButtons,
@@ -28,6 +27,8 @@ import {
 } from "ionicons/icons";
 import { StockItem } from "../mock/stocks";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 import { useDataContext } from "../contexts/data/UseDataContext";
 import "./NewProduct.css";
 
@@ -39,6 +40,7 @@ interface LocationState {
 const NewProduct: React.FC = () => {
   const location = useLocation<LocationState>();
   const history = useHistory();
+  const { user } = useAuthContext();
   const isEditMode = location.state?.editMode || false;
   const existingProduct = location.state?.productData;
   const { addNewProduct, isProductsLoading } = useDataContext();
@@ -246,9 +248,13 @@ const NewProduct: React.FC = () => {
           </IonButtons>
           <IonTitle>{isEditMode ? "Edit Product" : "Add New Product"}</IonTitle>
           <IonButtons slot="end">
-            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-              <img src="https://picsum.photos/100" alt="Profile" />
-            </IonAvatar>
+            <IonButton onClick={handleProfileClick}>
+              <InitialsAvatar
+                name={user?.name || "User"}
+                size="small"
+                className="header-avatar"
+              />
+            </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
