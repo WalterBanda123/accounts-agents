@@ -14,17 +14,26 @@ import {
   IonButtons,
   IonSpinner,
   IonToast,
+  IonSelect,
+  IonSelectOption,
+  IonCheckbox,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 import "./Register.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
+import LocationAutoComplete from "../components/LocationAutoComplete";
 
 const Register: React.FC = () => {
+  const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [location, setLocation] = useState("");
+  const [languagePreference, setLanguagePreference] = useState("English");
+  const [preferredCurrency, setPreferredCurrency] = useState("USD");
+  const [isBusinessOwner, setIsBusinessOwner] = useState(false);
   const [showErrorToast, setShowErrorToast] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -42,13 +51,23 @@ const Register: React.FC = () => {
     }
 
     try {
-      console.log("Register:", { businessName, phone, email, password });
-      await signUp(email, password, businessName, phone);
+      console.log("Register:", {
+        fullName,
+        businessName,
+        phone,
+        email,
+        password,
+        location,
+        languagePreference,
+        preferredCurrency,
+        isBusinessOwner,
+      });
+      await signUp(email, password, fullName, phone);
 
       setTimeout(() => {
         if (isLoggedIn && !error) {
           setToastMessage(
-            `Welcome to Account Manager, ${businessName}! Your account has been created successfully.`
+            `Welcome to Account Manager, ${fullName}! Your account has been created successfully.`
           );
           setShowSuccessToast(true);
           setTimeout(() => {
@@ -83,15 +102,18 @@ const Register: React.FC = () => {
   };
 
   const isFormValid =
-    businessName &&
-    phone &&
-    validatePhone(phone) &&
+    fullName &&
     email &&
     validateEmail(email) &&
+    phone &&
+    validatePhone(phone) &&
     password &&
     password.length >= 6 &&
     confirmPassword &&
-    password === confirmPassword;
+    password === confirmPassword &&
+    location &&
+    languagePreference &&
+    preferredCurrency;
 
   return (
     <IonPage>
@@ -104,17 +126,27 @@ const Register: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="register-content">
-        <div className="register-container">
+      <IonContent className="">
+        <div className="">
           {/* App Logo/Title */}
           <div className="register-header">
             <h1>Account Manager</h1>
-            <p>Create your business account</p>
+            <p>Create your account and personalized profile</p>
           </div>
 
           <div className="register-form">
             <IonItem className="register-item">
-              <IonLabel position="stacked">Business Name</IonLabel>
+              <IonLabel position="stacked">Full Name</IonLabel>
+              <IonInput
+                type="text"
+                value={fullName}
+                onIonInput={(e) => setFullName(e.detail.value!)}
+                placeholder="Enter your full name"
+              />
+            </IonItem>
+
+            <IonItem className="register-item">
+              <IonLabel position="stacked">Business Name (Optional)</IonLabel>
               <IonInput
                 type="text"
                 value={businessName}
@@ -122,6 +154,7 @@ const Register: React.FC = () => {
                 placeholder="Enter your business name"
               />
             </IonItem>
+
             <IonItem className="register-item">
               <IonLabel position="stacked">Phone Number</IonLabel>
               <IonInput
@@ -139,7 +172,6 @@ const Register: React.FC = () => {
               </div>
             )}
 
-            {/* Email Input */}
             <IonItem className="register-item">
               <IonLabel position="stacked">Email</IonLabel>
               <IonInput
@@ -156,6 +188,47 @@ const Register: React.FC = () => {
                 </IonText>
               </div>
             )}
+
+            <LocationAutoComplete
+              value={location}
+              onLocationChange={setLocation}
+              className="register-item"
+              placeholder="Search for your location"
+            />
+
+            <IonItem className="register-item">
+              <IonLabel position="stacked">Language Preference</IonLabel>
+              <IonSelect
+                value={languagePreference}
+                onIonChange={(e) => setLanguagePreference(e.detail.value)}
+              >
+                <IonSelectOption value="English">English</IonSelectOption>
+                <IonSelectOption value="Shona">Shona</IonSelectOption>
+                <IonSelectOption value="Ndebele">Ndebele</IonSelectOption>
+              </IonSelect>
+            </IonItem>
+
+            <IonItem className="register-item">
+              <IonLabel position="stacked">Preferred Currency</IonLabel>
+              <IonSelect
+                value={preferredCurrency}
+                onIonChange={(e) => setPreferredCurrency(e.detail.value)}
+              >
+                <IonSelectOption value="USD">USD</IonSelectOption>
+                <IonSelectOption value="ZWL">ZWL</IonSelectOption>
+                <IonSelectOption value="EUR">EUR</IonSelectOption>
+                <IonSelectOption value="GBP">GBP</IonSelectOption>
+              </IonSelect>
+            </IonItem>
+
+            <IonItem className="register-item">
+              <IonLabel>Business Owner</IonLabel>
+              <IonCheckbox
+                slot="end"
+                checked={isBusinessOwner}
+                onIonChange={(e) => setIsBusinessOwner(e.detail.checked)}
+              />
+            </IonItem>
 
             <IonItem className="register-item">
               <IonLabel position="stacked">Password</IonLabel>

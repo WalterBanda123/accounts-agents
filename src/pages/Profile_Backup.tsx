@@ -14,12 +14,6 @@ import {
   IonToolbar,
   IonAvatar,
   IonToast,
-  // IonCard,
-  // IonCardContent,
-  // IonCardHeader,
-  // IonCardTitle,
-  // IonSelect,
-  // IonSelectOption,
 } from "@ionic/react";
 import {
   pencilOutline,
@@ -29,36 +23,12 @@ import {
   businessOutline,
   mailOutline,
   callOutline,
-  // colorPalette,
 } from "ionicons/icons";
 import { useHistory } from "react-router-dom";
 import "./Profile.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
-import { UserInterface } from "../interfaces/user";
-// import { StoreProfile } from "../interfaces/store";
-// import AvatarComponent from "../components/AvatarComponent";
-// import { AVATAR_COLORS, generateUserAvatar } from "../utils/avatarUtils";
-
-// Local interfaces for this backup file
-interface UserProfile extends UserInterface {
-  user_id?: string;
-  avatar?: { color: string };
-  language_preference?: string;
-  preferred_currency?: string;
-  country?: string;
-  business_owner?: boolean;
-  updated_at?: string;
-}
-
-// interface StoreProfile {
-//   id: string;
-//   name: string;
-// }
-
-// Simple avatar generator function
-const generateUserAvatar = () => ({
-  color: '#' + Math.floor(Math.random()*16777215).toString(16)
-});
+import { UserProfile } from "../interfaces/user";
+// Avatar utilities not needed for backup file
 
 const Profile: React.FC = () => {
   const history = useHistory();
@@ -67,16 +37,14 @@ const Profile: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Load user and store profiles from localStorage (replace with API calls later)
+  // Load user profile from localStorage
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  // const [storeProfile, setStoreProfile] = useState<StoreProfile | null>(null);
 
   const [editData, setEditData] = useState<Partial<UserProfile>>({});
 
   useEffect(() => {
     // Load profiles from localStorage
     const savedUserProfile = localStorage.getItem('userProfile');
-    const savedStoreProfile = localStorage.getItem('storeProfile');
     
     if (savedUserProfile) {
       const parsed = JSON.parse(savedUserProfile);
@@ -89,18 +57,13 @@ const Profile: React.FC = () => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        avatar: generateUserAvatar(),
         language_preference: 'English',
         preferred_currency: 'USD',
-        country: 'Zimbabwe',
+        location: 'Zimbabwe',
         business_owner: true,
       };
       setUserProfile(fallbackProfile as UserProfile);
       setEditData(fallbackProfile);
-    }
-
-    if (savedStoreProfile) {
-      // setStoreProfile(JSON.parse(savedStoreProfile));
     }
   }, [user]);
 
@@ -130,18 +93,18 @@ const Profile: React.FC = () => {
     setIsEditing(false);
   };
 
-  // const handleAvatarColorChange = (color: string) => {
-  //   if (userProfile && userProfile.avatar) {
-  //     const updatedAvatar = { ...userProfile.avatar, color };
-  //     const updatedProfile = { ...userProfile, avatar: updatedAvatar };
-  //     setUserProfile(updatedProfile);
-  //     setEditData(updatedProfile);
-  //     localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-  //   }
-  // };
-
   const goToProfileSetup = () => {
     history.push('/profile-setup');
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditData({ ...editData, [field]: value });
+  };
+
+  const handleImageChange = () => {
+    // Image upload logic would go here
+    setToastMessage("Image upload feature coming soon");
+    setShowToast(true);
   };
 
   if (!userProfile) {
@@ -166,16 +129,6 @@ const Profile: React.FC = () => {
       </IonPage>
     );
   }
-
-  const handleInputChange = (field: string, value: string) => {
-    setEditData({ ...editData, [field]: value });
-  };
-
-  const handleImageChange = () => {
-    // Image upload logic would go here
-    setToastMessage("Image upload feature coming soon");
-    setShowToast(true);
-  };
 
   return (
     <IonPage>
@@ -215,7 +168,7 @@ const Profile: React.FC = () => {
           <div className="profile-image-section">
             <div className="avatar-container">
               <IonAvatar className="profile-avatar-large">
-                <img src={userProfile?.profileImage} alt="Profile" />
+                <img src={userProfile?.email || ''} alt="Profile" />
               </IonAvatar>
               {isEditing && (
                 <IonButton
@@ -231,7 +184,7 @@ const Profile: React.FC = () => {
             {!isEditing && (
               <div className="profile-name">
                 <h2>{userProfile?.name}</h2>
-                <p>{userProfile?.businessName}</p>
+                <p>{userProfile?.email}</p>
               </div>
             )}
           </div>
@@ -250,18 +203,6 @@ const Profile: React.FC = () => {
                       handleInputChange("name", e.detail.value!)
                     }
                     placeholder="Enter your full name"
-                  />
-                </IonItem>
-
-                <IonItem className="profile-item">
-                  <IonIcon icon={businessOutline} slot="start" color="medium" />
-                  <IonLabel position="stacked">Business Name</IonLabel>
-                  <IonInput
-                    value={editData.businessName}
-                    onIonInput={(e) =>
-                      handleInputChange("businessName", e.detail.value!)
-                    }
-                    placeholder="Enter your business name"
                   />
                 </IonItem>
 
@@ -310,7 +251,7 @@ const Profile: React.FC = () => {
                   </div>
                   <div className="info-content">
                     <label>Business Name</label>
-                    <p>{userProfile?.businessName}</p>
+                    <p>{userProfile?.email}</p>
                   </div>
                 </div>
 

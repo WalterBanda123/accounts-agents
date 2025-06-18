@@ -15,7 +15,6 @@ import {
   IonRow,
   IonTitle,
   IonToolbar,
-  IonAvatar,
 } from "@ionic/react";
 import {
   chatbubbleOutline,
@@ -26,7 +25,9 @@ import {
 } from "ionicons/icons";
 import RecentTransactionCard from "../components/RecentTransactionCard";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
 import { ALL_TRANSACTIONS } from "../mock/transactions";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 import "../components/RecentTransactionCard.css";
 import "./Home.css";
 
@@ -38,6 +39,7 @@ const Home: React.FC = () => {
   >(undefined);
 
   const history = useHistory();
+  const { user } = useAuthContext();
 
   // Calculate today's sales metrics
   const todaysTransactions = ALL_TRANSACTIONS.filter((transaction) => {
@@ -98,12 +100,11 @@ const Home: React.FC = () => {
             <IonTitle>Dashboard</IonTitle>
             <IonButtons slot="end">
               <IonButton onClick={handleProfileClick}>
-                <IonAvatar className="header-avatar">
-                  <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-                    alt="Profile"
-                  />
-                </IonAvatar>
+                <InitialsAvatar
+                  name={user?.name || "User"}
+                  size="small"
+                  className="header-avatar"
+                />
               </IonButton>
             </IonButtons>
           </IonToolbar>
@@ -159,7 +160,9 @@ const Home: React.FC = () => {
                   <IonCol size="10">
                     <IonLabel>
                       <h2>Transaction Chat</h2>
-                      <p className="action-subtitle">Record sales by typing "3 bread @2.50, 1 milk @3.00"</p>
+                      <p className="action-subtitle">
+                        Record sales by typing "3 bread @2.50, 1 milk @3.00"
+                      </p>
                     </IonLabel>
                   </IonCol>
                 </div>
