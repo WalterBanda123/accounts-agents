@@ -15,14 +15,15 @@ http://ionicframework.com/docs/theming/ */
   --ion-border-radius: 12px;
   --ion-card-border-radius: 16px;
   --ion-button-border-radius: 12px;
-  
+
   /* Enhanced shadows */
   --ion-box-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --ion-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   --ion-box-shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.12);
-  
+
   /* Modern typography */
-  --ion-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --ion-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 /* Global card styling */

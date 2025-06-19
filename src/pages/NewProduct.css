@@ -1,78 +1,74 @@
-/* NewProduct.css - Minimal Design */
+/* NewProduct.css - Modern Design */
 
 /* Page Background */
 .NewProduct {
   --background: #fafafa;
 }
 
-/* AI Promotion Card - Minimal Design */
-.ai-promotion-card {
+/* Add Product Options Card */
+.add-product-options-card {
   background: white;
   border: 1px solid #e5e5e5;
-  border-radius: 0;
+  border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
   overflow: hidden;
   transition: all 0.2s ease;
 }
 
-.ai-promotion-card:hover {
+.add-product-options-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
-.ai-promotion-card ion-card-header {
-  background: #f8f8f8;
-  border-bottom: 1px solid #e5e5e5;
-  padding: 1.5rem;
-}
-
-.ai-promotion-card ion-card-title {
-  color: #111827;
-  font-weight: 600;
-  font-size: 1.25rem;
+.add-options {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.ai-promotion-card ion-card-title ion-icon {
-  color: #2563eb;
-  font-size: 1.5rem;
-}
-
-.ai-promotion-card ion-card-content {
-  padding: 1.5rem;
-}
-
-.ai-promotion-card p {
-  color: #6b7280;
-  font-size: 1rem;
-  line-height: 1.5;
-  margin: 0 0 1.5rem 0;
-}
-
-.ai-cta-button {
-  --background: #2563eb;
-  --background-hover: #1d4ed8;
-  --color: white;
-  --border-radius: 0;
+.option-button {
+  --border-radius: 12px;
   --padding-start: 1.5rem;
   --padding-end: 1.5rem;
+  height: auto;
+  min-height: 4rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   font-weight: 500;
-  height: 3rem;
-  margin-bottom: 1.5rem;
 }
 
-.or-divider {
+.ai-option {
+  --background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --background-hover: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  --color: white;
+}
+
+.manual-option {
+  --background: transparent;
+  --background-hover: #f9fafb;
+  --color: #374151;
+  --border-color: #d1d5db;
+}
+
+.option-subtitle {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+.option-divider {
   text-align: center;
   position: relative;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
 }
 
-.or-divider::before {
-  content: '';
+.option-divider::before {
+  content: "";
   position: absolute;
   top: 50%;
   left: 0;
@@ -81,7 +77,7 @@
   background: #e5e5e5;
 }
 
-.or-divider span {
+.option-divider span {
   background: white;
   color: #6b7280;
   font-size: 0.875rem;
@@ -89,11 +85,149 @@
   position: relative;
 }
 
-/* Card styling - Minimal Design */
+/* Image Capture Card */
+.image-capture-card {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.capture-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.capture-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.capture-placeholder ion-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.capture-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.capture-buttons ion-button {
+  --border-radius: 12px;
+  --padding-start: 1.5rem;
+  --padding-end: 1.5rem;
+  height: 3rem;
+  font-weight: 500;
+}
+
+.image-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-preview {
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 300px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.processing-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f3f4f6;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.processing-status p {
+  margin: 0;
+  color: #374151;
+  font-weight: 500;
+}
+
+.image-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Image upload and preview styles */
+.image-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.upload-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.image-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-preview {
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 200px;
+  display: flex;
+  justify-content: center;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.image-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.image-actions ion-button {
+  --border-radius: 8px;
+}
+
+/* Card styling - Modern Design */
 ion-card {
   background: white;
   border: 1px solid #e5e5e5;
-  border-radius: 0;
+  border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin: 1.5rem 0;
   overflow: hidden;
@@ -150,7 +284,7 @@ ion-card-content {
 
 .form-input {
   --background: #f9f9f9;
-  --border-radius: 0;
+  --border-radius: 12px;
   --border-width: 1px;
   --border-color: #e5e5e5;
   --padding-start: 1rem;
@@ -173,7 +307,7 @@ ion-card-content {
 
 .form-textarea {
   --background: #f9f9f9;
-  --border-radius: 0;
+  --border-radius: 12px;
   --border-width: 1px;
   --border-color: #e5e5e5;
   --padding-start: 1rem;
@@ -196,7 +330,7 @@ ion-card-content {
 
 .form-select {
   --background: #f9f9f9;
-  --border-radius: 0;
+  --border-radius: 12px;
   --border-width: 1px;
   --border-color: #e5e5e5;
   --padding-start: 1rem;
@@ -231,7 +365,7 @@ ion-card-content {
   --background: #2563eb;
   --background-activated: #1d4ed8;
   --background-hover: #1e40af;
-  --border-radius: 0;
+  --border-radius: 16px;
   --color: white;
   font-weight: 500;
   font-size: 1rem;

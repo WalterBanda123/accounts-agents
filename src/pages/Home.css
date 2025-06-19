@@ -278,22 +278,22 @@ ion-grid {
     border-radius: 16px;
     margin: 12px 8px 20px 8px;
   }
-  
+
   .container {
     border-radius: 12px;
     margin: 6px 8px;
   }
-  
+
   .section-header {
     border-radius: 12px;
     margin: 20px 8px 12px 8px;
   }
-  
+
   .recent-transactions-container {
     border-radius: 12px;
     margin: 8px 8px;
   }
-  
+
   ion-grid {
     padding: 0 8px;
   }

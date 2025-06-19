@@ -4,6 +4,8 @@ import { StockItem } from "../../mock/stocks";
 import { ChatMessage, MessageData } from "../../interfaces/message";
 import { ProfileInterface } from "../../interfaces/profile";
 import { ensureUserProfileExists } from "../../utils/profileUtils";
+import { calculateStockStatus } from "../../utils/stockUtils";
+import { sessionStorageUtils } from "../../utils/sessionManagerUtils";
 import {
   collection,
   doc,
@@ -39,11 +41,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [error, setError] = useState<unknown>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(
     () => {
-      // Initialize from sessionStorage if available
-      if (typeof window !== "undefined") {
-        return sessionStorage.getItem("currentSessionId") || null;
-      }
-      return null;
+      // Initialize from sessionStorage if available and not expired
+      return sessionStorageUtils.getCurrentSession();
     }
   );
 
@@ -51,37 +50,34 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [miscActivitiesSessionId, setMiscActivitiesSessionId] = useState<
     string | null
   >(() => {
-    // Initialize from sessionStorage if available
-    if (typeof window !== "undefined") {
-      return sessionStorage.getItem("miscActivitiesSessionId") || null;
-    }
-    return null;
+    // Initialize from sessionStorage if available and not expired
+    return sessionStorageUtils.getMiscActivitiesSession();
   });
 
   // Persist session ID to sessionStorage when it changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (currentSessionId) {
-        sessionStorage.setItem("currentSessionId", currentSessionId);
-      } else {
-        sessionStorage.removeItem("currentSessionId");
-      }
+    if (currentSessionId) {
+      sessionStorageUtils.setCurrentSession(currentSessionId);
+    } else {
+      sessionStorageUtils.clearAll();
     }
   }, [currentSessionId]);
 
   // Persist miscellaneous activities session ID to sessionStorage when it changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (miscActivitiesSessionId) {
-        sessionStorage.setItem(
-          "miscActivitiesSessionId",
-          miscActivitiesSessionId
-        );
-      } else {
-        sessionStorage.removeItem("miscActivitiesSessionId");
-      }
+    if (miscActivitiesSessionId) {
+      sessionStorageUtils.setMiscActivitiesSession(miscActivitiesSessionId);
     }
   }, [miscActivitiesSessionId]);
+
+  // Initialize session management when user changes
+  useEffect(() => {
+    if (user?.id) {
+      sessionStorageUtils.initialize(user.id).catch(error => {
+        console.error('Error initializing session management:', error);
+      });
+    }
+  }, [user?.id]);
 
   // Helper function to check if a store_id matches the user's profile
   const isUserStore = useCallback(
@@ -92,7 +88,21 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     []
   );
 
-  // Helper function to get products with fallback queries
+  // Helper function to get products by Firebase user ID
+  const queryUserProductsByUserId = useCallback(
+    async (firebaseUserId: string) => {
+      const productsRef = collection(fStore, COLLECTION_NAMES.products);
+
+      // Query by userId field (Firebase UID)
+      const q = query(productsRef, where("userId", "==", firebaseUserId));
+      const docs_ref = await getDocs(q);
+
+      return docs_ref;
+    },
+    [COLLECTION_NAMES.products]
+  );
+
+  // Keep the old profile-based query as fallback
   const queryUserProducts = useCallback(
     async (profileId: string) => {
       const productsRef = collection(fStore, COLLECTION_NAMES.products);
@@ -188,32 +198,49 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     [user?.id, user?.profileImage, COLLECTION_NAMES.profiles, getUserProfile]
   );
 
-  const addNewProduct = useCallback(
-    async (product: Partial<StockItem>) => {
+  const addNewProduct = useCallback(async (product: Partial<StockItem>) => {
       try {
+        console.log("🔥 DataContextProvider.addNewProduct called with:", product);
         setIsProductsLoading(true);
 
+        if (!user?.id) {
+          console.log("❌ User not authenticated");
+          throw new Error("User not authenticated");
+        }
+
+        console.log("👤 User ID:", user.id);
+
         // Ensure user profile exists
+        console.log("🔍 Getting user profile...");
         const userProfile = await ensureUserProfileExists(
           getUserProfile,
           createUserProfile,
           user
         );
         if (!userProfile) {
+          console.log("❌ Failed to get or create user profile", userProfile);
           throw new Error("Failed to get or create user profile");
         }
 
-        // Add store_id to the product (referencing the profile as store)
-        // Store as reference path format to match existing data
-        const productWithProfile = {
+        console.log("✅ User profile:", userProfile);
+
+        // Add both userId (Firebase UID) and store_id (profile reference) for compatibility
+        const productWithIds = {
           ...product,
-          store_id: `/profiles/${userProfile.id}`,
+          userId: user.id,
+          store_id: `/store_profiles/${userProfile.id}`,
         };
+
+        console.log("📦 Product data with IDs to save:", productWithIds);
+        console.log("💾 Saving to Firestore collection:", COLLECTION_NAMES.products);
 
         const doc_ref = await addDoc(
           collection(fStore, COLLECTION_NAMES.products),
-          productWithProfile
+          productWithIds
         );
+        
+        console.log("✅ Product saved successfully! Document ID:", doc_ref.id);
+        
         setError(null);
         setIsProductsLoading(false);
         return {
@@ -222,13 +249,12 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           },
         };
       } catch (error) {
+        console.error("❌ Error in addNewProduct:", error);
         setError(error);
         setIsProductsLoading(false);
         return null;
       }
-    },
-    [COLLECTION_NAMES.products, getUserProfile, createUserProfile, user]
-  );
+    }, [user, getUserProfile, createUserProfile, COLLECTION_NAMES.products]);
 
   const getProduct = useCallback(
     async (productId: string) => {
@@ -262,7 +288,12 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           return {} as Partial<StockItem>;
         }
 
-        const product = { id: doc_ref.id, ...productData };
+        const product = {
+          id: doc_ref.id,
+          ...productData,
+          // Recalculate status based on current quantity
+          status: calculateStockStatus(productData.quantity || 0),
+        };
         setIsProductsLoading(false);
         setError(null);
         return product as Partial<StockItem>;
@@ -280,14 +311,20 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       try {
         setIsProductsLoading(true);
 
-        // Get user profile first
-        const userProfile = await getUserProfile();
-        if (!userProfile) {
-          throw new Error("User profile not found");
+        if (!user?.id) {
+          throw new Error("User not authenticated");
         }
 
-        // Query products that belong to the user's store using helper function
-        const docs_ref = await queryUserProducts(userProfile.id);
+        // Query products by Firebase user ID first (primary method)
+        let docs_ref = await queryUserProductsByUserId(user.id);
+
+        // If no results found with userId, fallback to profile-based query
+        if (docs_ref.empty) {
+          const userProfile = await getUserProfile();
+          if (userProfile) {
+            docs_ref = await queryUserProducts(userProfile.id);
+          }
+        }
 
         const allProducts: Partial<StockItem>[] = [];
         docs_ref.forEach((product) => {
@@ -318,20 +355,30 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         return [];
       }
     },
-    [getUserProfile, queryUserProducts]
+    [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]
   );
 
   const getAllProducts = useCallback(async () => {
     try {
       setIsProductsLoading(true);
 
-      // Get user profile first
-      const userProfile = await getUserProfile();
-      if (!userProfile) {
-        throw new Error("User profile not found");
+      if (!user?.id) {
+        throw new Error("User not authenticated");
       }
 
-      const docs_ref = await queryUserProducts(userProfile.id);
+      // Query products by Firebase user ID first (primary method)
+      let docs_ref = await queryUserProductsByUserId(user.id);
+
+      // If no results found with userId, fallback to profile-based query for backward compatibility
+      if (docs_ref.empty) {
+        console.log(
+          "No products found with userId, trying profile-based query..."
+        );
+        const userProfile = await getUserProfile();
+        if (userProfile) {
+          docs_ref = await queryUserProducts(userProfile.id);
+        }
+      }
 
       const products: Partial<StockItem>[] = [];
       docs_ref.forEach((product) => {
@@ -339,6 +386,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         const updatedProd: Partial<StockItem> = {
           id: product.id,
           ...productData,
+          // Recalculate status based on current quantity
+          status: calculateStockStatus(productData.quantity || 0),
         };
         products.push(updatedProd);
       });
@@ -353,7 +402,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsProductsLoading(false);
       return null;
     }
-  }, [getUserProfile, queryUserProducts]);
+  }, [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]);
 
   const getAgentSession = useCallback(async () => {
     try {

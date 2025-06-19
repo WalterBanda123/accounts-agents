@@ -224,7 +224,11 @@
 }
 
 .save-button {
-  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  --background: linear-gradient(
+    135deg,
+    var(--ion-color-primary) 0%,
+    var(--ion-color-primary-shade) 100%
+  );
   --color: white;
   --border-radius: 16px;
   height: 56px;
@@ -236,7 +240,11 @@
 }
 
 .save-button:hover {
-  --background: linear-gradient(135deg, var(--ion-color-primary-shade) 0%, var(--ion-color-primary-tint) 100%);
+  --background: linear-gradient(
+    135deg,
+    var(--ion-color-primary-shade) 0%,
+    var(--ion-color-primary-tint) 100%
+  );
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }

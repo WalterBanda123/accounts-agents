@@ -20,29 +20,10 @@ import {
   saveOutline,
   sparklesOutline,
 } from "ionicons/icons";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { fAuth, fStore, fStorage } from "../../firebase.config";
+import { fAuth, fStorage } from "../../firebase.config";
+import { useDataContext } from "../contexts/data/UseDataContext";
 import "./AddProductByImage.css";
-
-interface ProductDocument {
-  userId: string;
-  name: string;
-  brand: string;
-  size: string;
-  unit: string;
-  category: string;
-  subcategory: string;
-  description: string;
-  unitPrice: number;
-  quantity: number;
-  supplier: string;
-  image: string;
-  createdAt: ReturnType<typeof serverTimestamp>;
-  barcode?: string;
-  confidence?: number;
-  processing_time?: number;
-}
 
 interface ProductData {
   name: string;
@@ -85,7 +66,22 @@ interface BackendResponse {
   session_id: string | null;
 }
 
+// Utility function to calculate stock status based on quantity
+const calculateStockStatus = (
+  quantity: number
+): "in-stock" | "low-stock" | "out-of-stock" => {
+  if (quantity === 0) {
+    return "out-of-stock";
+  } else if (quantity <= 10) {
+    // Low stock threshold
+    return "low-stock";
+  } else {
+    return "in-stock";
+  }
+};
+
 const AddProductByImage: React.FC = () => {
+  const { addNewProduct } = useDataContext();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -168,7 +164,6 @@ const AddProductByImage: React.FC = () => {
   ];
 
   const auth = fAuth;
-  const db = fStore;
   const storage = fStorage;
 
   const showMessage = (
@@ -329,71 +324,72 @@ const AddProductByImage: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      // Generate unique product ID
-      const newProductId = `product_${Date.now()}_${Math.random()
-        .toString(36)
-        .substr(2, 9)}`;
+      let imageUrl = "";
 
-      // Convert data URL to blob
-      const response = await fetch(capturedImage!);
-      const blob = await response.blob();
+      // Upload image if we have one
+      if (capturedImage) {
+        // Generate unique product ID
+        const newProductId = `product_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
 
-      // Upload image to Firebase Storage
-      const storageRef = ref(
-        storage,
-        `products/${currentUser.uid}/${newProductId}.jpg`
-      );
-      const uploadTask = uploadBytesResumable(storageRef, blob);
+        // Convert data URL to blob
+        const response = await fetch(capturedImage);
+        const blob = await response.blob();
 
-      // Monitor upload progress
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error("Upload error:", error);
-          throw new Error("Failed to upload image");
-        }
-      );
+        // Upload image to Firebase Storage
+        const storageRef = ref(
+          storage,
+          `products/${currentUser.uid}/${newProductId}.jpg`
+        );
+        const uploadTask = uploadBytesResumable(storageRef, blob);
 
-      // Wait for upload to complete
-      await uploadTask;
-      const downloadURL = await getDownloadURL(storageRef);
+        // Monitor upload progress
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          },
+          (error) => {
+            console.error("Upload error:", error);
+            throw new Error("Failed to upload image");
+          }
+        );
 
-      // Save product data to Firestore
-      const productDoc: Partial<ProductDocument> = {
-        userId: currentUser.uid,
+        // Wait for upload to complete
+        await uploadTask;
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      // Create product data using the same structure as NewProduct
+      const productQuantity = parseInt(formData.quantity || "0");
+
+      const productData = {
+        id: `STK${Date.now()}`,
         name: formData.name,
-        brand: formData.brand,
-        size: formData.size,
-        unit: formData.unit,
+        description: formData.description,
         category: formData.category,
         subcategory: formData.subcategory,
-        description: formData.description,
         unitPrice: parseFloat(formData.unitPrice || "0"),
-        quantity: parseInt(formData.quantity || "0"),
+        quantity: productQuantity,
+        unit: formData.unit,
+        brand: formData.brand,
+        size: formData.size,
+        status: calculateStockStatus(productQuantity),
+        lastRestocked: new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
         supplier: formData.supplier,
-        image: downloadURL,
-        createdAt: serverTimestamp(),
+        ...(formData.barcode && { barcode: formData.barcode }),
+        ...(imageUrl && { image: imageUrl }),
       };
 
-      // Only add optional fields if they have values
-      if (formData.barcode && formData.barcode.trim()) {
-        productDoc.barcode = formData.barcode.trim();
-      }
-
-      if (formData.confidence !== undefined) {
-        productDoc.confidence = formData.confidence;
-      }
-
-      if (formData.processing_time !== undefined) {
-        productDoc.processing_time = formData.processing_time;
-      }
-
-      await addDoc(collection(db, "products"), productDoc);
+      // Use DataContext addNewProduct function to ensure proper store_id
+      await addNewProduct(productData);
 
       showMessage("Product saved successfully!", "success");
 
@@ -426,8 +422,8 @@ const AddProductByImage: React.FC = () => {
       <IonContent className="add-product-content">
         {/* Header */}
         <div className="minimal-header">
-          <IonButton 
-            fill="clear" 
+          <IonButton
+            fill="clear"
             className="back-button"
             onClick={() => window.history.back()}
           >
@@ -467,11 +463,16 @@ const AddProductByImage: React.FC = () => {
               </IonButton>
             </div>
           ) : (
-            <div className="image-placeholder" onClick={() => setShowActionSheet(true)}>
+            <div
+              className="image-placeholder"
+              onClick={() => setShowActionSheet(true)}
+            >
               <div className="placeholder-content">
                 <IonIcon icon={cameraOutline} className="placeholder-icon" />
                 <h3>Add Product Photo</h3>
-                <p>Take a photo and AI will extract product details automatically</p>
+                <p>
+                  Take a photo and AI will extract product details automatically
+                </p>
               </div>
               <IonButton
                 expand="block"
@@ -516,12 +517,20 @@ const AddProductByImage: React.FC = () => {
             {/* Basic Information */}
             <div className="form-card">
               <h2 className="form-card-title">Basic Information</h2>
-              
-              <div className={`form-field ${formData.name ? 'ai-populated-field' : ''}`}>
+
+              <div
+                className={`form-field ${
+                  formData.name ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label required">
                   Product Name
                   {formData.name && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonInput
@@ -532,42 +541,70 @@ const AddProductByImage: React.FC = () => {
                 />
               </div>
 
-              <div className={`form-field ${formData.brand ? 'ai-populated-field' : ''}`}>
+              <div
+                className={`form-field ${
+                  formData.brand ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label required">
                   Brand
                   {formData.brand && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonInput
                   className="form-input"
                   value={formData.brand}
-                  onIonInput={(e) => handleInputChange("brand", e.detail.value!)}
+                  onIonInput={(e) =>
+                    handleInputChange("brand", e.detail.value!)
+                  }
                   placeholder="Enter brand name"
                 />
               </div>
 
-              <div className={`form-field ${formData.description ? 'ai-populated-field' : ''}`}>
+              <div
+                className={`form-field ${
+                  formData.description ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label">
                   Description
                   {formData.description && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonTextarea
                   className="form-textarea"
                   value={formData.description}
-                  onIonInput={(e) => handleInputChange("description", e.detail.value!)}
+                  onIonInput={(e) =>
+                    handleInputChange("description", e.detail.value!)
+                  }
                   placeholder="Enter product description"
                   rows={3}
                 />
               </div>
 
-              <div className={`form-field ${formData.size ? 'ai-populated-field' : ''}`}>
+              <div
+                className={`form-field ${
+                  formData.size ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label">
                   Size
                   {formData.size && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonInput
@@ -582,12 +619,20 @@ const AddProductByImage: React.FC = () => {
             {/* Category */}
             <div className="form-card">
               <h2 className="form-card-title">Category</h2>
-              
-              <div className={`form-field ${formData.category ? 'ai-populated-field' : ''}`}>
+
+              <div
+                className={`form-field ${
+                  formData.category ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label required">
                   Category
                   {formData.category && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonSelect
@@ -600,24 +645,37 @@ const AddProductByImage: React.FC = () => {
                   placeholder="Select category"
                 >
                   {categories.map((category) => (
-                    <IonSelectOption key={category.value} value={category.value}>
+                    <IonSelectOption
+                      key={category.value}
+                      value={category.value}
+                    >
                       {category.value}
                     </IonSelectOption>
                   ))}
                 </IonSelect>
               </div>
 
-              <div className={`form-field ${formData.subcategory ? 'ai-populated-field' : ''}`}>
+              <div
+                className={`form-field ${
+                  formData.subcategory ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label required">
                   Subcategory
                   {formData.subcategory && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonSelect
                   className="form-select"
                   value={formData.subcategory}
-                  onIonChange={(e) => handleInputChange("subcategory", e.detail.value)}
+                  onIonChange={(e) =>
+                    handleInputChange("subcategory", e.detail.value)
+                  }
                   placeholder="Select subcategory"
                   disabled={!formData.category}
                 >
@@ -633,14 +691,16 @@ const AddProductByImage: React.FC = () => {
             {/* Pricing & Inventory */}
             <div className="form-card">
               <h2 className="form-card-title">Pricing & Inventory</h2>
-              
+
               <div className="form-field">
                 <label className="form-label required">Unit Price</label>
                 <IonInput
                   className="form-input"
                   type="number"
                   value={formData.unitPrice}
-                  onIonInput={(e) => handleInputChange("unitPrice", e.detail.value!)}
+                  onIonInput={(e) =>
+                    handleInputChange("unitPrice", e.detail.value!)
+                  }
                   placeholder="0.00"
                 />
               </div>
@@ -651,16 +711,26 @@ const AddProductByImage: React.FC = () => {
                   className="form-input"
                   type="number"
                   value={formData.quantity}
-                  onIonInput={(e) => handleInputChange("quantity", e.detail.value!)}
+                  onIonInput={(e) =>
+                    handleInputChange("quantity", e.detail.value!)
+                  }
                   placeholder="0"
                 />
               </div>
 
-              <div className={`form-field ${formData.unit ? 'ai-populated-field' : ''}`}>
+              <div
+                className={`form-field ${
+                  formData.unit ? "ai-populated-field" : ""
+                }`}
+              >
                 <label className="form-label">
                   Unit Type
                   {formData.unit && (
-                    <IonIcon icon={sparklesOutline} className="ai-indicator" title="Auto-filled by AI" />
+                    <IonIcon
+                      icon={sparklesOutline}
+                      className="ai-indicator"
+                      title="Auto-filled by AI"
+                    />
                   )}
                 </label>
                 <IonSelect
@@ -681,13 +751,15 @@ const AddProductByImage: React.FC = () => {
             {/* Additional Information */}
             <div className="form-card">
               <h2 className="form-card-title">Additional Information</h2>
-              
+
               <div className="form-field">
                 <label className="form-label required">Supplier</label>
                 <IonInput
                   className="form-input"
                   value={formData.supplier}
-                  onIonInput={(e) => handleInputChange("supplier", e.detail.value!)}
+                  onIonInput={(e) =>
+                    handleInputChange("supplier", e.detail.value!)
+                  }
                   placeholder="Enter supplier name"
                 />
               </div>
@@ -697,7 +769,9 @@ const AddProductByImage: React.FC = () => {
                 <IonInput
                   className="form-input"
                   value={formData.barcode}
-                  onIonInput={(e) => handleInputChange("barcode", e.detail.value!)}
+                  onIonInput={(e) =>
+                    handleInputChange("barcode", e.detail.value!)
+                  }
                   placeholder="Enter barcode"
                 />
               </div>
@@ -710,7 +784,8 @@ const AddProductByImage: React.FC = () => {
                   <IonIcon icon={sparklesOutline} />
                   <span>
                     AI processed in {formData.processing_time}s
-                    {formData.confidence && ` • ${Math.round(formData.confidence * 100)}% confidence`}
+                    {formData.confidence &&
+                      ` • ${Math.round(formData.confidence * 100)}% confidence`}
                   </span>
                 </div>
               </div>
@@ -721,7 +796,11 @@ const AddProductByImage: React.FC = () => {
         {/* Upload Progress */}
         {isUploading && (
           <div className="upload-progress-card">
-            <IonSpinner name="crescent" color="primary" style={{ marginBottom: "16px" }} />
+            <IonSpinner
+              name="crescent"
+              color="primary"
+              style={{ marginBottom: "16px" }}
+            />
             <h3>Uploading Product...</h3>
             <p>{Math.round(uploadProgress)}% complete</p>
             <IonProgressBar value={uploadProgress / 100} />

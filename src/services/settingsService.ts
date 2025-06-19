@@ -225,7 +225,7 @@ export const settingsService = {
 
             // Update in Firestore
             const success = await this.updateStoreSettings(userId, settings);
-            
+
             return {
                 success
             };

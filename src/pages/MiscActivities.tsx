@@ -203,7 +203,7 @@ I'll help you log it properly and update your registry. What would you like to r
               timestamp: new Date(),
               messageOrder: 0,
             };
-            
+
             allMessages.unshift(initialMessage);
           }
 
@@ -318,8 +318,19 @@ User request: ${userMessage}`;
         let responseText: string = "";
 
         // Handle new response format with message and pdfData
-        if (typeof aiResponse === "object" && aiResponse !== null && 'message' in aiResponse) {
-          const response = aiResponse as { message: string; pdfData?: { pdf_base64: string; pdf_size: number; direct_download_url: string } };
+        if (
+          typeof aiResponse === "object" &&
+          aiResponse !== null &&
+          "message" in aiResponse
+        ) {
+          const response = aiResponse as {
+            message: string;
+            pdfData?: {
+              pdf_base64: string;
+              pdf_size: number;
+              direct_download_url: string;
+            };
+          };
           responseText = response.message;
           // Note: MiscActivities doesn't currently support PDF downloads, but the message will be displayed
         } else if (typeof aiResponse === "string") {

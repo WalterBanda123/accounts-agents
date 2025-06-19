@@ -1,162 +1,162 @@
 /* Recent Transaction Card - Modern Rounded Style */
 .recent-transaction-card {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s ease;
-    background-color: white;
-    border-radius: 12px;
-    margin-bottom: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    border: 1px solid #f5f5f5;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background-color: white;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f5f5f5;
 }
 
 .recent-transaction-card:hover {
-    background-color: #f8f9fa;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-    border-color: var(--ion-color-primary-tint);
+  background-color: #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--ion-color-primary-tint);
 }
 
 .recent-transaction-card:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .recent-transaction-card.compact {
-    padding: 10px 14px;
-    margin-bottom: 6px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
 }
 
 .recent-transaction-content {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
 }
 
 /* Amount Section */
 .recent-transaction-amount {
-    flex: 0 0 90px;
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--ion-color-primary);
-    text-align: left;
+  flex: 0 0 90px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ion-color-primary);
+  text-align: left;
 }
 
 .recent-transaction-card.compact .recent-transaction-amount {
-    flex: 0 0 80px;
-    font-size: 0.95rem;
+  flex: 0 0 80px;
+  font-size: 0.95rem;
 }
 
 /* Details Section */
 .recent-transaction-details {
-    flex: 1;
-    min-width: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .recent-transaction-merchant {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--ion-color-dark);
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ion-color-dark);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .recent-transaction-description {
-    font-size: 0.8rem;
-    color: var(--ion-color-medium);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.3;
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .recent-transaction-card.compact .recent-transaction-merchant {
-    font-size: 0.9rem;
+  font-size: 0.9rem;
 }
 
 .recent-transaction-card.compact .recent-transaction-description {
-    font-size: 0.75rem;
+  font-size: 0.75rem;
 }
 
 /* Date/Time Section */
 .recent-transaction-datetime {
-    flex: 0 0 70px;
-    text-align: right;
-    font-size: 0.8rem;
+  flex: 0 0 70px;
+  text-align: right;
+  font-size: 0.8rem;
 }
 
 .recent-transaction-card.compact .recent-transaction-datetime {
-    flex: 0 0 60px;
-    font-size: 0.75rem;
+  flex: 0 0 60px;
+  font-size: 0.75rem;
 }
 
 .recent-transaction-date {
-    font-weight: 500;
-    color: var(--ion-color-dark);
-    margin-bottom: 2px;
+  font-weight: 500;
+  color: var(--ion-color-dark);
+  margin-bottom: 2px;
 }
 
 .recent-transaction-time {
-    color: var(--ion-color-medium);
-    font-size: 0.75rem;
+  color: var(--ion-color-medium);
+  font-size: 0.75rem;
 }
 
 /* Status Indicator */
 .recent-transaction-status {
-    flex: 0 0 12px;
-    margin-left: 8px;
+  flex: 0 0 12px;
+  margin-left: 8px;
 }
 
 .recent-transaction-status.completed ion-icon {
-    color: var(--ion-color-success);
+  color: var(--ion-color-success);
 }
 
 .recent-transaction-status.pending ion-icon {
-    color: var(--ion-color-warning);
+  color: var(--ion-color-warning);
 }
 
 .recent-transaction-status.failed ion-icon {
-    color: var(--ion-color-danger);
+  color: var(--ion-color-danger);
 }
 
 /* Hover effects */
 .recent-transaction-card:hover .recent-transaction-amount {
-    color: var(--ion-color-primary-shade);
-    transform: scale(1.02);
+  color: var(--ion-color-primary-shade);
+  transform: scale(1.02);
 }
 
 /* Mobile responsive */
 @media (max-width: 480px) {
-    .recent-transaction-card {
-        padding: 10px 12px;
-    }
+  .recent-transaction-card {
+    padding: 10px 12px;
+  }
 
-    .recent-transaction-content {
-        gap: 8px;
-    }
+  .recent-transaction-content {
+    gap: 8px;
+  }
 
-    .recent-transaction-amount {
-        flex: 0 0 70px;
-        font-size: 0.9rem;
-    }
+  .recent-transaction-amount {
+    flex: 0 0 70px;
+    font-size: 0.9rem;
+  }
 
-    .recent-transaction-datetime {
-        flex: 0 0 50px;
-        font-size: 0.7rem;
-    }
+  .recent-transaction-datetime {
+    flex: 0 0 50px;
+    font-size: 0.7rem;
+  }
 
-    .recent-transaction-merchant {
-        font-size: 0.85rem;
-    }
+  .recent-transaction-merchant {
+    font-size: 0.85rem;
+  }
 
-    .recent-transaction-description {
-        font-size: 0.7rem;
-    }
+  .recent-transaction-description {
+    font-size: 0.7rem;
+  }
 }

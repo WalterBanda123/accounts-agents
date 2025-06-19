@@ -13,7 +13,6 @@ import {
   IonSpinner,
 } from "@ionic/react";
 import {
-  add,
   send,
   documentText,
   downloadOutline,
@@ -84,37 +83,40 @@ const MessageBubble: React.FC<{
       let success = false;
 
       // Debug logging to see what data we have
-      console.log('Download attempt:', {
+      console.log("Download attempt:", {
         downloadableFile,
         messagePdfData: message.pdfData,
         hasBase64Data: !!downloadableFile.base64Data,
-        hasUrl: !!downloadableFile.url
+        hasUrl: !!downloadableFile.url,
       });
 
       // If we have the complete PDF data from the backend, use the exact recommended method
       if (message.pdfData && message.pdfData.pdf_base64) {
-        console.log('Using complete backend PDF data');
+        console.log("Using complete backend PDF data");
         downloadPDF({
           pdf_data: message.pdfData,
-          data: { filename: downloadableFile.filename }
+          data: { filename: downloadableFile.filename },
         });
         success = true;
       }
       // If we have base64 PDF data from backend, use it
       else if (downloadableFile.base64Data) {
-        console.log('Using extracted base64 data');
+        console.log("Using extracted base64 data");
         success = downloadFileFromBase64(
           downloadableFile.base64Data,
           downloadableFile.filename,
-          'application/pdf'
+          "application/pdf"
         );
       } else if (downloadableFile.url) {
         // Use direct download URL if available
-        console.log('Using direct download URL');
-        success = await downloadFile(downloadableFile.url, downloadableFile.filename);
+        console.log("Using direct download URL");
+        success = await downloadFile(
+          downloadableFile.url,
+          downloadableFile.filename
+        );
       } else if (downloadableFile.content) {
         // Fallback to generating PDF from text content
-        console.log('Using fallback PDF generation');
+        console.log("Using fallback PDF generation");
         const pdfUrl = generateReportPDF(
           downloadableFile.content,
           userId,
@@ -137,8 +139,16 @@ const MessageBubble: React.FC<{
   };
 
   return (
-    <div className={`message-group ${message.isBot ? "" : "client"}`}>
-      <div className={message.isBot ? "bot_message" : "client_message"}>
+    <div
+      className={`message-bubble-wrapper ${
+        message.isBot ? "bot-message" : "user-message"
+      }`}
+    >
+      <div
+        className={`message-bubble ${
+          message.isBot ? "bot-bubble" : "user-bubble"
+        }`}
+      >
         {message.id === "typing-indicator" ? (
           <div className="typing-indicator">
             <span></span>
@@ -147,8 +157,11 @@ const MessageBubble: React.FC<{
           </div>
         ) : (
           <>
-            <div className="message-content">
+            <div className="message-text">
               {parseBasicMarkdown(message.text)}
+            </div>
+            <div className="message-meta">
+              <span className="message-timestamp">{message.timestamp}</span>
             </div>
             {downloadableFile && (
               <div className="message-attachment">
@@ -163,7 +176,6 @@ const MessageBubble: React.FC<{
                         {formatFileSize(downloadableFile.size)}
                       </div>
                     )}
-                    <div className="pdf-preview-text">PDF Report</div>
                   </div>
                 </div>
                 <IonButton
@@ -197,9 +209,6 @@ const MessageBubble: React.FC<{
           </>
         )}
       </div>
-      {message.id !== "typing-indicator" && (
-        <div className="message-timestamp">{message.timestamp}</div>
-      )}
     </div>
   );
 });
@@ -338,7 +347,15 @@ const Chat: React.FC = () => {
   };
 
   const addMessage = useCallback(
-    async (text: string, isBot: boolean = false, pdfData?: { pdf_base64: string; pdf_size: number; direct_download_url: string }) => {
+    async (
+      text: string,
+      isBot: boolean = false,
+      pdfData?: {
+        pdf_base64: string;
+        pdf_size: number;
+        direct_download_url: string;
+      }
+    ) => {
       // Create a more unique ID to prevent duplicate keys
       const timestamp = performance.now(); // More precise than Date.now()
       const randomId = Math.random().toString(36).substr(2, 9);
@@ -354,7 +371,7 @@ const Chat: React.FC = () => {
         isBot,
         timestamp: new Date(),
         messageOrder: 1, // Will be updated when saved
-        ...(pdfData && { pdfData }) // Add PDF data if available
+        ...(pdfData && { pdfData }), // Add PDF data if available
       };
 
       // Update the message groups by adding the new message to today's group
@@ -493,62 +510,73 @@ const Chat: React.FC = () => {
       // Check if this looks like a sales entry
       if (isSalesText(userMessage)) {
         console.log("Processing as sales entry:", userMessage);
-        
+
         // Parse the sales text
         const parsedItems = parseSalesText(userMessage);
         console.log("Parsed items:", parsedItems);
-        
+
         if (parsedItems.length > 0) {
           // Validate against inventory
-          const validatedItems = validateSaleItems(parsedItems, ALL_STOCK_ITEMS);
-          
+          const validatedItems = validateSaleItems(
+            parsedItems,
+            ALL_STOCK_ITEMS
+          );
+
           // Generate receipt
           const receipt = generateSalesReceipt(validatedItems);
-          
+
           // Format receipt text for display
           const receiptText = formatReceiptText(receipt);
-          
+
           // Remove typing indicator and show receipt
           removeTypingIndicator();
           setChatLoading(false);
-          
+
           await addMessage(receiptText, true);
-          
+
           // If successful, send to API for confirmation
           if (receipt.isValid) {
             console.log("Transaction successful:", receipt);
-            
+
             // Create transaction ID
-            const transactionId = `TXN_${user?.id || 'user'}_${Date.now()}`;
-            
+            const transactionId = `TXN_${user?.id || "user"}_${Date.now()}`;
+
             // Send transaction to API for processing
             try {
-              const transactionData = createTransactionFromReceipt(receipt, user?.email || "Unknown");
-              
+              const transactionData = createTransactionFromReceipt(
+                receipt,
+                user?.email || "Unknown"
+              );
+
               // Call the API to process the transaction
-              const apiResponse = await fetch('http://localhost:8003/run', {
-                method: 'POST',
+              const apiResponse = await fetch("http://localhost:8003/run", {
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  message: `Record transaction: ${JSON.stringify(transactionData)}`,
-                  context: { user_id: user?.id || 'test_user' },
-                  session_id: currentSessionId || 'default_session'
-                })
+                  message: `Record transaction: ${JSON.stringify(
+                    transactionData
+                  )}`,
+                  context: { user_id: user?.id || "test_user" },
+                  session_id: currentSessionId || "default_session",
+                }),
               });
-              
+
               if (apiResponse.ok) {
                 const apiResult = await apiResponse.json();
                 console.log("Transaction recorded successfully:", apiResult);
-                
+
                 // Optionally show confirmation message
                 await addMessage(
                   `✅ **Transaction Recorded Successfully**\n\nTransaction ID: ${transactionId}\n\nYour sale has been saved to the system.`,
                   true
                 );
               } else {
-                console.error("Failed to record transaction:", apiResponse.statusText);
+                console.error(
+                  "Failed to record transaction:",
+                  apiResponse.statusText
+                );
                 await addMessage(
                   "⚠️ **Transaction Generated** but could not be saved to the system. Please try again or contact support.",
                   true
@@ -562,7 +590,7 @@ const Chat: React.FC = () => {
               );
             }
           }
-          
+
           // Reset flag and return early
           sendingMessageRef.current = false;
           return;
@@ -572,7 +600,7 @@ const Chat: React.FC = () => {
       // If not a sales entry, proceed with normal AI chat
       console.log("Processing as regular chat message");
       console.log("agent info:", agent);
-      
+
       // Pass the current session ID to askAiAssistant
       const botResponse = await askAiAssistant(
         userMessage,
@@ -585,14 +613,32 @@ const Chat: React.FC = () => {
 
       if (botResponse) {
         let responseText: string = "";
-        let pdfData: { pdf_base64: string; pdf_size: number; direct_download_url: string } | undefined;
+        let pdfData:
+          | {
+              pdf_base64: string;
+              pdf_size: number;
+              direct_download_url: string;
+            }
+          | undefined;
 
         // Handle backend response format: {status, message, data, pdf_data}
-        if (typeof botResponse === "object" && botResponse !== null && 'message' in botResponse) {
-          const response = botResponse as { 
-            message: string; 
-            pdfData?: { pdf_base64: string; pdf_size: number; direct_download_url: string };
-            pdf_data?: { pdf_base64: string; pdf_size: number; direct_download_url: string };
+        if (
+          typeof botResponse === "object" &&
+          botResponse !== null &&
+          "message" in botResponse
+        ) {
+          const response = botResponse as {
+            message: string;
+            pdfData?: {
+              pdf_base64: string;
+              pdf_size: number;
+              direct_download_url: string;
+            };
+            pdf_data?: {
+              pdf_base64: string;
+              pdf_size: number;
+              direct_download_url: string;
+            };
             data?: unknown;
           };
           responseText = response.message;
@@ -609,8 +655,12 @@ const Chat: React.FC = () => {
             String(response.data || "") ||
             JSON.stringify(botResponse);
           // Also check for pdf_data in general object response
-          if (response.pdf_data && typeof response.pdf_data === 'object') {
-            pdfData = response.pdf_data as { pdf_base64: string; pdf_size: number; direct_download_url: string };
+          if (response.pdf_data && typeof response.pdf_data === "object") {
+            pdfData = response.pdf_data as {
+              pdf_base64: string;
+              pdf_size: number;
+              direct_download_url: string;
+            };
           }
         } else {
           responseText = "I received an unexpected response format.";
@@ -684,10 +734,6 @@ const Chat: React.FC = () => {
     }
   }, [user?.id]);
 
-  const handleAddMedia = useCallback(() => {
-    console.log("Opening media picker");
-  }, []);
-
   const handleProfileClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
@@ -723,24 +769,45 @@ const Chat: React.FC = () => {
           {messageGroups.length === 0 && (
             <div className="sales-examples">
               <h4>💰 Record Sales Quickly</h4>
-              <div className="example-item" onClick={() => setMessage("3 bread @2.50, 1 milk @3.00")}>
+              <div
+                className="example-item"
+                onClick={() => setMessage("3 bread @2.50, 1 milk @3.00")}
+              >
                 3 bread @2.50, 1 milk @3.00
-                <div className="example-description">Record multiple items with quantities and prices</div>
+                <div className="example-description">
+                  Record multiple items with quantities and prices
+                </div>
               </div>
-              <div className="example-item" onClick={() => setMessage("5 apples @0.30, 2 coke @1.75")}>
+              <div
+                className="example-item"
+                onClick={() => setMessage("5 apples @0.30, 2 coke @1.75")}
+              >
                 5 apples @0.30, 2 coke @1.75
-                <div className="example-description">Simple format: quantity product @price</div>
+                <div className="example-description">
+                  Simple format: quantity product @price
+                </div>
               </div>
-              <div className="example-item" onClick={() => setMessage("1 soap @1.20")}>
+              <div
+                className="example-item"
+                onClick={() => setMessage("1 soap @1.20")}
+              >
                 1 soap @1.20
-                <div className="example-description">Single item transaction</div>
+                <div className="example-description">
+                  Single item transaction
+                </div>
               </div>
-              <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: '#6c757d' }}>
+              <p
+                style={{
+                  margin: "12px 0 0 0",
+                  fontSize: "12px",
+                  color: "#6c757d",
+                }}
+              >
                 Or ask me anything about your business, inventory, or reports!
               </p>
             </div>
           )}
-          
+
           {messageGroups.map((group) => (
             <React.Fragment key={group.date}>
               {/* Only show date separator if it's not the only group, or if it's not today */}
@@ -776,38 +843,37 @@ const Chat: React.FC = () => {
           )}
         </div>
       </IonContent>
-      <IonFooter mode="ios">
-        <div className="chat_input_container">
-          <IonButton
-            fill="clear"
-            onClick={handleAddMedia}
-            className="add_media_button"
-          >
-            <IonIcon icon={add} slot="icon-only" />
-          </IonButton>
-          <IonTextarea
-            value={message}
-            mode="ios"
-            placeholder="Type sales like '2 bread @2.50, 1 milk @3.00' or ask anything..."
-            onIonInput={(e) => setMessage(e.detail.value!)}
-            onKeyUp={handleKeyPress}
-            className="chat_input"
-            rows={1}
-            autoGrow={true}
-            wrap="soft"
-          />
+
+      <IonFooter mode="ios" className="modern-chat-footer">
+        <div className="modern-input-container">
+          <div className="modern-input-wrapper">
+            <IonTextarea
+              value={message}
+              mode="ios"
+              placeholder="Type a message..."
+              onIonInput={(e) => setMessage(e.detail.value!)}
+              onKeyDown={handleKeyPress}
+              className="modern-message-input"
+              rows={1}
+              autoGrow={true}
+              maxlength={1000}
+              wrap="soft"
+              enterkeyhint="send"
+            />
+          </div>
+
           <IonButton
             fill="solid"
-            size="small"
             onClick={handleSendMessage}
             disabled={
               !message.trim() || chatLoading || sendingMessageRef.current
             }
-            className={`send_button ${chatLoading ? "loading" : ""}`}
-            color={"dark"}
+            className={`modern-send-btn ${!message.trim() ? "disabled" : ""} ${
+              chatLoading ? "loading" : ""
+            }`}
           >
             {chatLoading ? (
-              <div className="loading-spinner"></div>
+              <div className="modern-spinner"></div>
             ) : (
               <IonIcon icon={send} />
             )}

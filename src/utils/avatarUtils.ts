@@ -14,7 +14,7 @@ export const AVATAR_COLORS = [
 export const generateUserAvatar = (userId: string, userName: string) => {
   const colorIndex = Math.abs(hashCode(userId)) % AVATAR_COLORS.length;
   const initials = getInitials(userName);
-  
+
   return {
     initials,
     color: AVATAR_COLORS[colorIndex],
@@ -23,12 +23,12 @@ export const generateUserAvatar = (userId: string, userName: string) => {
 
 export const getInitials = (name: string): string => {
   if (!name) return '?';
-  
+
   const parts = name.trim().split(' ');
   if (parts.length === 1) {
     return parts[0].charAt(0).toUpperCase();
   }
-  
+
   return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
 };
 

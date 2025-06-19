@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { fAuth } from "../../../firebase.config";
-import { deactivateAllUserSessions } from "../../utils/sessionUtils";
+import { logoutCleanup } from "../../utils/sessionManagerUtils";
 
 const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
   props
@@ -103,14 +103,14 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
     try {
       setError(null);
 
-      // Deactivate any active sessions before signing out
+      // Deactivate any active sessions and clear local storage before signing out
       if (user?.id) {
         try {
-          console.log("Deactivating sessions for user:", user.id);
-          await deactivateAllUserSessions(user.id);
+          console.log("Cleaning up sessions for user:", user.id);
+          await logoutCleanup(user.id);
         } catch (sessionError) {
-          console.error("Error deactivating sessions:", sessionError);
-          // Don't fail logout if session deactivation fails
+          console.error("Error during logout cleanup:", sessionError);
+          // Don't fail logout if session cleanup fails
         }
       }
 

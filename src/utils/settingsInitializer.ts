@@ -30,7 +30,7 @@ export const initializeStoreSettingsCollection = async (): Promise<SettingsIniti
 
                 // Check if settings already exist
                 const existingSettings = await settingsService.getStoreSettings(userId);
-                
+
                 if (!existingSettings) {
                     // Create default settings for this user
                     const defaultSettings = settingsService.getDefaultSettings({
@@ -68,13 +68,13 @@ export const migrateLocalStorageSettings = async (userId: string): Promise<boole
     try {
         // Check if user has settings in localStorage
         const localSettings = localStorage.getItem('userSettings') || localStorage.getItem(`settings_${userId}`);
-        
+
         if (localSettings) {
             const parsedSettings = JSON.parse(localSettings);
-            
+
             // Check if settings already exist in Firestore
             const existingSettings = await settingsService.getStoreSettings(userId);
-            
+
             if (!existingSettings) {
                 // Migrate from localStorage to Firestore
                 const migratedSettings: StoreSettings = {
@@ -84,15 +84,15 @@ export const migrateLocalStorageSettings = async (userId: string): Promise<boole
 
                 await settingsService.createStoreSettings(userId, migratedSettings);
                 console.log('Settings migrated from localStorage to Firestore');
-                
+
                 // Remove from localStorage after successful migration
                 localStorage.removeItem('userSettings');
                 localStorage.removeItem(`settings_${userId}`);
-                
+
                 return true;
             }
         }
-        
+
         return false;
     } catch (error) {
         console.error('Error migrating localStorage settings:', error);
@@ -121,10 +121,10 @@ export const validateAndFixSettingsDocuments = async (): Promise<SettingsInitial
 
                 // Validate the settings structure
                 const validation = settingsService.validateSettings(settingsData);
-                
+
                 if (!validation.isValid) {
                     console.log(`Fixing invalid settings for user ${userId}:`, validation.errors);
-                    
+
                     // Get default settings and merge with existing valid data
                     const defaultSettings = settingsService.getDefaultSettings();
                     const fixedSettings: StoreSettings = {
@@ -162,7 +162,7 @@ export const validateAndFixSettingsDocuments = async (): Promise<SettingsInitial
 // Complete initialization workflow
 export const initializeCompleteSettingsSystem = async (): Promise<SettingsInitializationResult> => {
     console.log('Starting complete settings system initialization...');
-    
+
     const result: SettingsInitializationResult = {
         success: true,
         usersProcessed: 0,

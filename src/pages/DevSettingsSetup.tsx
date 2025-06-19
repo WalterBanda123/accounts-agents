@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   IonContent,
   IonHeader,
@@ -14,21 +14,27 @@ import {
   IonText,
   IonBackButton,
   IonButtons,
-  IonToast
-} from '@ionic/react';
-import { settingsOutline, checkmarkCircleOutline } from 'ionicons/icons';
-import SettingsInitializer from '../components/SettingsInitializer';
-import { SettingsInitializationResult } from '../utils/settingsInitializer';
+  IonToast,
+} from "@ionic/react";
+import { settingsOutline, checkmarkCircleOutline } from "ionicons/icons";
+import SettingsInitializer from "../components/SettingsInitializer";
+import { SettingsInitializationResult } from "../utils/settingsInitializer";
 
 const DevSettingsSetup: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
 
-  const handleInitializationComplete = (result: SettingsInitializationResult) => {
+  const handleInitializationComplete = (
+    result: SettingsInitializationResult
+  ) => {
     if (result.success) {
-      setToastMessage(`Settings system initialized successfully! ${result.usersProcessed} users processed.`);
+      setToastMessage(
+        `Settings system initialized successfully! ${result.usersProcessed} users processed.`
+      );
     } else {
-      setToastMessage(`Initialization completed with ${result.errors.length} issues. Check console for details.`);
+      setToastMessage(
+        `Initialization completed with ${result.errors.length} issues. Check console for details.`
+      );
     }
     setShowToast(true);
   };
@@ -54,15 +60,15 @@ const DevSettingsSetup: React.FC = () => {
         <IonCard>
           <IonCardHeader>
             <IonCardTitle>
-              <IonIcon icon={settingsOutline} style={{ marginRight: '8px' }} />
+              <IonIcon icon={settingsOutline} style={{ marginRight: "8px" }} />
               Development Tool - Store Settings Initialization
             </IonCardTitle>
           </IonCardHeader>
           <IonCardContent>
             <IonText>
               <p>
-                <strong>Important:</strong> This is a development tool to set up the store settings 
-                system in Firestore. It will:
+                <strong>Important:</strong> This is a development tool to set up
+                the store settings system in Firestore. It will:
               </p>
               <ul>
                 <li>Create store_settings collection structure</li>
@@ -79,15 +85,16 @@ const DevSettingsSetup: React.FC = () => {
         <IonCard>
           <IonCardHeader>
             <IonCardTitle>
-              <IonIcon icon={checkmarkCircleOutline} style={{ marginRight: '8px' }} />
+              <IonIcon
+                icon={checkmarkCircleOutline}
+                style={{ marginRight: "8px" }}
+              />
               After Initialization
             </IonCardTitle>
           </IonCardHeader>
           <IonCardContent>
             <IonText>
-              <p>
-                Once initialized, all users will have:
-              </p>
+              <p>Once initialized, all users will have:</p>
               <ul>
                 <li>✅ Persistent store settings in Firestore</li>
                 <li>✅ Automatic backup to localStorage</li>
@@ -97,11 +104,11 @@ const DevSettingsSetup: React.FC = () => {
               </ul>
             </IonText>
 
-            <IonButton 
-              expand="block" 
-              fill="outline" 
+            <IonButton
+              expand="block"
+              fill="outline"
               routerLink="/account-settings"
-              style={{ marginTop: '16px' }}
+              style={{ marginTop: "16px" }}
             >
               Go to Account Settings
             </IonButton>

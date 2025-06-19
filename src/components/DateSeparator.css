@@ -1,32 +1,61 @@
-/* DateSeparator.css */
+/* DateSeparator.css - WhatsApp-style Timeline */
 
 .date-separator {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 12px 0 8px 0;
+  margin: 20px 0 16px 0;
   position: relative;
+  width: 100%;
 }
 
 .date-separator::before {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 20px;
+  right: 20px;
   height: 1px;
-  background: var(--ion-color-light);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.08) 20%,
+    rgba(0, 0, 0, 0.08) 80%,
+    transparent 100%
+  );
   z-index: 1;
 }
 
 .date-text {
-  background: var(--ion-color-light-tint);
-  color: var(--ion-color-medium);
-  padding: 2px 8px;
-  font-size: 10px;
-  font-weight: 500;
-  border-radius: 0;
+  background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);
+  color: #65676b;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 16px;
   position: relative;
   z-index: 2;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .date-separator::before {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 20%,
+      rgba(255, 255, 255, 0.15) 80%,
+      transparent 100%
+    );
+  }
+
+  .date-text {
+    background: linear-gradient(135deg, #3a3b3c 0%, #242526 100%);
+    color: #b0b3b8;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 }
