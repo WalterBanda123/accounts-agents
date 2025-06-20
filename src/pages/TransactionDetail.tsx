@@ -11,15 +11,6 @@ import {
   IonSpinner,
   IonBackButton,
   IonButtons,
-  IonBadge,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonNote,
   IonActionSheet,
 } from "@ionic/react";
 import {
@@ -27,13 +18,7 @@ import {
   printOutline,
   shareOutline,
   downloadOutline,
-  cardOutline,
-  cashOutline,
-  personOutline,
-  callOutline,
-  mailOutline,
-  calendarOutline,
-  listOutline,
+  copyOutline,
 } from "ionicons/icons";
 import { useParams, useHistory } from "react-router-dom";
 import { useDataContext } from "../contexts/data/UseDataContext";
@@ -92,29 +77,19 @@ const TransactionDetail: React.FC = () => {
     setShowActionSheet(false);
   };
 
-  const getStatusColor = (status: Transaction["status"]) => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "pending":
-        return "warning";
-      case "cancelled":
-        return "medium";
-      case "refunded":
-        return "danger";
-      default:
-        return "medium";
-    }
-  };
-
-  const getPaymentIcon = (method?: string) => {
-    switch (method) {
-      case "cash":
-        return cashOutline;
-      case "card":
-        return cardOutline;
-      default:
-        return cardOutline;
+  const handleCopyTransactionId = async () => {
+    const transactionId =
+      transaction?.transaction_id ||
+      transaction?.transactionId ||
+      transaction?.id;
+    if (transactionId) {
+      try {
+        await navigator.clipboard.writeText(transactionId);
+        // Could add a toast notification here
+        console.log("Transaction ID copied to clipboard");
+      } catch {
+        console.error("Failed to copy transaction ID");
+      }
     }
   };
 
@@ -122,8 +97,16 @@ const TransactionDetail: React.FC = () => {
     return `$${amount.toFixed(2)}`;
   };
 
-  const formatDateTime = (date: Date): string => {
-    return format(date, "MMM dd, yyyy 'at' hh:mm a");
+  const formatDateTime = (dateInput: string | Date | undefined): string => {
+    if (!dateInput) return "Unknown date";
+
+    try {
+      const date =
+        typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+      return format(date, "MMM dd, yyyy 'at' hh:mm a");
+    } catch {
+      return "Invalid date";
+    }
   };
 
   if (isLoading) {
@@ -176,172 +159,160 @@ const TransactionDetail: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader mode="ios">
         <IonToolbar>
           <IonButtons slot="start">
             <IonBackButton defaultHref="/transaction-history" />
           </IonButtons>
           <IonTitle>Receipt</IonTitle>
-          <IonButtons slot="end">
-            <IonButton fill="clear" onClick={() => setShowActionSheet(true)}>
-              <IonIcon icon={shareOutline} />
-            </IonButton>
-          </IonButtons>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen className="transaction-detail-content">
         <div className="transaction-detail-container">
-          {/* Receipt Header */}
-          <IonCard className="receipt-header">
-            <IonCardHeader>
-              <div className="receipt-title">
-                <IonIcon icon={receiptOutline} />
-                <IonCardTitle>
-                  Receipt #
-                  {(
-                    transaction.transaction_id ||
-                    transaction.transactionId ||
-                    "unknown"
-                  ).slice(-8)}
-                </IonCardTitle>
-                <IonBadge color={getStatusColor(transaction.status)}>
-                  {transaction.status.toUpperCase()}
-                </IonBadge>
+          {/* Amount Section - Top Priority */}
+          <div className="amount-section">
+            <div className="amount-paid">
+              <div className="amount-value">
+                {formatCurrency(transaction.total)}
               </div>
-            </IonCardHeader>
-            <IonCardContent>
-              <div className="receipt-info">
-                <div className="info-item">
-                  <IonIcon icon={calendarOutline} />
-                  <span>
-                    {formatDateTime(
-                      transaction.timestamp ||
-                        transaction.createdAt ||
-                        new Date()
-                    )}
-                  </span>
+              <div className="amount-label">Total Paid</div>
+            </div>
+            <div className="transaction-meta">
+              <span className="transaction-date">
+                {formatDateTime(
+                  transaction.created_at || transaction.createdAt
+                )}
+              </span>
+              <span className="transaction-id">
+                #
+                {(
+                  transaction.transaction_id ||
+                  transaction.transactionId ||
+                  transaction.id ||
+                  ""
+                ).slice(-8)}
+              </span>
+            </div>
+          </div>
+
+          {/* Items Sold - Main Highlight */}
+          <div className="items-section">
+            <div className="section-title">
+              Items Purchased ({transaction.items.length})
+            </div>
+
+            <div className="items-list">
+              {transaction.items.map((item, index) => (
+                <div key={index} className="item-row">
+                  <div className="item-details">
+                    <div className="item-name">
+                      {item.name || item.productName || "Unknown Product"}
+                    </div>
+                    <div className="item-quantity-price">
+                      {item.quantity} ×{" "}
+                      {formatCurrency(item.unit_price || item.unitPrice || 0)}
+                    </div>
+                  </div>
+                  <div className="item-total">
+                    {formatCurrency(item.line_total || item.totalPrice || 0)}
+                  </div>
                 </div>
-                <div className="info-item">
-                  <IonIcon
-                    icon={getPaymentIcon(
-                      transaction.payment_method || transaction.paymentMethod
-                    )}
-                  />
-                  <span>
-                    {(
-                      transaction.payment_method || transaction.paymentMethod
-                    )?.toUpperCase() || "N/A"}
-                  </span>
-                </div>
-              </div>
-            </IonCardContent>
-          </IonCard>
+              ))}
+            </div>
+          </div>
 
-          {/* Customer Information */}
-          {transaction.customerInfo && (
-            <IonCard className="customer-info">
-              <IonCardHeader>
-                <IonCardTitle>Customer Information</IonCardTitle>
-              </IonCardHeader>
-              <IonCardContent>
-                {transaction.customerInfo.name && (
-                  <div className="info-item">
-                    <IonIcon icon={personOutline} />
-                    <span>{transaction.customerInfo.name}</span>
-                  </div>
-                )}
-                {transaction.customerInfo.email && (
-                  <div className="info-item">
-                    <IonIcon icon={mailOutline} />
-                    <span>{transaction.customerInfo.email}</span>
-                  </div>
-                )}
-                {transaction.customerInfo.phone && (
-                  <div className="info-item">
-                    <IonIcon icon={callOutline} />
-                    <span>{transaction.customerInfo.phone}</span>
-                  </div>
-                )}
-              </IonCardContent>
-            </IonCard>
-          )}
-
-          {/* Items */}
-          <IonCard className="items-section">
-            <IonCardHeader>
-              <IonCardTitle>
-                <IonIcon icon={listOutline} />
-                Items ({transaction.items.length})
-              </IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              <IonList>
-                {transaction.items.map((item, index) => (
-                  <IonItem key={index}>
-                    <IonLabel>
-                      <h3>
-                        {item.name || item.productName || "Unknown Product"}
-                      </h3>
-                      <p>
-                        {item.quantity} ×{" "}
-                        {formatCurrency(item.unit_price || item.unitPrice || 0)}
-                      </p>
-                    </IonLabel>
-                    <IonNote slot="end">
-                      {formatCurrency(item.line_total || item.totalPrice || 0)}
-                    </IonNote>
-                  </IonItem>
-                ))}
-              </IonList>
-            </IonCardContent>
-          </IonCard>
-
-          {/* Totals */}
-          <IonCard className="totals-section">
-            <IonCardContent>
-              <div className="total-line">
-                <span>Subtotal:</span>
-                <span>{formatCurrency(transaction.subtotal)}</span>
-              </div>
-              <div className="total-line">
-                <span>
-                  Tax (
-                  {(
-                    (transaction.tax_rate || transaction.taxRate || 0) * 100
-                  ).toFixed(1)}
-                  %):
-                </span>
+          {/* Payment Breakdown - Clean */}
+          <div className="payment-section">
+            <div className="payment-row">
+              <span>Subtotal</span>
+              <span>{formatCurrency(transaction.subtotal)}</span>
+            </div>
+            {(transaction.tax_amount || transaction.tax || 0) > 0 && (
+              <div className="payment-row">
+                <span>Tax</span>
                 <span>
                   {formatCurrency(
                     transaction.tax_amount || transaction.tax || 0
                   )}
                 </span>
               </div>
-              <div className="total-line total-amount">
-                <span>Total:</span>
-                <span>{formatCurrency(transaction.total)}</span>
-              </div>
-            </IonCardContent>
-          </IonCard>
+            )}
+            <div className="payment-divider"></div>
+            <div className="payment-row payment-total">
+              <span>Total</span>
+              <span>{formatCurrency(transaction.total)}</span>
+            </div>
+          </div>
 
-          {/* Notes */}
-          {transaction.notes && (
-            <IonCard className="notes-section">
-              <IonCardHeader>
-                <IonCardTitle>Notes</IonCardTitle>
-              </IonCardHeader>
-              <IonCardContent>
-                <IonText>{transaction.notes}</IonText>
-              </IonCardContent>
-            </IonCard>
+          {/* Payment Method */}
+          <div className="payment-method-section">
+            <span>
+              Paid via{" "}
+              {(
+                transaction.payment_method ||
+                transaction.paymentMethod ||
+                "cash"
+              ).toLowerCase()}
+            </span>
+            <span className="status-indicator">{transaction.status}</span>
+          </div>
+
+          {/* Customer Info - If exists, minimal */}
+          {(transaction.customerInfo?.name || transaction.customer_name) && (
+            <div className="customer-section">
+              <div className="section-title">Customer</div>
+              <div className="customer-name">
+                {transaction.customerInfo?.name || transaction.customer_name}
+              </div>
+              {transaction.customerInfo?.email && (
+                <div className="customer-contact">
+                  {transaction.customerInfo.email}
+                </div>
+              )}
+              {transaction.customerInfo?.phone && (
+                <div className="customer-contact">
+                  {transaction.customerInfo.phone}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="action-buttons">
-            <IonButton expand="block" fill="solid" onClick={handlePrint}>
+          {/* Notes - If exists */}
+          {transaction.notes && (
+            <div className="notes-section">
+              <div className="section-title">Notes</div>
+              <div className="notes-text">{transaction.notes}</div>
+            </div>
+          )}
+
+          {/* Simple Actions */}
+          <div className="actions-section">
+            <IonButton
+              fill="clear"
+              onClick={handlePrint}
+              className="action-button"
+            >
               <IonIcon icon={printOutline} slot="start" />
-              Print Receipt
+              Print
+            </IonButton>
+
+            <IonButton
+              fill="clear"
+              onClick={handleShare}
+              className="action-button"
+            >
+              <IonIcon icon={shareOutline} slot="start" />
+              Share
+            </IonButton>
+
+            <IonButton
+              fill="clear"
+              onClick={handleCopyTransactionId}
+              className="action-button"
+            >
+              <IonIcon icon={copyOutline} slot="start" />
+              Copy ID
             </IonButton>
           </div>
         </div>

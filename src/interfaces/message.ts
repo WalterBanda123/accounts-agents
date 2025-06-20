@@ -8,6 +8,8 @@ export interface ChatMessage {
     messageOrder: number;
     createdAt?: Date;
     updatedAt?: Date;
+    isReceipt?: boolean; // Add this field
+    transactionId?: string; // Add this field
     attachment?: {
         type: 'pdf' | 'image' | 'document';
         url: string;
@@ -30,6 +32,8 @@ export interface MessageData {
     messageOrder: number;
     createdAt: Date;
     updatedAt: Date;
+    isReceipt?: boolean; // Add this field
+    transactionId?: string; // Add this field
 }
 
 export interface MessageGroup {

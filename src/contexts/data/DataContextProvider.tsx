@@ -832,11 +832,21 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       try {
         setIsChatLoading(true);
 
+        const now = new Date();
         const messageData: MessageData = {
           ...message,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          timestamp: message.timestamp || now, // Ensure timestamp is always present
+          messageOrder: message.messageOrder || 0, // Ensure messageOrder is always present
+          createdAt: now,
+          updatedAt: now,
         };
+
+        console.log(`💾 Saving message to Firestore:`, {
+          text: messageData.text.substring(0, 50) + "...",
+          timestamp: messageData.timestamp.toISOString(),
+          messageOrder: messageData.messageOrder,
+          isBot: messageData.isBot,
+        });
 
         const messageDocRef = await addDoc(
           collection(fStore, "messages"),
@@ -866,7 +876,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         const q = query(
           messagesRef,
           where("sessionId", "==", sessionId),
-          orderBy("messageOrder", "asc")
+          orderBy("timestamp", "asc") // Use timestamp for consistent ordering
         );
 
         const querySnapshot = await getDocs(q);
@@ -881,11 +891,16 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
             text: data.text,
             isBot: data.isBot,
             timestamp: data.timestamp.toDate(),
-            messageOrder: data.messageOrder,
+            messageOrder: data.messageOrder || 0, // Fallback to 0 if missing
             createdAt: data.createdAt.toDate(),
             updatedAt: data.updatedAt.toDate(),
+            isReceipt: data.isReceipt || false, // Include receipt flag
+            transactionId: data.transactionId || undefined, // Include transaction ID
           });
         });
+
+        // Sort by timestamp as a backup to ensure correct order
+        messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
         setError(null);
         setIsChatLoading(false);
@@ -1130,6 +1145,48 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [user?.id, miscActivitiesSessionId]);
 
+  // Save transaction chat messages for better tracking and history
+  const saveTransactionChatMessages = useCallback(
+    async (
+      transactionId: string,
+      chatMessages: ChatMessage[]
+    ): Promise<void> => {
+      try {
+        if (!transactionId || !chatMessages.length) return;
+
+        console.log(
+          `💬 Saving ${chatMessages.length} chat messages for transaction ${transactionId}`
+        );
+
+        // Save each message with transaction reference
+        const savePromises = chatMessages.map(async (message, index) => {
+          const messageData = {
+            ...message,
+            transactionId,
+            messageIndex: index,
+            type: "transaction_chat",
+            createdAt: message.createdAt || message.timestamp,
+            updatedAt: new Date(),
+          };
+
+          return addDoc(
+            collection(fStore, COLLECTION_NAMES.messages),
+            messageData
+          );
+        });
+
+        await Promise.all(savePromises);
+        console.log(
+          `✅ Successfully saved ${chatMessages.length} chat messages for transaction ${transactionId}`
+        );
+      } catch (error) {
+        console.error("❌ Error saving transaction chat messages:", error);
+        // Don't throw - this shouldn't fail the transaction
+      }
+    },
+    [COLLECTION_NAMES.messages]
+  );
+
   // Transaction Management Functions
   const createTransaction = useCallback(
     async (
@@ -1137,7 +1194,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       items: TransactionItem[],
       customerInfo?: Transaction["customerInfo"],
       paymentMethod?: Transaction["paymentMethod"],
-      notes?: string
+      notes?: string,
+      chatMessages?: ChatMessage[]
     ): Promise<{
       success: boolean;
       transactionId?: string;
@@ -1207,6 +1265,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           change_due: 0,
           status: "completed",
           notes: notes || "",
+          chatMessages: chatMessages || [], // Save chat conversation
 
           // Legacy compatibility fields
           transactionId,
@@ -1222,17 +1281,14 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           updatedAt: now,
         };
 
-        console.log(
-          "💰 Creating transaction with standardized schema:",
-          {
-            transaction_id: transactionData.transaction_id,
-            userId: transactionData.userId,
-            store_id: transactionData.store_id,
-            created_at: transactionData.created_at,
-            total: transactionData.total,
-            itemCount: transactionData.items.length
-          }
-        );
+        console.log("💰 Creating transaction with standardized schema:", {
+          transaction_id: transactionData.transaction_id,
+          userId: transactionData.userId,
+          store_id: transactionData.store_id,
+          created_at: transactionData.created_at,
+          total: transactionData.total,
+          itemCount: transactionData.items.length,
+        });
 
         const docRef = await addDoc(
           collection(fStore, COLLECTION_NAMES.transactions),
@@ -1279,6 +1335,11 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           }
         }
 
+        // Save chat messages separately for better tracking
+        if (chatMessages && chatMessages.length > 0) {
+          await saveTransactionChatMessages(docRef.id, chatMessages);
+        }
+
         return { success: true, transactionId: docRef.id };
       } catch (error) {
         console.error("❌ Error creating transaction:", error);
@@ -1293,6 +1354,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       getUserProfile,
       COLLECTION_NAMES.transactions,
       COLLECTION_NAMES.products,
+      saveTransactionChatMessages,
     ]
   );
 
@@ -1355,12 +1417,16 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           transactions.push(transaction);
         });
 
-        console.log(`💰 Found ${transactions.length} transactions with userId field`);
+        console.log(
+          `💰 Found ${transactions.length} transactions with userId field`
+        );
 
         // If no transactions found with userId, try legacy user_id field
         if (transactions.length === 0) {
-          console.log("🔄 No transactions found with userId, trying legacy user_id field...");
-          
+          console.log(
+            "🔄 No transactions found with userId, trying legacy user_id field..."
+          );
+
           let legacyQ = query(
             transactionsRef,
             where("user_id", "==", user.id),
@@ -1380,11 +1446,14 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           }
 
           if (filter?.dateTo) {
-            legacyQ = query(legacyQ, where("created_at", "<=", filter.dateTo.toISOString()));
+            legacyQ = query(
+              legacyQ,
+              where("created_at", "<=", filter.dateTo.toISOString())
+            );
           }
 
           const legacySnapshot = await getDocs(legacyQ);
-          
+
           legacySnapshot.forEach((doc) => {
             const data = doc.data();
             const transaction = {
@@ -1399,12 +1468,14 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
                 (data.created_at ? new Date(data.created_at) : new Date()),
               updatedAt:
                 data.updatedAt?.toDate() ||
-                (data.updated_at ? new Date(data.updated_at) : new Date()),
+                (data.updated_at ? new Date(data.updatedAt) : new Date()),
             } as Transaction;
             transactions.push(transaction);
           });
 
-          console.log(`💰 Found ${legacySnapshot.size} transactions with legacy user_id field`);
+          console.log(
+            `💰 Found ${legacySnapshot.size} transactions with legacy user_id field`
+          );
         }
 
         // Apply client-side filters for amount range (Firestore doesn't support multiple range queries)
@@ -1420,7 +1491,9 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           );
         }
 
-        console.log(`💰 Returning ${filteredTransactions.length} filtered transactions`);
+        console.log(
+          `💰 Returning ${filteredTransactions.length} filtered transactions`
+        );
         return filteredTransactions;
       } catch (error) {
         console.error("❌ Error fetching transaction history:", error);
@@ -1456,7 +1529,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
             (data.created_at ? new Date(data.created_at) : new Date()),
           updatedAt:
             data.updatedAt?.toDate() ||
-            (data.updated_at ? new Date(data.updated_at) : new Date()),
+            (data.updated_at ? new Date(data.updatedAt) : new Date()),
         } as Transaction;
       } catch (error) {
         console.error("❌ Error fetching transaction:", error);
@@ -1464,6 +1537,94 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     },
     [COLLECTION_NAMES.transactions]
+  );
+
+  // Transaction Chat Functions
+  const getTransactionChat = useCallback(
+    async (transactionId: string): Promise<ChatMessage[]> => {
+      try {
+        const messagesRef = collection(fStore, COLLECTION_NAMES.messages);
+        const q = query(
+          messagesRef,
+          where("transactionId", "==", transactionId),
+          where("type", "==", "transaction_chat"),
+          orderBy("messageIndex", "asc")
+        );
+
+        const snapshot = await getDocs(q);
+        const messages: ChatMessage[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          messages.push({
+            id: doc.id,
+            profileId: data.profileId,
+            sessionId: data.sessionId,
+            text: data.text,
+            isBot: data.isBot,
+            timestamp: data.timestamp.toDate(),
+            messageOrder: data.messageOrder || data.messageIndex,
+            createdAt: data.createdAt?.toDate() || data.timestamp.toDate(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+          });
+        });
+
+        console.log(
+          `📞 Retrieved ${messages.length} chat messages for transaction ${transactionId}`
+        );
+        return messages;
+      } catch (error) {
+        console.error("❌ Error getting transaction chat:", error);
+        return [];
+      }
+    },
+    [COLLECTION_NAMES.messages]
+  );
+
+  const getTransactionChatSummary = useCallback(
+    async (
+      transactionId: string
+    ): Promise<{
+      transactionId: string;
+      messageCount: number;
+      chatDuration: number;
+      firstMessage: Date;
+      lastMessage: Date;
+      userMessageCount: number;
+      botMessageCount: number;
+    } | null> => {
+      try {
+        const messages = await getTransactionChat(transactionId);
+
+        if (messages.length === 0) {
+          return null;
+        }
+
+        const timestamps = messages.map((m) => m.timestamp);
+        const firstMessage = new Date(
+          Math.min(...timestamps.map((t) => t.getTime()))
+        );
+        const lastMessage = new Date(
+          Math.max(...timestamps.map((t) => t.getTime()))
+        );
+        const chatDuration =
+          (lastMessage.getTime() - firstMessage.getTime()) / (1000 * 60); // minutes
+
+        return {
+          transactionId,
+          messageCount: messages.length,
+          chatDuration: Math.round(chatDuration * 100) / 100, // Round to 2 decimal places
+          firstMessage,
+          lastMessage,
+          userMessageCount: messages.filter((m) => !m.isBot).length,
+          botMessageCount: messages.filter((m) => m.isBot).length,
+        };
+      } catch (error) {
+        console.error("❌ Error getting transaction chat summary:", error);
+        return null;
+      }
+    },
+    [getTransactionChat]
   );
 
   const getTransactionSummary = useCallback(
@@ -1870,7 +2031,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     }, [getNotifications]);
 
-  // === END NOTIFICATION FUNCTIONS ===
   const contextValue = useMemo(
     () => ({
       addNewProduct,
@@ -1907,6 +2067,9 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       getTransactionSummary,
       updateTransactionStatus,
       linkTransactionToSession,
+      // Transaction chat management
+      getTransactionChat,
+      getTransactionChatSummary,
       // Notification management
       createNotification,
       createTransactionNotification,
@@ -1915,6 +2078,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       markAllNotificationsAsRead,
       deleteNotification,
       getNotificationSummary,
+      saveTransactionChatMessages,
     }),
     [
       addNewProduct,
@@ -1949,6 +2113,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       getTransactionSummary,
       updateTransactionStatus,
       linkTransactionToSession,
+      getTransactionChat,
+      getTransactionChatSummary,
       createNotification,
       createTransactionNotification,
       getNotifications,
@@ -1956,6 +2122,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       markAllNotificationsAsRead,
       deleteNotification,
       getNotificationSummary,
+      saveTransactionChatMessages,
     ]
   );
 

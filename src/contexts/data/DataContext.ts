@@ -5,6 +5,17 @@ import { ProfileInterface } from "../../interfaces/profile";
 import { Transaction, TransactionItem, TransactionSummary, TransactionFilter } from "../../interfaces/transaction";
 import { Notification, NotificationFilter, NotificationSummary } from "../../interfaces/notification";
 
+// Import the transaction chat summary type
+export interface TransactionChatSummary {
+    transactionId: string;
+    messageCount: number;
+    chatDuration: number;
+    firstMessage: Date;
+    lastMessage: Date;
+    userMessageCount: number;
+    botMessageCount: number;
+}
+
 export interface DataContextInterface {
     isLoading: boolean,
     isProductsLoading: boolean,
@@ -44,13 +55,17 @@ export interface DataContextInterface {
         items: TransactionItem[],
         customerInfo?: Transaction['customerInfo'],
         paymentMethod?: Transaction['paymentMethod'],
-        notes?: string
+        notes?: string,
+        chatMessages?: ChatMessage[]
     ) => Promise<{ success: boolean; transactionId?: string; error?: string }>,
     getTransactionHistory: (filter?: TransactionFilter) => Promise<Transaction[]>,
     getTransactionById: (transactionId: string) => Promise<Transaction | null>,
     getTransactionSummary: (dateFrom?: Date, dateTo?: Date) => Promise<TransactionSummary | null>,
     updateTransactionStatus: (transactionId: string, status: Transaction['status'], notes?: string) => Promise<boolean>,
     linkTransactionToSession: (transactionId: string, sessionId: string) => Promise<boolean>,
+    // Transaction chat functions
+    getTransactionChat: (transactionId: string) => Promise<ChatMessage[]>,
+    getTransactionChatSummary: (transactionId: string) => Promise<TransactionChatSummary | null>,
     // Notification management functions
     createNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>,
     createTransactionNotification: (transaction: Transaction) => Promise<string | null>,
@@ -105,6 +120,9 @@ const DataContext = React.createContext<DataContextInterface>({
     getTransactionSummary: async () => Promise.resolve(null),
     updateTransactionStatus: async () => Promise.resolve(false),
     linkTransactionToSession: async () => Promise.resolve(false),
+    // Transaction chat function defaults
+    getTransactionChat: async () => Promise.resolve([]),
+    getTransactionChatSummary: async () => Promise.resolve(null),
     // Notification management function defaults
     createNotification: async () => Promise.resolve(null),
     createTransactionNotification: async () => Promise.resolve(null),

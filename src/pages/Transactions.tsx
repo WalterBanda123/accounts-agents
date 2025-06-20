@@ -12,6 +12,7 @@ import {
   IonSearchbar,
   IonTitle,
   IonToolbar,
+  IonSpinner,
 } from "@ionic/react";
 import {
   receiptOutline,
@@ -19,12 +20,10 @@ import {
   timeOutline,
   closeCircle,
 } from "ionicons/icons";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
-import {
-  ALL_TRANSACTIONS,
-  TransactionReceiptInterface,
-} from "../mock/transactions";
+import { Transaction } from "../interfaces/transaction";
+import { profileService } from "../services/profileService";
 import ProfilePopover from "../components/ProfilePopover";
 import InitialsAvatar from "../components/InitialsAvatar";
 import useAuthContext from "../contexts/auth/UseAuthContext";
@@ -35,16 +34,56 @@ const Transactions: React.FC = () => {
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [profilePopoverEvent, setProfilePopoverEvent] =
     useState<CustomEvent | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuthContext();
   const history = useHistory();
-  const totalReceipts = ALL_TRANSACTIONS.length;
 
-  const filteredTransactions = ALL_TRANSACTIONS.filter(
-    (transaction) =>
-      transaction.description
-        .toLowerCase()
-        .includes(searchText.toLowerCase()) ||
-      transaction.merchant.toLowerCase().includes(searchText.toLowerCase())
+  // Load user transactions on component mount
+  useEffect(() => {
+    loadTransactions();
+  });
+
+  const loadTransactions = async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const userTransactions = await profileService.getUserTransactions(
+        user.id
+      );
+      setTransactions(userTransactions);
+      console.log(
+        `Loaded ${userTransactions.length} transactions for user ${user.id}`
+      );
+    } catch (err) {
+      console.error("Error loading transactions:", err);
+      setError("Failed to load transactions. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const totalReceipts = transactions.length;
+
+  const filteredTransactions = transactions.filter(
+    (transaction: Transaction) => {
+      const searchLower = searchText.toLowerCase();
+      return (
+        transaction.notes?.toLowerCase().includes(searchLower) ||
+        transaction.customer_name?.toLowerCase().includes(searchLower) ||
+        transaction.payment_method?.toLowerCase().includes(searchLower) ||
+        transaction.items?.some((item) =>
+          item.name.toLowerCase().includes(searchLower)
+        )
+      );
+    }
   );
 
   const formatAmount = (amount: number): string => {
@@ -75,6 +114,7 @@ const Transactions: React.FC = () => {
       case "pending":
         return timeOutline;
       case "failed":
+      case "cancelled":
         return closeCircle;
       default:
         return checkmarkCircle;
@@ -88,10 +128,33 @@ const Transactions: React.FC = () => {
       case "pending":
         return "warning";
       case "failed":
+      case "cancelled":
         return "danger";
       default:
         return "medium";
     }
+  };
+
+  const formatTransactionDescription = (transaction: Transaction): string => {
+    if (transaction.notes) {
+      return transaction.notes;
+    }
+    if (transaction.items && transaction.items.length > 0) {
+      const itemCount = transaction.items.length;
+      const firstItem = transaction.items[0].name;
+      return itemCount === 1
+        ? firstItem
+        : `${firstItem} and ${itemCount - 1} more item${
+            itemCount > 2 ? "s" : ""
+          }`;
+    }
+    return "Transaction";
+  };
+
+  const getMerchantName = (transaction: Transaction): string => {
+    return (
+      transaction.customer_name || transaction.store_id || "Store Transaction"
+    );
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
@@ -151,29 +214,58 @@ const Transactions: React.FC = () => {
               </div>
             </IonCol>
           </IonRow>
-        </IonGrid>{" "}
+        </IonGrid>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div
+            className="loading-container"
+            style={{ textAlign: "center", padding: "2rem" }}
+          >
+            <IonSpinner name="crescent" />
+            <p>Loading transactions...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div
+            className="error-container"
+            style={{
+              textAlign: "center",
+              padding: "2rem",
+              color: "var(--ion-color-danger)",
+            }}
+          >
+            <p>{error}</p>
+          </div>
+        )}
+
         {/* Transaction List - Gmail Style */}
-        <div className="transaction-list">
-          {filteredTransactions.map(
-            (transaction: TransactionReceiptInterface) => (
+        {!isLoading && !error && (
+          <div className="transaction-list">
+            {filteredTransactions.map((transaction: Transaction) => (
               <div
                 key={transaction.id}
                 className="transaction-item"
-                onClick={() => handleTransactionClick(transaction.id)}
+                onClick={() => handleTransactionClick(transaction.id!)}
               >
                 <div className="transaction-content">
                   {/* Amount - Left side like email sender */}
                   <div className="transaction-amount">
-                    {formatAmount(transaction.amount)}
+                    {formatAmount(transaction.total)}
                   </div>
 
                   {/* Description - Middle like email content */}
                   <div className="transaction-details">
                     <div className="transaction-merchant">
-                      {transaction.merchant}
+                      {getMerchantName(transaction)}
                     </div>
                     <div className="transaction-description">
-                      {truncateDescription(transaction.description, 60)}
+                      {truncateDescription(
+                        formatTransactionDescription(transaction),
+                        60
+                      )}
                     </div>
                   </div>
 
@@ -193,15 +285,15 @@ const Transactions: React.FC = () => {
                   />
                 </div>
               </div>
-            )
-          )}
+            ))}
 
-          {filteredTransactions.length === 0 && (
-            <div className="no-transactions">
-              <p>No transactions found matching your search.</p>
-            </div>
-          )}
-        </div>
+            {filteredTransactions.length === 0 && !isLoading && (
+              <div className="no-transactions">
+                <p>No transactions found matching your search.</p>
+              </div>
+            )}
+          </div>
+        )}
       </IonContent>
 
       <ProfilePopover

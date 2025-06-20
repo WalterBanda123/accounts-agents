@@ -1,3 +1,5 @@
+import { ChatMessage } from './message';
+
 export interface Transaction {
     id?: string;
     transaction_id: string; // Standardized field
@@ -11,6 +13,7 @@ export interface Transaction {
     time: string; // Standardized field (HH:MM:SS)
     created_at: string; // Standardized field (ISO timestamp)
     sessionId?: string; // Chat session ID that led to this transaction
+    chatMessages?: ChatMessage[]; // Chat conversation that led to this transaction
     customerInfo?: {
         email?: string;
         phone?: string;

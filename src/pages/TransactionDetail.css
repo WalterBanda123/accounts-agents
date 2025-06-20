@@ -1,266 +1,393 @@
+/* Minimal Transaction Detail Styles - Very Few Colors, Focus on Content */
+
 .transaction-detail-content {
-  --background: var(--ion-background-color, #f8f9fa);
+  --background: #fdfdfd;
+  --ion-safe-area-top: 0;
 }
 
 .transaction-detail-container {
-  padding: 16px;
+  padding: 20px;
   max-width: 600px;
   margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
 }
 
+/* Amount Section - Top Priority */
+.amount-section {
+  text-align: center;
+  padding: 40px 20px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.amount-paid {
+  margin-bottom: 16px;
+}
+
+.amount-value {
+  font-size: 48px;
+  font-weight: 300;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.amount-label {
+  font-size: 16px;
+  color: #666;
+  margin: 8px 0 0 0;
+  font-weight: 400;
+}
+
+.transaction-meta {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.transaction-date,
+.transaction-id {
+  font-size: 14px;
+  color: #888;
+  font-weight: 400;
+}
+
+.transaction-id {
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+    "Courier New", monospace;
+}
+
+/* Items Section - Main Highlight */
+.items-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
+
+.items-list {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.item-quantity-price {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+.item-total {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: right;
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+/* Payment Section - Clean */
+.payment-section {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+
+.payment-divider {
+  height: 1px;
+  background: #e8e8e8;
+  margin: 12px 0;
+}
+
+.payment-total {
+  font-weight: 600;
+  font-size: 16px;
+  padding-top: 12px;
+}
+
+/* Payment Method */
+.payment-method-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.status-indicator {
+  background: #f5f5f5;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: capitalize;
+}
+
+/* Customer Section */
+.customer-section {
+  margin-bottom: 24px;
+}
+
+.customer-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.customer-contact {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0;
+}
+
+/* Notes Section */
+.notes-section {
+  margin-bottom: 24px;
+}
+
+.notes-text {
+  background: #f9f9f9;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 16px;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+  margin: 12px 0 0 0;
+}
+
+/* Actions Section */
+.actions-section {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px 0;
+  margin-top: 32px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-button {
+  --color: #666;
+  --background: transparent;
+  --box-shadow: none;
+  --border-radius: 0;
+  font-size: 14px;
+  font-weight: 400;
+  height: auto;
+  min-height: 40px;
+}
+
+.action-button ion-icon {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+/* Loading & Error States */
 .loading-container,
 .error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
   min-height: 300px;
-  gap: 16px;
+}
+
+.loading-container ion-spinner {
+  margin-bottom: 16px;
+  --color: #ccc;
+}
+
+.loading-container ion-text {
+  color: #888;
+  font-size: 16px;
 }
 
 .error-container ion-icon {
-  font-size: 64px;
-  color: var(--ion-color-medium);
-}
-
-/* Receipt Header */
-.receipt-header {
+  font-size: 48px;
+  color: #ccc;
   margin-bottom: 16px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.receipt-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.receipt-title ion-icon {
-  font-size: 24px;
-  color: var(--ion-color-primary);
-}
-
-.receipt-title ion-card-title {
-  flex: 1;
-  margin: 0;
-}
-
-.receipt-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--ion-color-medium);
-}
-
-.info-item ion-icon {
-  font-size: 20px;
-  color: var(--ion-color-primary);
-}
-
-/* Customer Info */
-.customer-info {
-  margin-bottom: 16px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.customer-info ion-card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-}
-
-.customer-info .info-item {
-  margin-bottom: 8px;
-}
-
-.customer-info .info-item:last-child {
-  margin-bottom: 0;
-}
-
-/* Items Section */
-.items-section {
-  margin-bottom: 16px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.items-section ion-card-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-}
-
-.items-section ion-card-title ion-icon {
-  color: var(--ion-color-primary);
-}
-
-.items-section ion-list {
-  background: transparent;
-}
-
-.items-section ion-item {
-  --background: transparent;
-  --border-color: var(--ion-color-light);
-  --border-width: 0 0 1px 0;
-  --padding-start: 0;
-  --padding-end: 0;
-}
-
-.items-section ion-item:last-child {
-  --border-width: 0;
-}
-
-.items-section ion-label h3 {
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin-bottom: 4px;
-}
-
-.items-section ion-label p {
-  color: var(--ion-color-medium);
-  font-size: 14px;
-}
-
-.items-section ion-note {
-  font-weight: 600;
+.error-container ion-text {
+  color: #888;
   font-size: 16px;
-  color: var(--ion-color-dark);
-}
-
-/* Totals Section */
-.totals-section {
-  margin-bottom: 16px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(
-    135deg,
-    var(--ion-color-primary-tint),
-    var(--ion-color-primary)
-  );
-}
-
-.totals-section ion-card-content {
-  padding: 20px;
-}
-
-.total-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  color: white;
-  font-size: 16px;
-}
-
-.total-line:last-child {
-  margin-bottom: 0;
-}
-
-.total-amount {
-  font-size: 20px;
-  font-weight: 700;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  margin-top: 8px;
-}
-
-/* Notes Section */
-.notes-section {
-  margin-bottom: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.notes-section ion-card-title {
-  font-size: 18px;
-}
-
-.notes-section ion-text {
-  color: var(--ion-color-medium);
-  line-height: 1.6;
-}
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-
-.action-buttons ion-button {
-  --border-radius: 12px;
-  height: 48px;
-  font-weight: 600;
+  margin-bottom: 20px;
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .transaction-detail-container {
-    padding: 12px;
+    padding: 16px;
   }
 
-  .receipt-title {
-    justify-content: center;
-    text-align: center;
+  .amount-section {
+    padding: 32px 16px;
   }
 
-  .receipt-title ion-card-title {
-    font-size: 18px;
+  .amount-value {
+    font-size: 40px;
   }
 
-  .info-item {
-    font-size: 14px;
+  .transaction-meta {
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .total-line {
-    font-size: 14px;
+  .actions-section {
+    gap: 24px;
   }
 
-  .total-amount {
-    font-size: 18px;
+  .item-row {
+    padding: 14px 16px;
+  }
+
+  .payment-section {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .amount-value {
+    font-size: 36px;
+  }
+
+  .actions-section {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .item-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .item-total {
+    text-align: left;
+    margin-left: 0;
   }
 }
 
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   .transaction-detail-content {
-    --background: var(--ion-background-color, #1a1a1a);
+    --background: #1a1a1a;
   }
 
-  .receipt-header,
-  .customer-info,
-  .items-section,
-  .notes-section {
-    background: var(--ion-color-step-50);
-    border: 1px solid var(--ion-color-step-100);
+  .transaction-detail-container {
+    color: #ffffff;
   }
 
-  .totals-section {
-    background: linear-gradient(
-      135deg,
-      var(--ion-color-primary-shade),
-      var(--ion-color-primary)
-    );
+  .amount-section {
+    border-bottom-color: #333;
   }
 
-  .items-section ion-label h3 {
-    color: var(--ion-color-primary-contrast);
+  .amount-value,
+  .item-name,
+  .customer-name,
+  .section-title {
+    color: #ffffff;
   }
 
-  .items-section ion-note {
-    color: var(--ion-color-primary-contrast);
+  .amount-label,
+  .transaction-date,
+  .transaction-id,
+  .item-quantity-price,
+  .customer-contact {
+    color: #999;
+  }
+
+  .items-list,
+  .payment-section {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .item-row {
+    border-bottom-color: #333;
+  }
+
+  .payment-row {
+    color: #ffffff;
+  }
+
+  .payment-divider {
+    background: #444;
+  }
+
+  .payment-method-section {
+    border-bottom-color: #333;
+    color: #999;
+  }
+
+  .status-indicator {
+    background: #333;
+    color: #999;
+  }
+
+  .notes-text {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #ccc;
+  }
+
+  .actions-section {
+    border-top-color: #333;
+  }
+
+  .action-button {
+    --color: #999;
   }
 }

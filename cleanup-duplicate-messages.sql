@@ -1,0 +1,16 @@
+-- SQL-like script to clean up duplicate welcome messages
+-- This is a reference for manual cleanup if needed
+-- 1. Find all welcome messages in a session:
+-- Query: messages collection where sessionId = "your-session-id" and text contains "👋 Welcome to Transaction Chat"
+-- 2. Keep only the earliest one (by timestamp) and delete the rest
+-- 3. For your current session with duplicates, you can:
+--    a) Go to Firebase Console > Firestore > messages collection
+--    b) Filter by sessionId = "qt8ugXgVsjR9sVINF86W" (or your current session)
+--    c) Look for documents with text containing "👋 Welcome to Transaction Chat"
+--    d) Delete all but the earliest one (keep the one with earliest timestamp)
+-- Example of duplicate IDs from your data:
+-- Keep: lj20rplZ61onrQ7xR2Xl (2025-06-20T19:39:05.828Z)
+-- Delete: PZ697h6Ba2Ono6SGROH4 (2025-06-20T19:44:13.097Z)
+-- Delete: CgLvLCPOTckR1jeYExfO (2025-06-20T19:44:13.862Z)
+-- Delete: nB6FdAAJ1DgqSLKRK29h (2025-06-20T19:45:20.822Z)
+-- After cleanup, your session should only have one welcome message at the beginning
