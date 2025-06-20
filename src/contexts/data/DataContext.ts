@@ -25,6 +25,7 @@ export interface DataContextInterface {
     addNewProduct: (product: Partial<StockItem>) => Promise<unknown>,
     getProduct: (productId: string) => Promise<Partial<StockItem> | null>,
     getAllProducts: () => Promise<unknown>,
+    refreshInventory: () => Promise<unknown>,
     searchProducts: (search: string) => Promise<Partial<StockItem>[]>
     askAiAssistant: (message: string, sessionId?: string, imageFile?: File | Blob) => Promise<unknown>,
     getAgentSession: () => Promise<unknown>,
@@ -89,6 +90,9 @@ const DataContext = React.createContext<DataContextInterface>({
         return Promise.resolve({})
     },
     getAllProducts: async () => {
+        return Promise.resolve({})
+    },
+    refreshInventory: async () => {
         return Promise.resolve({})
     },
     searchProducts: async () => {

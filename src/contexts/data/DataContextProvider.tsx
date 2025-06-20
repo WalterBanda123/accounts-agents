@@ -443,13 +443,15 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]
   );
 
-  const getAllProducts = useCallback(async () => {
+  const getAllProducts = useCallback(async (forceRefresh: boolean = false) => {
     try {
       setIsProductsLoading(true);
 
       if (!user?.id) {
         throw new Error("User not authenticated");
       }
+
+      console.log(`🔄 ${forceRefresh ? 'Force refreshing' : 'Loading'} products for user:`, user.id);
 
       // Query products by Firebase user ID first (primary method)
       let docs_ref = await queryUserProductsByUserId(user.id);
@@ -468,11 +470,24 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       const products: Partial<StockItem>[] = [];
       docs_ref.forEach((product) => {
         const productData = product.data();
+        // Use standardized stock_quantity field first, fallback to legacy quantity field
+        const currentQuantity = productData.stock_quantity || productData.quantity || 0;
+        
+        console.log(`📊 Product data for ${productData.product_name || productData.name}:`, {
+          id: product.id,
+          stock_quantity: productData.stock_quantity,
+          quantity: productData.quantity,
+          finalQuantity: currentQuantity,
+          status: productData.status
+        });
+        
         const updatedProd: Partial<StockItem> = {
           id: product.id,
           ...productData,
+          // Ensure quantity field is consistent for StockItem interface
+          quantity: currentQuantity,
           // Recalculate status based on current quantity
-          status: calculateStockStatus(productData.quantity || 0),
+          status: calculateStockStatus(currentQuantity),
         };
         products.push(updatedProd);
       });
@@ -488,6 +503,11 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       return null;
     }
   }, [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]);
+
+  // Convenience method to refresh inventory (force refresh)
+  const refreshInventory = useCallback(async () => {
+    return getAllProducts(true);
+  }, [getAllProducts]);
 
   const getAgentSession = useCallback(async () => {
     try {
@@ -1310,21 +1330,37 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
               if (productDoc.exists()) {
                 const currentData = productDoc.data();
-                const currentQuantity = currentData.quantity || 0;
+                // Check both standardized and legacy quantity fields
+                const currentQuantity = currentData.stock_quantity || currentData.quantity || 0;
                 const newQuantity = Math.max(
                   0,
                   currentQuantity - item.quantity
                 );
 
+                console.log(`📊 Stock update details for ${item.productName}:`, {
+                  productId: item.productId,
+                  currentStockQuantity: currentData.stock_quantity,
+                  currentQuantity: currentData.quantity,
+                  finalCurrentQuantity: currentQuantity,
+                  soldQuantity: item.quantity,
+                  newQuantity: newQuantity,
+                  reduction: currentQuantity - newQuantity
+                });
+
+                // Update both standardized and legacy fields for consistency
                 await updateDoc(productRef, {
-                  quantity: newQuantity,
+                  stock_quantity: newQuantity, // Standardized field
+                  quantity: newQuantity, // Legacy field for backward compatibility
                   status: calculateStockStatus(newQuantity),
-                  updatedAt: new Date(),
+                  updated_at: new Date().toISOString(),
+                  updatedAt: new Date(), // Legacy field
                 });
 
                 console.log(
-                  `📦 Updated stock for ${item.productName}: ${currentQuantity} -> ${newQuantity}`
+                  `📦 Updated stock for ${item.productName}: ${currentQuantity} -> ${newQuantity} (reduced by ${item.quantity} items)`
                 );
+              } else {
+                console.error(`Product with ID ${item.productId} not found in Firestore`);
               }
             } catch (stockError) {
               console.error(
@@ -1332,12 +1368,24 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
                 stockError
               );
             }
+          } else {
+            console.warn(`No productId provided for item: ${item.productName}`);
           }
         }
 
         // Save chat messages separately for better tracking
         if (chatMessages && chatMessages.length > 0) {
           await saveTransactionChatMessages(docRef.id, chatMessages);
+        }
+
+        // Refresh inventory to reflect updated stock levels
+        console.log("🔄 Refreshing inventory after transaction...");
+        try {
+          await getAllProducts(true); // Force refresh
+          console.log("✅ Inventory refreshed successfully");
+        } catch (refreshError) {
+          console.error("⚠️ Failed to refresh inventory:", refreshError);
+          // Don't fail the transaction if inventory refresh fails
         }
 
         return { success: true, transactionId: docRef.id };
@@ -1355,6 +1403,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       COLLECTION_NAMES.transactions,
       COLLECTION_NAMES.products,
       saveTransactionChatMessages,
+      getAllProducts,
     ]
   );
 
@@ -2040,6 +2089,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       isProductsLoading,
       isChatLoading,
       getAllProducts,
+      refreshInventory,
       error,
       searchProducts,
       askAiAssistant,
@@ -2088,6 +2138,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       isProductsLoading,
       isChatLoading,
       getAllProducts,
+      refreshInventory,
       error,
       searchProducts,
       askAiAssistant,

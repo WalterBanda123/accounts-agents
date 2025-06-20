@@ -60,9 +60,23 @@ const Stocks: React.FC = () => {
       }
     };
 
-    if (inventory.length === 0) {
-      fetchProducts();
-    }
+    // Always fetch on mount to ensure fresh data
+    fetchProducts();
+  }, [getAllProducts]);
+
+  // Refresh when page becomes visible (e.g., navigating back from transactions)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && inventory.length > 0) {
+        console.log("🔄 Page became visible - refreshing inventory...");
+        getAllProducts();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [getAllProducts, inventory.length]);
 
   const handleRefresh = useCallback(async () => {
@@ -298,11 +312,13 @@ const Stocks: React.FC = () => {
                     <strong>Unit Price:</strong> ${selectedStock.unitPrice}
                   </p>
                   <p>
-                    <strong>Quantity:</strong> {selectedStock.quantity}{" "}
-                    {selectedStock.unit}
+                    <strong>Quantity in Stock:</strong> {selectedStock.quantity} items
                   </p>
                   <p>
-                    <strong>Size:</strong> {selectedStock.size}
+                    <strong>Unit Size:</strong> {selectedStock.size}
+                  </p>
+                  <p>
+                    <strong>Unit Type:</strong> {selectedStock.unit}
                   </p>
                   <p>
                     <strong>Total Value:</strong> $

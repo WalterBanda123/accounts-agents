@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useHistory } from "react-router-dom";
 import {
   IonButton,
@@ -15,6 +15,7 @@ import {
   IonRow,
   IonTitle,
   IonToolbar,
+  IonSpinner,
 } from "@ionic/react";
 import {
   chatbubbleOutline,
@@ -22,12 +23,11 @@ import {
   cubeOutline,
   cashOutline,
 } from "ionicons/icons";
-import RecentTransactionCard from "../components/RecentTransactionCard";
 import ProfilePopover from "../components/ProfilePopover";
 import InitialsAvatar from "../components/InitialsAvatar";
-import { ALL_TRANSACTIONS } from "../mock/transactions";
 import useAuthContext from "../contexts/auth/UseAuthContext";
-import "../components/RecentTransactionCard.css";
+import { useDataContext } from "../contexts/data/UseDataContext";
+import { Transaction } from "../interfaces/transaction";
 import "./Home.css";
 
 const Home: React.FC = () => {
@@ -36,32 +36,80 @@ const Home: React.FC = () => {
   const [profilePopoverEvent, setProfilePopoverEvent] = useState<
     Event | undefined
   >(undefined);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const history = useHistory();
   const { user } = useAuthContext();
+  const { getTransactionHistory } = useDataContext();
 
-  // Calculate today's sales metrics
-  const todaysTransactions = ALL_TRANSACTIONS.filter((transaction) => {
-    const transactionDate = new Date(transaction.date);
-    const todayDate = new Date();
-    return transactionDate.toDateString() === todayDate.toDateString();
-  });
+  // Fetch transactions on component mount
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedTransactions = await getTransactionHistory();
+        setTransactions(fetchedTransactions || []);
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+        setTransactions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const todaysRevenue = todaysTransactions.reduce(
-    (sum, transaction) => sum + transaction.amount,
-    0
-  );
-  const itemsSoldToday = todaysTransactions.reduce(
-    (sum, transaction) => sum + transaction.cartItems.length,
-    0
-  );
+    fetchTransactions();
+  }, [getTransactionHistory]);
 
-  // Get the most recent 5 transactions
-  const recentTransactions = ALL_TRANSACTIONS.sort(
-    (a, b) =>
-      new Date(b.date + " " + b.time).getTime() -
-      new Date(a.date + " " + a.time).getTime()
-  ).slice(0, 5);
+  // Calculate today's sales metrics using real transaction data
+  const todaysMetrics = useMemo(() => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    const todaysTransactions = transactions.filter((transaction) => {
+      // Handle both date formats
+      const transactionDate = transaction.date || transaction.created_at?.split('T')[0];
+      return transactionDate === todayStr;
+    });
+
+    const todaysRevenue = todaysTransactions.reduce(
+      (sum, transaction) => sum + (transaction.total || 0),
+      0
+    );
+
+    const itemsSoldToday = todaysTransactions.reduce(
+      (sum, transaction) => {
+        // Count items from transaction items array
+        const itemCount = transaction.items?.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0) || 0;
+        return sum + itemCount;
+      },
+      0
+    );
+
+    return {
+      revenue: todaysRevenue,
+      transactionCount: todaysTransactions.length,
+      itemsSold: itemsSoldToday
+    };
+  }, [transactions]);
+
+  // Get the most recent transactions from the last 20 minutes (limit 5)
+  const recentTransactions = useMemo(() => {
+    const now = new Date();
+    const twentyMinutesAgo = new Date(now.getTime() - 20 * 60 * 1000); // 20 minutes ago
+
+    return transactions
+      .filter((transaction) => {
+        const transactionDate = new Date(transaction.created_at || transaction.timestamp || '');
+        return transactionDate >= twentyMinutesAgo;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at || a.timestamp || '').getTime();
+        const dateB = new Date(b.created_at || b.timestamp || '').getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 5); // Limit to 5 transactions
+  }, [transactions]);
 
   const navigateToReceipts = () => {
     history.push("/transaction-history");
@@ -86,10 +134,7 @@ const Home: React.FC = () => {
     setProfilePopoverEvent(undefined);
   };
 
-  // Miscellaneous activity handlers
-  const handleMiscActivityOpen = () => {
-    history.push("/misc-activities");
-  };
+  // Miscellaneous activity handlers - REMOVED
 
   return (
     <React.Fragment>
@@ -126,18 +171,18 @@ const Home: React.FC = () => {
                   <div className="summary-metrics">
                     <div className="metric-card">
                       <div className="metric-value">
-                        ${todaysRevenue.toFixed(2)}
+                        ${todaysMetrics.revenue.toFixed(2)}
                       </div>
                       <div className="metric-label">Revenue</div>
                     </div>
                     <div className="metric-card">
                       <div className="metric-value">
-                        {todaysTransactions.length}
+                        {todaysMetrics.transactionCount}
                       </div>
                       <div className="metric-label">Sales</div>
                     </div>
                     <div className="metric-card">
-                      <div className="metric-value">{itemsSoldToday}</div>
+                      <div className="metric-value">{todaysMetrics.itemsSold}</div>
                       <div className="metric-label">Items Sold</div>
                     </div>
                   </div>
@@ -199,26 +244,6 @@ const Home: React.FC = () => {
                 </div>
               </IonCol>
             </IonRow>
-            <IonRow>
-              <IonCol>
-                <div
-                  className="container misc-activity-card"
-                  onClick={handleMiscActivityOpen}
-                >
-                  <IonCol size="2">
-                    <IonIcon icon={cashOutline} size="large" />
-                  </IonCol>
-                  <IonCol size="10">
-                    <IonLabel>
-                      <h2>Record Activity</h2>
-                      <p className="action-subtitle">
-                        Log cash withdrawals & misc expenses
-                      </p>
-                    </IonLabel>
-                  </IonCol>
-                </div>
-              </IonCol>
-            </IonRow>
           </IonGrid>
           <IonGrid>
             <IonRow>
@@ -226,7 +251,7 @@ const Home: React.FC = () => {
                 <div className="section-header">
                   <IonLabel>
                     <h2>Recent Transactions</h2>
-                    <p>Your latest financial activity</p>
+                    <p>Last 20 minutes • Up to 5 most recent sales</p>
                   </IonLabel>
                 </div>
               </IonCol>
@@ -234,18 +259,41 @@ const Home: React.FC = () => {
             <IonRow>
               <IonCol>
                 <div className="recent-transactions-container">
-                  {recentTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="clickable-transaction"
-                      onClick={() => history.push(`/receipt/${transaction.id}`)}
-                    >
-                      <RecentTransactionCard
-                        transaction={transaction}
-                        compact={true}
-                      />
+                  {isLoading ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                      <IonSpinner />
+                      <p>Loading transactions...</p>
                     </div>
-                  ))}
+                  ) : recentTransactions.length > 0 ? (
+                    recentTransactions.map((transaction) => (
+                      <div
+                        key={transaction.id || transaction.transaction_id}
+                        className="clickable-transaction"
+                        onClick={() => history.push(`/transaction-detail/${transaction.id || transaction.transaction_id}`)}
+                      >
+                        <div className="transaction-card-wrapper">
+                          <div className="transaction-item">
+                            <div className="transaction-header">
+                              <h3>Transaction #{(transaction.transaction_id || transaction.id || '').slice(-6)}</h3>
+                              <span className="transaction-amount">${transaction.total?.toFixed(2)}</span>
+                            </div>
+                            <div className="transaction-details">
+                              <p>
+                                {transaction.items?.length || 0} items • {' '}
+                                {new Date(transaction.created_at || transaction.timestamp || '').toLocaleDateString()} {' '}
+                                {new Date(transaction.created_at || transaction.timestamp || '').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </p>
+                              <span className="transaction-status">Completed</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--ion-color-medium)' }}>
+                      <p>No transactions in the last 20 minutes. Start by recording your first sale!</p>
+                    </div>
+                  )}
                 </div>
               </IonCol>
             </IonRow>
@@ -257,10 +305,10 @@ const Home: React.FC = () => {
                   mode="ios"
                   fill="outline"
                   color="primary"
-                  routerLink="/receipts"
+                  routerLink="/transaction-history"
                   routerDirection="forward"
                 >
-                  View All Transactions • ${todaysRevenue.toFixed(2)} today
+                  View All Transactions • ${todaysMetrics.revenue.toFixed(2)} today
                 </IonButton>
               </IonCol>
             </IonRow>
