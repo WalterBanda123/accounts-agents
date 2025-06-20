@@ -364,28 +364,45 @@ const AddProductByImage: React.FC = () => {
       }
 
       // Create product data using the same structure as NewProduct
+      const unitPrice = parseFloat(formData.unitPrice || "0");
       const productQuantity = parseInt(formData.quantity || "0");
+
+      // Validate numeric values
+      if (
+        isNaN(unitPrice) ||
+        isNaN(productQuantity) ||
+        unitPrice < 0 ||
+        productQuantity < 0
+      ) {
+        showMessage(
+          "Please enter valid numbers for price and quantity",
+          "danger"
+        );
+        return;
+      }
 
       const productData = {
         id: `STK${Date.now()}`,
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         category: formData.category,
         subcategory: formData.subcategory,
-        unitPrice: parseFloat(formData.unitPrice || "0"),
+        unitPrice: unitPrice,
         quantity: productQuantity,
         unit: formData.unit,
-        brand: formData.brand,
-        size: formData.size,
+        brand: formData.brand.trim(),
+        size: formData.size.trim(),
         status: calculateStockStatus(productQuantity),
         lastRestocked: new Date().toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         }),
-        supplier: formData.supplier,
-        ...(formData.barcode && { barcode: formData.barcode }),
-        ...(imageUrl && { image: imageUrl }),
+        supplier: formData.supplier.trim(),
+        // Only include optional fields if they have valid values
+        ...(formData.barcode &&
+          formData.barcode.trim() && { barcode: formData.barcode.trim() }),
+        ...(imageUrl && imageUrl.trim() && { image: imageUrl.trim() }),
       };
 
       // Use DataContext addNewProduct function to ensure proper store_id

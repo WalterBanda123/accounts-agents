@@ -24,7 +24,7 @@ const getSessionExpiry = (): number => {
 const isSessionExpired = (): boolean => {
   const expiryTime = sessionStorage.getItem(SESSION_KEYS.SESSION_EXPIRY);
   if (!expiryTime) return true;
-  
+
   return Date.now() > parseInt(expiryTime, 10);
 };
 
@@ -33,7 +33,7 @@ const isSessionExpired = (): boolean => {
  */
 export const storeSessionId = (sessionId: string, key: string = SESSION_KEYS.CURRENT_SESSION_ID): void => {
   if (typeof window === 'undefined') return;
-  
+
   const expiryTime = getSessionExpiry();
   sessionStorage.setItem(key, sessionId);
   sessionStorage.setItem(SESSION_KEYS.SESSION_EXPIRY, expiryTime.toString());
@@ -44,12 +44,12 @@ export const storeSessionId = (sessionId: string, key: string = SESSION_KEYS.CUR
  */
 export const getSessionId = (key: string = SESSION_KEYS.CURRENT_SESSION_ID): string | null => {
   if (typeof window === 'undefined') return null;
-  
+
   if (isSessionExpired()) {
     clearAllSessions();
     return null;
   }
-  
+
   return sessionStorage.getItem(key);
 };
 
@@ -58,7 +58,7 @@ export const getSessionId = (key: string = SESSION_KEYS.CURRENT_SESSION_ID): str
  */
 export const clearAllSessions = (): void => {
   if (typeof window === 'undefined') return;
-  
+
   Object.values(SESSION_KEYS).forEach(key => {
     sessionStorage.removeItem(key);
   });
@@ -70,10 +70,10 @@ export const clearAllSessions = (): void => {
 export const initializeSessionManagement = async (userId: string): Promise<void> => {
   if (isSessionExpired()) {
     console.log('Session expired, clearing local storage and deactivating server sessions');
-    
+
     // Clear local storage
     clearAllSessions();
-    
+
     // Deactivate all server sessions for this user
     try {
       await deactivateAllUserSessions(userId);
@@ -90,17 +90,17 @@ export const sessionStorageUtils = {
   // Current session (main chat)
   setCurrentSession: (sessionId: string) => storeSessionId(sessionId, SESSION_KEYS.CURRENT_SESSION_ID),
   getCurrentSession: () => getSessionId(SESSION_KEYS.CURRENT_SESSION_ID),
-  
+
   // Miscellaneous activities session
   setMiscActivitiesSession: (sessionId: string) => storeSessionId(sessionId, SESSION_KEYS.MISC_ACTIVITIES_SESSION_ID),
   getMiscActivitiesSession: () => getSessionId(SESSION_KEYS.MISC_ACTIVITIES_SESSION_ID),
-  
+
   // Check if sessions are expired
   areSessionsExpired: isSessionExpired,
-  
+
   // Clear all sessions
   clearAll: clearAllSessions,
-  
+
   // Initialize with cleanup
   initialize: initializeSessionManagement,
 };
@@ -112,10 +112,10 @@ export const logoutCleanup = async (userId: string): Promise<void> => {
   try {
     // Clear local storage
     clearAllSessions();
-    
+
     // Deactivate all server sessions
     await deactivateAllUserSessions(userId);
-    
+
     console.log('Logout cleanup completed for user:', userId);
   } catch (error) {
     console.error('Error during logout cleanup:', error);

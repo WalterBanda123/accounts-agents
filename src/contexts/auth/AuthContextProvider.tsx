@@ -38,7 +38,7 @@ const AuthContextProvider: React.FC<{ children: React.ReactNode }> = (
         id: firebaseUser.uid,
         name: firebaseUser.displayName || "User",
         email: firebaseUser.email || email,
-        businessName: firebaseUser.displayName || "My Business", 
+        businessName: firebaseUser.displayName || "My Business",
         phone: firebaseUser.phoneNumber || "",
         profileImage:
           firebaseUser.photoURL ||

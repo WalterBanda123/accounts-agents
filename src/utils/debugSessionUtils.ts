@@ -7,13 +7,13 @@ export const debugSessionUtils = {
    */
   getSessionDebugInfo: () => {
     if (typeof window === 'undefined') return null;
-    
+
     const currentSession = sessionStorage.getItem('currentSessionId');
     const miscSession = sessionStorage.getItem('miscActivitiesSessionId');
     const expiry = sessionStorage.getItem('sessionExpiry');
     const now = Date.now();
     const isExpired = expiry ? now > parseInt(expiry, 10) : true;
-    
+
     return {
       currentSessionId: currentSession,
       miscActivitiesSessionId: miscSession,
@@ -45,7 +45,7 @@ export const debugSessionUtils = {
    */
   forceExpireSessions: () => {
     if (typeof window === 'undefined') return;
-    
+
     console.log('🚫 Force expiring sessions for testing');
     sessionStorage.setItem('sessionExpiry', (Date.now() - 1000).toString());
   },
@@ -55,7 +55,7 @@ export const debugSessionUtils = {
    */
   forceClearSessions: () => {
     if (typeof window === 'undefined') return;
-    
+
     console.log('🧹 Force clearing all session data');
     sessionStorage.removeItem('currentSessionId');
     sessionStorage.removeItem('miscActivitiesSessionId');

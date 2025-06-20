@@ -20,7 +20,6 @@ import {
   chatbubbleOutline,
   chatbubblesOutline,
   cubeOutline,
-  documentAttachOutline,
   cashOutline,
 } from "ionicons/icons";
 import RecentTransactionCard from "../components/RecentTransactionCard";
@@ -65,7 +64,7 @@ const Home: React.FC = () => {
   ).slice(0, 5);
 
   const navigateToReceipts = () => {
-    history.push("/receipts");
+    history.push("/transaction-history");
   };
 
   const navigateToStockOverview = () => {
@@ -172,13 +171,13 @@ const Home: React.FC = () => {
               <IonCol>
                 <div className="container" onClick={navigateToReceipts}>
                   <IonCol size="2">
-                    <IonIcon icon={documentAttachOutline} size="large" />
+                    <IonIcon icon={cashOutline} size="large" />
                   </IonCol>
                   <IonCol size="10">
                     <IonLabel>
-                      <h2>View Receipts</h2>
+                      <h2>Transaction History</h2>
                       <p className="action-subtitle">
-                        Browse transaction history
+                        View sales history and analytics
                       </p>
                     </IonLabel>
                   </IonCol>

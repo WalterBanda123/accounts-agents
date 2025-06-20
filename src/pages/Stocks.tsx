@@ -1,5 +1,4 @@
 import {
-  IonAvatar,
   IonBackButton,
   IonButtons,
   IonContent,
@@ -33,9 +32,11 @@ import { useHistory } from "react-router-dom";
 import { StockItem } from "../mock/stocks";
 import StockCard from "../components/StockCard";
 import ProfilePopover from "../components/ProfilePopover";
+import InitialsAvatar from "../components/InitialsAvatar";
 import "../components/StockCard.css";
 import "./Stocks.css";
 import { useDataContext } from "../contexts/data/UseDataContext";
+import useAuthContext from "../contexts/auth/UseAuthContext";
 
 const Stocks: React.FC = () => {
   const [selectedStock, setSelectedStock] = useState<Partial<StockItem> | null>(
@@ -48,6 +49,7 @@ const Stocks: React.FC = () => {
   const modal = useRef<HTMLIonModalElement>(null);
   const history = useHistory();
   const { getAllProducts, inventory, isProductsLoading } = useDataContext();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -137,9 +139,13 @@ const Stocks: React.FC = () => {
           </IonButtons>
           <IonTitle>Stock Overview</IonTitle>
           <IonButtons slot="end">
-            <IonAvatar className="header-avatar" onClick={handleProfileClick}>
-              <img src="https://picsum.photos/100" alt="Profile" />
-            </IonAvatar>
+            <IonButton onClick={handleProfileClick}>
+              <InitialsAvatar
+                name={user?.name || "User"}
+                size="small"
+                className="header-avatar"
+              />
+            </IonButton>
             <IonButton
               fill="clear"
               color="primary"

@@ -180,13 +180,27 @@ const NewProduct: React.FC = () => {
       }
     }
 
-    console.log("✅ All required fields are filled");
+    // Validate numeric fields
+    const unitPrice = parseFloat(formData.unitPrice);
+    const quantity = parseInt(formData.quantity);
+
+    if (isNaN(unitPrice) || unitPrice < 0) {
+      console.log(`❌ Invalid unit price: ${formData.unitPrice}`);
+      return false;
+    }
+
+    if (isNaN(quantity) || quantity < 0) {
+      console.log(`❌ Invalid quantity: ${formData.quantity}`);
+      return false;
+    }
+
+    console.log("✅ All required fields are filled and valid");
     return true;
   };
 
   const handleSave = async () => {
     console.log("💾 Starting product save process...");
-    
+
     if (!validateForm()) {
       console.log("❌ Form validation failed");
       setToastMessage("Please fill in all required fields");
@@ -197,28 +211,41 @@ const NewProduct: React.FC = () => {
     console.log("✅ Form validation passed");
     console.log("📋 Form data:", formData);
 
-    const productQuantity = parseInt(formData.quantity || "0");
+    // Parse and validate numeric values
+    const unitPrice = parseFloat(formData.unitPrice);
+    const productQuantity = parseInt(formData.quantity);
+
+    // Double-check numeric validation
+    if (isNaN(unitPrice) || isNaN(productQuantity)) {
+      console.log("❌ Invalid numeric values detected");
+      setToastMessage("Please enter valid numbers for price and quantity");
+      setShowToast(true);
+      return;
+    }
 
     const productData: Partial<StockItem> = {
       id: isEditMode ? existingProduct?.id : `STK${Date.now()}`,
-      name: formData.name,
-      description: formData.description,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
       category: formData.category,
       subcategory: formData.subcategory,
-      unitPrice: parseFloat(formData.unitPrice || "0"),
+      unitPrice: unitPrice,
       quantity: productQuantity,
       unit: formData.unit,
-      brand: formData.brand,
-      size: formData.size,
+      brand: formData.brand.trim(),
+      size: formData.size.trim(),
       status: calculateStockStatus(productQuantity),
       lastRestocked: new Date().toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
       }),
-      supplier: formData.supplier,
-      ...(formData.barcode && { barcode: formData.barcode }),
-      ...(formData.imageUrl && { image: formData.imageUrl }),
+      supplier: formData.supplier.trim(),
+      // Only include optional fields if they have valid values
+      ...(formData.barcode &&
+        formData.barcode.trim() && { barcode: formData.barcode.trim() }),
+      ...(formData.imageUrl &&
+        formData.imageUrl.trim() && { image: formData.imageUrl.trim() }),
     } as StockItem;
 
     console.log("📦 Product data to save:", productData);
@@ -228,7 +255,7 @@ const NewProduct: React.FC = () => {
         console.log("🚀 Calling addNewProduct...");
         const result = await addNewProduct(productData);
         console.log("✅ addNewProduct result:", result);
-        
+
         setToastMessage("Product added successfully!");
         setShowToast(true);
 

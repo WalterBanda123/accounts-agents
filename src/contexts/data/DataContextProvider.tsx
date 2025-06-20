@@ -3,6 +3,17 @@ import DataContext from "./DataContext";
 import { StockItem } from "../../mock/stocks";
 import { ChatMessage, MessageData } from "../../interfaces/message";
 import { ProfileInterface } from "../../interfaces/profile";
+import {
+  Transaction,
+  TransactionItem,
+  TransactionSummary,
+  TransactionFilter,
+} from "../../interfaces/transaction";
+import {
+  Notification,
+  NotificationFilter,
+  NotificationSummary,
+} from "../../interfaces/notification";
 import { ensureUserProfileExists } from "../../utils/profileUtils";
 import { calculateStockStatus } from "../../utils/stockUtils";
 import { sessionStorageUtils } from "../../utils/sessionManagerUtils";
@@ -30,6 +41,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     () => ({
       products: "products",
       profiles: "user_profiles",
+      transactions: "transactions",
+      messages: "messages",
+      sessions: "sessions",
+      notifications: "notifications",
     }),
     []
   );
@@ -73,8 +88,8 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   // Initialize session management when user changes
   useEffect(() => {
     if (user?.id) {
-      sessionStorageUtils.initialize(user.id).catch(error => {
-        console.error('Error initializing session management:', error);
+      sessionStorageUtils.initialize(user.id).catch((error) => {
+        console.error("Error initializing session management:", error);
       });
     }
   }, [user?.id]);
@@ -198,9 +213,34 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     [user?.id, user?.profileImage, COLLECTION_NAMES.profiles, getUserProfile]
   );
 
-  const addNewProduct = useCallback(async (product: Partial<StockItem>) => {
+  // Helper function to clean product data before saving to Firestore
+  const cleanProductData = useCallback((product: Partial<StockItem>) => {
+    const cleaned = { ...product };
+
+    // Remove undefined, null, empty string values, and NaN
+    Object.keys(cleaned).forEach((key) => {
+      const value = cleaned[key as keyof typeof cleaned];
+      if (
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        (typeof value === "number" && isNaN(value))
+      ) {
+        delete cleaned[key as keyof typeof cleaned];
+      }
+    });
+
+    console.log("🧹 Cleaned product data:", cleaned);
+    return cleaned;
+  }, []);
+
+  const addNewProduct = useCallback(
+    async (product: Partial<StockItem>) => {
       try {
-        console.log("🔥 DataContextProvider.addNewProduct called with:", product);
+        console.log(
+          "🔥 DataContextProvider.addNewProduct called with:",
+          product
+        );
         setIsProductsLoading(true);
 
         if (!user?.id) {
@@ -224,23 +264,60 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         console.log("✅ User profile:", userProfile);
 
-        // Add both userId (Firebase UID) and store_id (profile reference) for compatibility
-        const productWithIds = {
-          ...product,
+        // Clean the product data to remove undefined/null/NaN values
+        const cleanedProduct = cleanProductData(product);
+
+        // Convert to standardized product schema
+        const now = new Date().toISOString();
+        const standardizedProduct = {
+          // Standardized fields
           userId: user.id,
+          product_name: cleanedProduct.name || "Unknown Product",
+          description: cleanedProduct.description || "",
+          category: cleanedProduct.category || "General",
+          subcategory: cleanedProduct.subcategory || "",
+          brand: cleanedProduct.brand || "",
+          unit_price: cleanedProduct.unitPrice || 0,
+          cost_price: 0, // Default
+          stock_quantity: cleanedProduct.quantity || 0,
+          unit_of_measure: cleanedProduct.unit || "pcs",
+          reorder_point: 5, // Default
+          status:
+            cleanedProduct.status === "out-of-stock" ? "inactive" : "active",
+          created_at: now,
+          updated_at: now,
+          image: cleanedProduct.image || "",
+          barcode: cleanedProduct.barcode || "",
+          sku: cleanedProduct.barcode || "",
+          supplier: cleanedProduct.supplier || "",
+          size: cleanedProduct.size ? parseFloat(cleanedProduct.size) || 0 : 0,
+
+          // Legacy compatibility fields
+          name: cleanedProduct.name,
+          unitPrice: cleanedProduct.unitPrice,
+          quantity: cleanedProduct.quantity,
+          unit: cleanedProduct.unit,
+          createdAt: new Date(),
+          lastRestocked: cleanedProduct.lastRestocked,
           store_id: `/store_profiles/${userProfile.id}`,
         };
 
-        console.log("📦 Product data with IDs to save:", productWithIds);
-        console.log("💾 Saving to Firestore collection:", COLLECTION_NAMES.products);
+        console.log(
+          "📦 Standardized product data to save:",
+          standardizedProduct
+        );
+        console.log(
+          "💾 Saving to Firestore collection:",
+          COLLECTION_NAMES.products
+        );
 
         const doc_ref = await addDoc(
           collection(fStore, COLLECTION_NAMES.products),
-          productWithIds
+          standardizedProduct
         );
-        
+
         console.log("✅ Product saved successfully! Document ID:", doc_ref.id);
-        
+
         setError(null);
         setIsProductsLoading(false);
         return {
@@ -254,7 +331,15 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
         setIsProductsLoading(false);
         return null;
       }
-    }, [user, getUserProfile, createUserProfile, COLLECTION_NAMES.products]);
+    },
+    [
+      user,
+      getUserProfile,
+      createUserProfile,
+      cleanProductData,
+      COLLECTION_NAMES.products,
+    ]
+  );
 
   const getProduct = useCallback(
     async (productId: string) => {
@@ -1045,6 +1130,747 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [user?.id, miscActivitiesSessionId]);
 
+  // Transaction Management Functions
+  const createTransaction = useCallback(
+    async (
+      sessionId: string,
+      items: TransactionItem[],
+      customerInfo?: Transaction["customerInfo"],
+      paymentMethod?: Transaction["paymentMethod"],
+      notes?: string
+    ): Promise<{
+      success: boolean;
+      transactionId?: string;
+      error?: string;
+    }> => {
+      try {
+        if (!user?.id) {
+          return { success: false, error: "User not authenticated" };
+        }
+
+        console.log("💰 Creating transaction for user:", user.id);
+
+        const userProfile = await getUserProfile();
+        if (!userProfile) {
+          return { success: false, error: "User profile not found" };
+        }
+
+        console.log("💰 User profile found:", userProfile.id);
+
+        // Calculate totals
+        const subtotal = items.reduce(
+          (sum, item) => sum + (item.totalPrice || 0),
+          0
+        );
+        const taxRate = 0.15; // 15% tax
+        const tax = subtotal * taxRate;
+        const total = subtotal + tax;
+
+        // Generate unique transaction ID
+        const transactionId = `txn_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+
+        const now = new Date();
+        const nowISO = now.toISOString();
+        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(" ")[0]; // HH:MM:SS
+
+        const transactionData: Omit<Transaction, "id"> = {
+          // Standardized fields
+          transaction_id: transactionId,
+          userId: user.id,
+          store_id: userProfile.id,
+          customer_name: customerInfo?.name || "",
+          date: dateStr,
+          time: timeStr,
+          created_at: nowISO,
+          items: items.map((item) => ({
+            name: item.productName || "Unknown Product",
+            quantity: item.quantity,
+            unit_price: item.unitPrice || 0,
+            line_total: item.totalPrice || 0,
+            sku: item.productId || "",
+            category: "", // TODO: Get from product data
+            // Legacy compatibility
+            productName: item.productName,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+            productId: item.productId,
+            stockReducedBy: item.stockReducedBy,
+          })),
+          subtotal,
+          tax_amount: tax,
+          tax_rate: taxRate,
+          total,
+          payment_method: paymentMethod || "cash",
+          change_due: 0,
+          status: "completed",
+          notes: notes || "",
+
+          // Legacy compatibility fields
+          transactionId,
+          storeId: userProfile.id,
+          sessionId,
+          customerInfo: customerInfo || {},
+          tax,
+          taxRate,
+          timestamp: now,
+          paymentMethod: paymentMethod || "cash",
+          receiptGenerated: true,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        console.log(
+          "💰 Creating transaction with standardized schema:",
+          {
+            transaction_id: transactionData.transaction_id,
+            userId: transactionData.userId,
+            store_id: transactionData.store_id,
+            created_at: transactionData.created_at,
+            total: transactionData.total,
+            itemCount: transactionData.items.length
+          }
+        );
+
+        const docRef = await addDoc(
+          collection(fStore, COLLECTION_NAMES.transactions),
+          transactionData
+        );
+
+        console.log("✅ Transaction created successfully:", docRef.id);
+
+        // Update product stock levels
+        for (const item of items) {
+          if (item.productId) {
+            try {
+              const productRef = doc(
+                fStore,
+                COLLECTION_NAMES.products,
+                item.productId
+              );
+              const productDoc = await getDoc(productRef);
+
+              if (productDoc.exists()) {
+                const currentData = productDoc.data();
+                const currentQuantity = currentData.quantity || 0;
+                const newQuantity = Math.max(
+                  0,
+                  currentQuantity - item.quantity
+                );
+
+                await updateDoc(productRef, {
+                  quantity: newQuantity,
+                  status: calculateStockStatus(newQuantity),
+                  updatedAt: new Date(),
+                });
+
+                console.log(
+                  `📦 Updated stock for ${item.productName}: ${currentQuantity} -> ${newQuantity}`
+                );
+              }
+            } catch (stockError) {
+              console.error(
+                `Failed to update stock for ${item.productName}:`,
+                stockError
+              );
+            }
+          }
+        }
+
+        return { success: true, transactionId: docRef.id };
+      } catch (error) {
+        console.error("❌ Error creating transaction:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    },
+    [
+      user,
+      getUserProfile,
+      COLLECTION_NAMES.transactions,
+      COLLECTION_NAMES.products,
+    ]
+  );
+
+  const getTransactionHistory = useCallback(
+    async (filter?: TransactionFilter): Promise<Transaction[]> => {
+      try {
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        const transactionsRef = collection(
+          fStore,
+          COLLECTION_NAMES.transactions
+        );
+
+        console.log("🔍 Fetching transactions for user:", user.id);
+
+        // First try querying with the standardized userId field
+        let q = query(
+          transactionsRef,
+          where("userId", "==", user.id),
+          orderBy("created_at", "desc")
+        );
+
+        // Apply additional filters if provided
+        if (filter?.status) {
+          q = query(q, where("status", "==", filter.status));
+        }
+
+        if (filter?.dateFrom) {
+          q = query(
+            q,
+            where("created_at", ">=", filter.dateFrom.toISOString())
+          );
+        }
+
+        if (filter?.dateTo) {
+          q = query(q, where("created_at", "<=", filter.dateTo.toISOString()));
+        }
+
+        const snapshot = await getDocs(q);
+        const transactions: Transaction[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const transaction = {
+            id: doc.id,
+            ...data,
+            // Handle both standardized and legacy timestamp fields
+            timestamp:
+              data.timestamp?.toDate() ||
+              (data.created_at ? new Date(data.created_at) : new Date()),
+            createdAt:
+              data.createdAt?.toDate() ||
+              (data.created_at ? new Date(data.created_at) : new Date()),
+            updatedAt:
+              data.updatedAt?.toDate() ||
+              (data.updated_at ? new Date(data.updated_at) : new Date()),
+          } as Transaction;
+          transactions.push(transaction);
+        });
+
+        console.log(`💰 Found ${transactions.length} transactions with userId field`);
+
+        // If no transactions found with userId, try legacy user_id field
+        if (transactions.length === 0) {
+          console.log("🔄 No transactions found with userId, trying legacy user_id field...");
+          
+          let legacyQ = query(
+            transactionsRef,
+            where("user_id", "==", user.id),
+            orderBy("created_at", "desc")
+          );
+
+          // Apply additional filters if provided
+          if (filter?.status) {
+            legacyQ = query(legacyQ, where("status", "==", filter.status));
+          }
+
+          if (filter?.dateFrom) {
+            legacyQ = query(
+              legacyQ,
+              where("created_at", ">=", filter.dateFrom.toISOString())
+            );
+          }
+
+          if (filter?.dateTo) {
+            legacyQ = query(legacyQ, where("created_at", "<=", filter.dateTo.toISOString()));
+          }
+
+          const legacySnapshot = await getDocs(legacyQ);
+          
+          legacySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const transaction = {
+              id: doc.id,
+              ...data,
+              // Handle both standardized and legacy timestamp fields
+              timestamp:
+                data.timestamp?.toDate() ||
+                (data.created_at ? new Date(data.created_at) : new Date()),
+              createdAt:
+                data.createdAt?.toDate() ||
+                (data.created_at ? new Date(data.created_at) : new Date()),
+              updatedAt:
+                data.updatedAt?.toDate() ||
+                (data.updated_at ? new Date(data.updated_at) : new Date()),
+            } as Transaction;
+            transactions.push(transaction);
+          });
+
+          console.log(`💰 Found ${legacySnapshot.size} transactions with legacy user_id field`);
+        }
+
+        // Apply client-side filters for amount range (Firestore doesn't support multiple range queries)
+        let filteredTransactions = transactions;
+        if (filter?.minAmount) {
+          filteredTransactions = filteredTransactions.filter(
+            (t) => t.total >= filter.minAmount!
+          );
+        }
+        if (filter?.maxAmount) {
+          filteredTransactions = filteredTransactions.filter(
+            (t) => t.total <= filter.maxAmount!
+          );
+        }
+
+        console.log(`💰 Returning ${filteredTransactions.length} filtered transactions`);
+        return filteredTransactions;
+      } catch (error) {
+        console.error("❌ Error fetching transaction history:", error);
+        return [];
+      }
+    },
+    [user?.id, COLLECTION_NAMES.transactions]
+  );
+
+  const getTransactionById = useCallback(
+    async (transactionId: string): Promise<Transaction | null> => {
+      try {
+        const transactionRef = doc(
+          fStore,
+          COLLECTION_NAMES.transactions,
+          transactionId
+        );
+        const transactionDoc = await getDoc(transactionRef);
+
+        if (!transactionDoc.exists()) {
+          return null;
+        }
+
+        const data = transactionDoc.data();
+        return {
+          id: transactionDoc.id,
+          ...data,
+          timestamp:
+            data.timestamp?.toDate() ||
+            (data.created_at ? new Date(data.created_at) : new Date()),
+          createdAt:
+            data.createdAt?.toDate() ||
+            (data.created_at ? new Date(data.created_at) : new Date()),
+          updatedAt:
+            data.updatedAt?.toDate() ||
+            (data.updated_at ? new Date(data.updated_at) : new Date()),
+        } as Transaction;
+      } catch (error) {
+        console.error("❌ Error fetching transaction:", error);
+        return null;
+      }
+    },
+    [COLLECTION_NAMES.transactions]
+  );
+
+  const getTransactionSummary = useCallback(
+    async (
+      dateFrom?: Date,
+      dateTo?: Date
+    ): Promise<TransactionSummary | null> => {
+      try {
+        const transactions = await getTransactionHistory({
+          status: "completed",
+          dateFrom,
+          dateTo,
+        });
+
+        if (transactions.length === 0) {
+          return {
+            totalSales: 0,
+            totalTransactions: 0,
+            averageTransactionValue: 0,
+            topSellingItems: [],
+            dateRange: {
+              from: dateFrom || new Date(),
+              to: dateTo || new Date(),
+            },
+          };
+        }
+
+        const totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
+        const totalTransactions = transactions.length;
+        const averageTransactionValue = totalSales / totalTransactions;
+
+        // Calculate top selling items
+        const itemSales = new Map<
+          string,
+          { quantitySold: number; revenue: number }
+        >();
+
+        transactions.forEach((transaction) => {
+          transaction.items.forEach((item) => {
+            const productName =
+              item.name || item.productName || "Unknown Product";
+            const lineTotal = item.line_total || item.totalPrice || 0;
+            const existing = itemSales.get(productName) || {
+              quantitySold: 0,
+              revenue: 0,
+            };
+            itemSales.set(productName, {
+              quantitySold: existing.quantitySold + item.quantity,
+              revenue: existing.revenue + lineTotal,
+            });
+          });
+        });
+
+        const topSellingItems = Array.from(itemSales.entries())
+          .map(([productName, stats]) => ({
+            productName,
+            quantitySold: stats.quantitySold,
+            revenue: stats.revenue,
+          }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 10);
+
+        return {
+          totalSales,
+          totalTransactions,
+          averageTransactionValue,
+          topSellingItems,
+          dateRange: {
+            from:
+              dateFrom ||
+              new Date(
+                Math.min(
+                  ...transactions.map((t) =>
+                    (t.timestamp || t.createdAt || new Date()).getTime()
+                  )
+                )
+              ),
+            to:
+              dateTo ||
+              new Date(
+                Math.max(
+                  ...transactions.map((t) =>
+                    (t.timestamp || t.createdAt || new Date()).getTime()
+                  )
+                )
+              ),
+          },
+        };
+      } catch (error) {
+        console.error("❌ Error generating transaction summary:", error);
+        return null;
+      }
+    },
+    [getTransactionHistory]
+  );
+
+  const updateTransactionStatus = useCallback(
+    async (
+      transactionId: string,
+      status: Transaction["status"],
+      notes?: string
+    ): Promise<boolean> => {
+      try {
+        const transactionRef = doc(
+          fStore,
+          COLLECTION_NAMES.transactions,
+          transactionId
+        );
+        await updateDoc(transactionRef, {
+          status,
+          notes: notes || "",
+          updatedAt: new Date(),
+        });
+
+        console.log(
+          `✅ Transaction ${transactionId} status updated to: ${status}`
+        );
+        return true;
+      } catch (error) {
+        console.error("❌ Error updating transaction status:", error);
+        return false;
+      }
+    },
+    [COLLECTION_NAMES.transactions]
+  );
+
+  // Link transaction to chat session for history tracking
+  const linkTransactionToSession = useCallback(
+    async (transactionId: string, sessionId: string): Promise<boolean> => {
+      try {
+        // Update the session with transaction reference
+        const sessionRef = doc(fStore, COLLECTION_NAMES.sessions, sessionId);
+        const sessionDoc = await getDoc(sessionRef);
+
+        if (sessionDoc.exists()) {
+          const sessionData = sessionDoc.data();
+          const transactions = sessionData.transactions || [];
+
+          if (!transactions.includes(transactionId)) {
+            transactions.push(transactionId);
+
+            await updateDoc(sessionRef, {
+              transactions,
+              updatedAt: new Date(),
+            });
+
+            console.log(
+              `🔗 Linked transaction ${transactionId} to session ${sessionId}`
+            );
+          }
+        }
+
+        return true;
+      } catch (error) {
+        console.error("❌ Error linking transaction to session:", error);
+        return false;
+      }
+    },
+    [COLLECTION_NAMES.sessions]
+  );
+
+  // === NOTIFICATION FUNCTIONS ===
+
+  const createNotification = useCallback(
+    async (
+      notification: Omit<Notification, "id" | "createdAt" | "updatedAt">
+    ): Promise<string | null> => {
+      try {
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        const profile = await getUserProfile();
+        if (!profile?.id) {
+          throw new Error("User profile not found");
+        }
+
+        const notificationData = {
+          ...notification,
+          userId: user.id,
+          storeId: profile.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        const notificationsRef = collection(
+          fStore,
+          COLLECTION_NAMES.notifications
+        );
+        const docRef = await addDoc(notificationsRef, notificationData);
+
+        console.log(`✅ Notification created: ${docRef.id}`);
+        return docRef.id;
+      } catch (error) {
+        console.error("❌ Error creating notification:", error);
+        return null;
+      }
+    },
+    [user?.id, getUserProfile, COLLECTION_NAMES.notifications]
+  );
+
+  const createTransactionNotification = useCallback(
+    async (transaction: Transaction): Promise<string | null> => {
+      try {
+        const notification: Omit<
+          Notification,
+          "id" | "createdAt" | "updatedAt"
+        > = {
+          userId: transaction.userId,
+          storeId: transaction.store_id || transaction.storeId || "",
+          title: "Transaction Completed",
+          message: `Receipt saved for transaction #${(
+            transaction.transaction_id ||
+            transaction.transactionId ||
+            "unknown"
+          ).slice(-8)} - ${
+            transaction.items.length
+          } items, $${transaction.total.toFixed(2)}`,
+          type: "transaction",
+          priority: "medium",
+          isRead: false,
+          actionUrl: `/transaction-detail/${transaction.id}`,
+          transactionId: transaction.id,
+        };
+
+        return await createNotification(notification);
+      } catch (error) {
+        console.error("❌ Error creating transaction notification:", error);
+        return null;
+      }
+    },
+    [createNotification]
+  );
+
+  const getNotifications = useCallback(
+    async (filter?: NotificationFilter): Promise<Notification[]> => {
+      try {
+        if (!user?.id) {
+          throw new Error("User not authenticated");
+        }
+
+        const notificationsRef = collection(
+          fStore,
+          COLLECTION_NAMES.notifications
+        );
+        let q = query(
+          notificationsRef,
+          where("userId", "==", user.id),
+          orderBy("createdAt", "desc")
+        );
+
+        // Apply filters
+        if (filter?.type) {
+          q = query(q, where("type", "==", filter.type));
+        }
+
+        if (filter?.priority) {
+          q = query(q, where("priority", "==", filter.priority));
+        }
+
+        if (filter?.isRead !== undefined) {
+          q = query(q, where("isRead", "==", filter.isRead));
+        }
+
+        if (filter?.dateFrom) {
+          q = query(q, where("createdAt", ">=", filter.dateFrom));
+        }
+
+        if (filter?.dateTo) {
+          q = query(q, where("createdAt", "<=", filter.dateTo));
+        }
+
+        const snapshot = await getDocs(q);
+        const notifications: Notification[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          notifications.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+          } as Notification);
+        });
+
+        return notifications;
+      } catch (error) {
+        console.error("❌ Error fetching notifications:", error);
+        return [];
+      }
+    },
+    [user?.id, COLLECTION_NAMES.notifications]
+  );
+
+  const markNotificationAsRead = useCallback(
+    async (notificationId: string): Promise<boolean> => {
+      try {
+        const notificationRef = doc(
+          fStore,
+          COLLECTION_NAMES.notifications,
+          notificationId
+        );
+        await updateDoc(notificationRef, {
+          isRead: true,
+          updatedAt: new Date(),
+        });
+
+        console.log(`✅ Notification ${notificationId} marked as read`);
+        return true;
+      } catch (error) {
+        console.error("❌ Error marking notification as read:", error);
+        return false;
+      }
+    },
+    [COLLECTION_NAMES.notifications]
+  );
+
+  const markAllNotificationsAsRead = useCallback(async (): Promise<boolean> => {
+    try {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      const notificationsRef = collection(
+        fStore,
+        COLLECTION_NAMES.notifications
+      );
+      const q = query(
+        notificationsRef,
+        where("userId", "==", user.id),
+        where("isRead", "==", false)
+      );
+
+      const snapshot = await getDocs(q);
+      const updatePromises = snapshot.docs.map((doc) =>
+        updateDoc(doc.ref, {
+          isRead: true,
+          updatedAt: new Date(),
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      console.log(`✅ Marked ${snapshot.docs.length} notifications as read`);
+      return true;
+    } catch (error) {
+      console.error("❌ Error marking all notifications as read:", error);
+      return false;
+    }
+  }, [user?.id, COLLECTION_NAMES.notifications]);
+
+  const deleteNotification = useCallback(
+    async (notificationId: string): Promise<boolean> => {
+      try {
+        const notificationRef = doc(
+          fStore,
+          COLLECTION_NAMES.notifications,
+          notificationId
+        );
+        await deleteDoc(notificationRef);
+
+        console.log(`✅ Notification ${notificationId} deleted`);
+        return true;
+      } catch (error) {
+        console.error("❌ Error deleting notification:", error);
+        return false;
+      }
+    },
+    [COLLECTION_NAMES.notifications]
+  );
+
+  const getNotificationSummary =
+    useCallback(async (): Promise<NotificationSummary | null> => {
+      try {
+        const notifications = await getNotifications();
+
+        const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+        const priorityBreakdown = {
+          high: notifications.filter((n) => n.priority === "high").length,
+          medium: notifications.filter((n) => n.priority === "medium").length,
+          low: notifications.filter((n) => n.priority === "low").length,
+        };
+
+        const typeBreakdown = {
+          info: notifications.filter((n) => n.type === "info").length,
+          warning: notifications.filter((n) => n.type === "warning").length,
+          success: notifications.filter((n) => n.type === "success").length,
+          error: notifications.filter((n) => n.type === "error").length,
+          transaction: notifications.filter((n) => n.type === "transaction")
+            .length,
+          inventory: notifications.filter((n) => n.type === "inventory").length,
+        };
+
+        return {
+          totalNotifications: notifications.length,
+          unreadCount,
+          priorityBreakdown,
+          typeBreakdown,
+        };
+      } catch (error) {
+        console.error("❌ Error generating notification summary:", error);
+        return null;
+      }
+    }, [getNotifications]);
+
+  // === END NOTIFICATION FUNCTIONS ===
   const contextValue = useMemo(
     () => ({
       addNewProduct,
@@ -1074,6 +1900,21 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       loadMessages,
       deleteMessage,
       loadAllUserMessages,
+      // Transaction management
+      createTransaction,
+      getTransactionHistory,
+      getTransactionById,
+      getTransactionSummary,
+      updateTransactionStatus,
+      linkTransactionToSession,
+      // Notification management
+      createNotification,
+      createTransactionNotification,
+      getNotifications,
+      markNotificationAsRead,
+      markAllNotificationsAsRead,
+      deleteNotification,
+      getNotificationSummary,
     }),
     [
       addNewProduct,
@@ -1102,6 +1943,19 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       loadMessages,
       deleteMessage,
       loadAllUserMessages,
+      createTransaction,
+      getTransactionHistory,
+      getTransactionById,
+      getTransactionSummary,
+      updateTransactionStatus,
+      linkTransactionToSession,
+      createNotification,
+      createTransactionNotification,
+      getNotifications,
+      markNotificationAsRead,
+      markAllNotificationsAsRead,
+      deleteNotification,
+      getNotificationSummary,
     ]
   );
 

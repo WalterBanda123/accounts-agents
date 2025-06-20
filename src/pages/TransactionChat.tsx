@@ -84,7 +84,14 @@ const MessageBubble: React.FC<{ message: TransactionMessage }> = React.memo(
 MessageBubble.displayName = "MessageBubble";
 
 const TransactionChat: React.FC = () => {
-  const { askAiAssistant, currentSessionId } = useDataContext();
+  const {
+    askAiAssistant,
+    currentSessionId,
+    createTransaction,
+    linkTransactionToSession,
+    createTransactionNotification,
+    getTransactionById,
+  } = useDataContext();
   const { user } = useAuthContext();
   const contentRef = useRef<HTMLIonContentElement>(null);
 
@@ -160,44 +167,85 @@ const TransactionChat: React.FC = () => {
           const receiptText = formatReceiptText(receipt);
 
           if (receipt.isValid) {
-            // If valid, create transaction ID and call API
-            const transactionId = `TXN_${user?.id}_${Date.now()}`;
+            // If valid, create transaction with our transaction system
+            const transactionItems = validatedItems
+              .filter((item) => item.isValid)
+              .map((item) => ({
+                productId: item.stockItem?.id,
+                name: item.productName,
+                quantity: item.quantity,
+                unit_price: item.unitPrice,
+                line_total: item.totalPrice,
+              }));
 
             try {
-              // Call the transaction API
-              const apiResponse = await fetch("http://localhost:8003/run", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  message: userMessage,
-                  context: { user_id: user?.id || "unknown" },
-                  session_id: currentSessionId || "default_session",
-                }),
-              });
+              // Record the transaction in Firestore
+              const transactionResult = await createTransaction(
+                currentSessionId || "default_session",
+                transactionItems,
+                undefined, // customerInfo
+                "cash", // default payment method
+                `Transaction from chat: ${userMessage}`
+              );
 
-              if (apiResponse.ok) {
-                const result = await apiResponse.json();
-                console.log("API Response:", result);
-
+              if (transactionResult.success) {
                 // Show the receipt
-                addMessage(receiptText, true, true, transactionId);
+                addMessage(
+                  receiptText,
+                  true,
+                  true,
+                  transactionResult.transactionId
+                );
 
                 // Add confirmation message
                 addMessage(
-                  `✅ Transaction recorded successfully!\n\n**Transaction ID:** ${transactionId}\n\nType "confirm ${transactionId}" to save this transaction to your records.`,
+                  `✅ Transaction recorded successfully!\n\n**Transaction ID:** ${transactionResult.transactionId}\n\nStock levels have been automatically updated.`,
                   true
                 );
+
+                // Link transaction to session for history tracking
+                if (transactionResult.transactionId && currentSessionId) {
+                  await linkTransactionToSession(
+                    transactionResult.transactionId,
+                    currentSessionId
+                  );
+                }
+
+                // Create a notification for the completed transaction
+                if (transactionResult.transactionId) {
+                  try {
+                    const transaction = await getTransactionById(
+                      transactionResult.transactionId
+                    );
+                    if (transaction) {
+                      await createTransactionNotification(transaction);
+                      console.log(
+                        `✅ Transaction notification created for ${transactionResult.transactionId}`
+                      );
+                    }
+                  } catch (notificationError) {
+                    console.error(
+                      "Failed to create transaction notification:",
+                      notificationError
+                    );
+                    // Don't fail the transaction if notification creation fails
+                  }
+                }
               } else {
-                throw new Error("API call failed");
+                throw new Error(
+                  transactionResult.error || "Failed to create transaction"
+                );
               }
-            } catch (apiError) {
-              console.error("API Error:", apiError);
-              // Fallback to local processing
-              addMessage(receiptText, true, true, transactionId);
+            } catch (transactionError) {
+              console.error("Transaction Error:", transactionError);
+              // Show receipt but indicate transaction failed
+              addMessage(receiptText, true, true);
               addMessage(
-                `⚠️ Transaction processed locally.\n\n**Transaction ID:** ${transactionId}\n\nType "confirm ${transactionId}" to save this transaction.`,
+                `❌ Failed to record transaction: ${
+                  transactionError instanceof Error
+                    ? transactionError.message
+                    : "Unknown error"
+                }\n\nPlease try again or record manually.`,
                 true
               );
             }
@@ -299,6 +347,10 @@ const TransactionChat: React.FC = () => {
     askAiAssistant,
     currentSessionId,
     user?.id,
+    createTransaction,
+    linkTransactionToSession,
+    createTransactionNotification,
+    getTransactionById,
   ]);
 
   const handleKeyPress = useCallback(
@@ -328,7 +380,7 @@ const TransactionChat: React.FC = () => {
     if (messages.length === 0) {
       // Log session debug info when component loads
       debugSessionUtils.logSessionDebugInfo();
-      
+
       addMessage(
         "👋 Welcome to Transaction Chat!\n\n💡 **How to record a sale:**\nType your items like: `3 bread @2.50, 1 milk @3.00`\n\n✨ **Supported formats:**\n• `2 coke @1.75`\n• `5x apples at 0.50`\n• `1 soap 1.20`\n\nTry one of the examples below to get started!",
         true

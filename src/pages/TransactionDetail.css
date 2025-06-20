@@ -1,0 +1,266 @@
+.transaction-detail-content {
+  --background: var(--ion-background-color, #f8f9fa);
+}
+
+.transaction-detail-container {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 16px;
+}
+
+.error-container ion-icon {
+  font-size: 64px;
+  color: var(--ion-color-medium);
+}
+
+/* Receipt Header */
+.receipt-header {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.receipt-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.receipt-title ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+}
+
+.receipt-title ion-card-title {
+  flex: 1;
+  margin: 0;
+}
+
+.receipt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ion-color-medium);
+}
+
+.info-item ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-primary);
+}
+
+/* Customer Info */
+.customer-info {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.customer-info ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+
+.customer-info .info-item {
+  margin-bottom: 8px;
+}
+
+.customer-info .info-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Items Section */
+.items-section {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.items-section ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+
+.items-section ion-card-title ion-icon {
+  color: var(--ion-color-primary);
+}
+
+.items-section ion-list {
+  background: transparent;
+}
+
+.items-section ion-item {
+  --background: transparent;
+  --border-color: var(--ion-color-light);
+  --border-width: 0 0 1px 0;
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.items-section ion-item:last-child {
+  --border-width: 0;
+}
+
+.items-section ion-label h3 {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 4px;
+}
+
+.items-section ion-label p {
+  color: var(--ion-color-medium);
+  font-size: 14px;
+}
+
+.items-section ion-note {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ion-color-dark);
+}
+
+/* Totals Section */
+.totals-section {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(
+    135deg,
+    var(--ion-color-primary-tint),
+    var(--ion-color-primary)
+  );
+}
+
+.totals-section ion-card-content {
+  padding: 20px;
+}
+
+.total-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  color: white;
+  font-size: 16px;
+}
+
+.total-line:last-child {
+  margin-bottom: 0;
+}
+
+.total-amount {
+  font-size: 20px;
+  font-weight: 700;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin-top: 8px;
+}
+
+/* Notes Section */
+.notes-section {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.notes-section ion-card-title {
+  font-size: 18px;
+}
+
+.notes-section ion-text {
+  color: var(--ion-color-medium);
+  line-height: 1.6;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.action-buttons ion-button {
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transaction-detail-container {
+    padding: 12px;
+  }
+
+  .receipt-title {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .receipt-title ion-card-title {
+    font-size: 18px;
+  }
+
+  .info-item {
+    font-size: 14px;
+  }
+
+  .total-line {
+    font-size: 14px;
+  }
+
+  .total-amount {
+    font-size: 18px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .transaction-detail-content {
+    --background: var(--ion-background-color, #1a1a1a);
+  }
+
+  .receipt-header,
+  .customer-info,
+  .items-section,
+  .notes-section {
+    background: var(--ion-color-step-50);
+    border: 1px solid var(--ion-color-step-100);
+  }
+
+  .totals-section {
+    background: linear-gradient(
+      135deg,
+      var(--ion-color-primary-shade),
+      var(--ion-color-primary)
+    );
+  }
+
+  .items-section ion-label h3 {
+    color: var(--ion-color-primary-contrast);
+  }
+
+  .items-section ion-note {
+    color: var(--ion-color-primary-contrast);
+  }
+}
