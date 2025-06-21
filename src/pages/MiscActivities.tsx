@@ -163,18 +163,24 @@ const MiscActivities: React.FC = () => {
   useEffect(() => {
     const loadMessages = async () => {
       if (
-        sessionInitialized &&
-        !messagesLoadedRef.current &&
-        miscActivitiesSessionId
+        user?.id &&
+        !messagesLoadedRef.current
       ) {
         try {
-          console.log(
-            "Loading misc activities messages for session:",
-            miscActivitiesSessionId
-          );
+          let loadedMessages: ChatMessage[] = [];
+          
+          if (miscActivitiesSessionId) {
+            console.log(
+              "Loading misc activities messages for session:",
+              miscActivitiesSessionId
+            );
+            loadedMessages = await loadMiscActivitiesMessages();
+          } else {
+            console.log("No misc activities session yet, will show welcome message");
+            loadedMessages = [];
+          }
+          
           messagesLoadedRef.current = true;
-
-          const loadedMessages = await loadMiscActivitiesMessages();
           const allMessages = loadedMessages || [];
 
           // Add initial helper message if no messages exist
@@ -221,10 +227,9 @@ I'll help you log it properly and update your registry. What would you like to r
 
     loadMessages();
   }, [
-    sessionInitialized,
+    user?.id,
     miscActivitiesSessionId,
     loadMiscActivitiesMessages,
-    user?.id,
   ]);
 
   const sendMessage = useCallback(async () => {

@@ -246,27 +246,31 @@ const TransactionChat: React.FC = () => {
     }
   }, [currentSessionId]);
 
-  // Load previous messages when component mounts
+  // Load previous messages when component mounts - try regardless of session state
   useEffect(() => {
     const loadPreviousMessages = async () => {
-      if (!currentSessionId || !user?.id) {
-        console.log("⏸️ Skipping message load - missing session or user:", {
-          currentSessionId,
-          userId: user?.id,
-        });
+      if (!user?.id) {
+        console.log("⏸️ Skipping message load - no user authenticated");
         setHasLoadedMessages(true);
-        setShowWelcomeMessage(true); // Show welcome if no session/user
+        setShowWelcomeMessage(true);
         return;
       }
 
       try {
-        console.log(
-          "📥 Loading previous transaction chat messages for session:",
-          currentSessionId
-        );
-        const transactionMessages = await loadTransactionMessages(
-          currentSessionId
-        );
+        // Try to load messages even without a session
+        let transactionMessages: TransactionMessage[] = [];
+        
+        if (currentSessionId) {
+          console.log(
+            "📥 Loading previous transaction chat messages for session:",
+            currentSessionId
+          );
+          transactionMessages = await loadTransactionMessages(currentSessionId);
+        } else {
+          console.log("📥 No session yet, will show welcome message for new user");
+          // No session yet, assume no messages
+          transactionMessages = [];
+        }
 
         console.log(
           `📨 Found ${transactionMessages.length} existing messages in Firestore`
@@ -349,7 +353,7 @@ const TransactionChat: React.FC = () => {
     };
 
     loadPreviousMessages();
-  }, [currentSessionId, user?.id, loadTransactionMessages, debugMessageOrder]);
+  }, [user?.id, currentSessionId, loadTransactionMessages, debugMessageOrder]);
 
   // Sales examples for quick input
   const salesExamples = [
@@ -704,20 +708,19 @@ const TransactionChat: React.FC = () => {
   const [showWelcomeMessage, setShowWelcomeMessage] = useState<boolean>(false);
 
   useEffect(() => {
-    // Only show welcome message after we've attempted to load messages and found none
+    // Show welcome message after we've attempted to load messages and found none OR if we have no session
     if (
       hasLoadedMessages &&
       messages.length === 0 &&
-      currentSessionId &&
       user?.id &&
       showWelcomeMessage
     ) {
-      console.log("🎉 Adding welcome message for new session");
+      console.log("🎉 Adding welcome message for new transaction chat session");
 
       // Log session debug info when component loads
       debugSessionUtils.logSessionDebugInfo();
 
-      // Add welcome message - this will be saved to Firestore
+      // Add welcome message - this will be saved to Firestore (if session exists) or just shown locally
       addMessage(
         "👋 Welcome to Transaction Chat!\n\n💡 **How to record a sale:**\nType your items like: `3 bread @2.50, 1 milk @3.00`\n\n✨ **Supported formats:**\n• `2 coke @1.75`\n• `5x apples at 0.50`\n• `1 soap 1.20`\n\nTry one of the examples below to get started!",
         true
@@ -729,7 +732,6 @@ const TransactionChat: React.FC = () => {
   }, [
     addMessage,
     messages.length,
-    currentSessionId,
     user?.id,
     hasLoadedMessages,
     showWelcomeMessage,

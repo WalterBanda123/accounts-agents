@@ -16,6 +16,7 @@ import {
 import { useHistory } from "react-router-dom";
 import "./Login.css";
 import useAuthContext from "../contexts/auth/UseAuthContext";
+import SplashScreen from "../components/SplashScreen";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -23,6 +24,7 @@ const Login: React.FC = () => {
   const [showErrorToast, setShowErrorToast] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showSplash, setShowSplash] = useState(true);
   const history = useHistory();
   const { signInUserWithEmailAndPassword, isLoading } = useAuthContext();
 
@@ -33,8 +35,8 @@ const Login: React.FC = () => {
       setToastMessage("Login successful! Welcome back.");
       setShowSuccessToast(true);
         history.push("/home");
-    } catch (err: unknown) {
-      console.error("Login failed:", err);
+    } catch (error: unknown) {
+      console.error("Login failed:", error);
       setToastMessage("Login failed. Please try again.");
       setShowErrorToast(true);
     }
@@ -43,6 +45,14 @@ const Login: React.FC = () => {
   const handleSignUpClick = () => {
     history.push("/register");
   };
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
 
   return (
     <IonPage>

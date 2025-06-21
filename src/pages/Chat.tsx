@@ -238,6 +238,10 @@ const Chat: React.FC = () => {
   const messagesLoadedRef = useRef<boolean>(false);
   const sendingMessageRef = useRef<boolean>(false); // Prevent double sends
 
+  // Welcome message state for first-time users
+  const [hasLoadedMessages, setHasLoadedMessages] = useState<boolean>(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState<boolean>(false);
+
   // Check if error exists and is a meaningful error
   const hasError = error !== null && error !== undefined;
 
@@ -289,7 +293,7 @@ const Chat: React.FC = () => {
             existingSession.sessionId
           ) {
             console.log("Using existing session:", existingSession.sessionId);
-            setSessionInitialized(true); // Only set to true when we have a session
+            setSessionInitialized(true);
           } else {
             // Create a new session if none exists
             console.log("Creating new chat session...");
@@ -299,14 +303,17 @@ const Chat: React.FC = () => {
                 "New chat session created successfully:",
                 newSessionId
               );
-              setSessionInitialized(true); // Only set to true when we have a session
+              setSessionInitialized(true);
             } else {
               console.error("Failed to create session");
+              // Still mark as initialized so messages can be loaded/shown
+              setSessionInitialized(true);
             }
           }
         } catch (error) {
           console.error("Failed to initialize chat session:", error);
-          setSessionInitialized(false);
+          // Mark as initialized even on error so we can show welcome message
+          setSessionInitialized(true);
         }
       }
     };
@@ -314,31 +321,55 @@ const Chat: React.FC = () => {
     initializeSession();
   }, [user?.id, sessionInitialized, createSession, getAgentSession]);
 
-  // Load messages when session is available
+  // Load messages when session is available OR when user is authenticated but no session exists
   useEffect(() => {
     const loadAllChatMessages = async () => {
-      if (sessionInitialized && user?.id && !messagesLoadedRef.current) {
-        try {
-          console.log("Loading all user messages for date-based grouping");
-          messagesLoadedRef.current = true;
-          const allMessages = await loadAllUserMessages();
+      if (!user?.id) {
+        console.log("⏸️ Skipping message load - no user authenticated");
+        return;
+      }
 
-          // Group messages by date
-          const grouped = groupMessagesByDate(allMessages);
-          setMessageGroups(grouped);
+      if (messagesLoadedRef.current) {
+        console.log("⏸️ Messages already loaded, skipping");
+        return;
+      }
 
-          console.log(
-            `Loaded and grouped ${allMessages.length} messages into ${grouped.length} date groups`
-          );
-        } catch (error) {
-          console.error("Error loading all user messages:", error);
-          messagesLoadedRef.current = false;
+      try {
+        console.log("Loading all user messages for date-based grouping");
+        messagesLoadedRef.current = true;
+        const allMessages = await loadAllUserMessages();
+
+        // If we have a session but no messages, or if we have no session at all
+        if (allMessages.length === 0) {
+          console.log("🆕 No existing messages found - showing welcome message");
+          setShowWelcomeMessage(true);
+        } else {
+          console.log(`✅ Found ${allMessages.length} existing messages`);
+          setShowWelcomeMessage(false);
         }
+
+        // Group messages by date
+        const grouped = groupMessagesByDate(allMessages);
+        setMessageGroups(grouped);
+        setHasLoadedMessages(true);
+
+        console.log(
+          `Loaded and grouped ${allMessages.length} messages into ${grouped.length} date groups`
+        );
+      } catch (error) {
+        console.error("Error loading all user messages:", error);
+        messagesLoadedRef.current = false;
+        // Show welcome message if loading failed
+        setShowWelcomeMessage(true);
+        setHasLoadedMessages(true);
       }
     };
 
-    loadAllChatMessages();
-  }, [sessionInitialized, user?.id, loadAllUserMessages]);
+    // Load messages regardless of session state, but only if user is authenticated
+    if (user?.id) {
+      loadAllChatMessages();
+    }
+  }, [user?.id, loadAllUserMessages]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -739,6 +770,63 @@ const Chat: React.FC = () => {
     setProfilePopoverEvent(e.nativeEvent as unknown as CustomEvent);
     setShowProfilePopover(true);
   }, []);
+
+  // Welcome message effect - show initial message for first-time users
+  useEffect(() => {
+    if (
+      hasLoadedMessages &&
+      messageGroups.length === 0 &&
+      user?.id &&
+      showWelcomeMessage
+    ) {
+      console.log("🎉 Adding welcome message for new user");
+
+      // Add welcome message for general chat
+      addMessage(
+        `👋 **Welcome to Account Manager Chat!**
+
+I'm your AI assistant here to help you manage your business efficiently. Here's what I can help you with:
+
+🏪 **Store Management:**
+• Track inventory and stock levels
+• Manage product information
+• Monitor sales performance
+
+💰 **Financial Operations:**
+• Record transactions and sales
+• Track expenses and income
+• Generate financial reports
+
+📊 **Business Analytics:**
+• View sales summaries and trends
+• Analyze customer behavior
+• Monitor business performance
+
+📱 **Quick Actions:**
+• Use the home screen for rapid access to features
+• Navigate to Transaction Chat for sales recording
+• Check Miscellaneous Activities for other operations
+
+**How to get started:**
+Simply ask me questions or tell me what you'd like to do! For example:
+- "Show me today's sales summary"
+- "Help me track inventory"
+- "Generate a financial report"
+
+What would you like to do today?`,
+        true // isBot = true
+      );
+
+      // Prevent showing welcome message again
+      setShowWelcomeMessage(false);
+    }
+  }, [
+    hasLoadedMessages,
+    messageGroups.length,
+    user?.id,
+    showWelcomeMessage,
+    addMessage,
+  ]);
 
   return (
     <IonPage>
