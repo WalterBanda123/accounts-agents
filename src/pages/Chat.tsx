@@ -37,6 +37,7 @@ import {
   generateReportPDF,
   downloadFileFromBase64,
   downloadPDF,
+  testFirebaseStorageUrl,
 } from "../utils/downloadUtils";
 import {
   parseSalesText,
@@ -58,6 +59,7 @@ interface Message {
     pdf_size: number;
     direct_download_url: string;
   };
+  data?: Record<string, unknown>;
 }
 
 // Enhanced MessageBubble component with download functionality
@@ -71,8 +73,37 @@ const MessageBubble: React.FC<{
 
   // Check if this message contains downloadable content
   const downloadableFile = message.isBot
-    ? extractDownloadableContent(message.text, message.pdfData)
+    ? extractDownloadableContent(message.text, message.pdfData, message.data)
     : null;
+
+  // Debug logging to help diagnose download detection
+  if (message.isBot) {
+    console.log("MessageBubble debug:", {
+      messageId: message.id,
+      messageText: message.text.substring(0, 100) + "...",
+      hasPdfData: !!message.pdfData,
+      pdfData: message.pdfData,
+      hasData: !!message.data,
+      data: message.data,
+      downloadableFile: downloadableFile,
+      hasDownloadButton: !!downloadableFile,
+      isTypingIndicator: message.id === "typing-indicator",
+    });
+    
+    // Additional debug for download URL detection
+    if (message.data) {
+      console.log("🔍 DOWNLOAD DEBUG - Message data analysis:", {
+        messageId: message.id,
+        dataKeys: Object.keys(message.data),
+        downloadUrl: message.data.download_url,
+        firebaseUrl: message.data.firebase_url,
+        serverUrl: message.data.server_url,
+        pdfUrl: message.data.pdf_url,
+        url: message.data.url,
+        hasAnyUrl: !!(message.data.download_url || message.data.firebase_url || message.data.server_url || message.data.pdf_url || message.data.url)
+      });
+    }
+  }
 
   const handleDownload = async () => {
     if (!downloadableFile || !userId || !sessionId) return;
@@ -83,40 +114,68 @@ const MessageBubble: React.FC<{
       let success = false;
 
       // Debug logging to see what data we have
-      console.log("Download attempt:", {
+      console.log("🔽 Download attempt with full context:", {
         downloadableFile,
         messagePdfData: message.pdfData,
+        messageData: message.data,
         hasBase64Data: !!downloadableFile.base64Data,
         hasUrl: !!downloadableFile.url,
+        urlPreview: downloadableFile.url ? downloadableFile.url.substring(0, 100) + "..." : "No URL"
       });
 
-      // If we have the complete PDF data from the backend, use the exact recommended method
-      if (message.pdfData && message.pdfData.pdf_base64) {
-        console.log("Using complete backend PDF data");
+      // PRIORITY 1: If we have a direct download URL from data object (Firebase Storage)
+      if (downloadableFile.url && downloadableFile.url.startsWith("http")) {
+        console.log("🔥 Using direct download URL from data object:", {
+          url: downloadableFile.url,
+          filename: downloadableFile.filename,
+          isFirebaseStorage: downloadableFile.url.includes('storage.googleapis.com') || downloadableFile.url.includes('firebasestorage.app')
+        });
+        
+        // For Firebase Storage URLs, test accessibility first
+        if (downloadableFile.url.includes('storage.googleapis.com') || downloadableFile.url.includes('firebasestorage.app')) {
+          console.log("🧪 Testing Firebase Storage URL accessibility first...");
+          const testResult = await testFirebaseStorageUrl(downloadableFile.url);
+          console.log("🧪 Firebase URL test result:", testResult);
+          
+          if (!testResult.accessible) {
+            console.warn("⚠️ Firebase URL test failed, but proceeding with download attempt anyway");
+          }
+        }
+        
+        success = await downloadFile(
+          downloadableFile.url,
+          downloadableFile.filename
+        );
+      }
+      // PRIORITY 2: If we have the complete PDF data from the backend with base64
+      else if (message.pdfData && message.pdfData.pdf_base64) {
+        console.log("📄 Using complete backend PDF data (base64)");
         downloadPDF({
           pdf_data: message.pdfData,
           data: { filename: downloadableFile.filename },
         });
         success = true;
       }
-      // If we have base64 PDF data from backend, use it
+      // PRIORITY 3: If we have base64 PDF data from downloadableFile
       else if (downloadableFile.base64Data) {
-        console.log("Using extracted base64 data");
+        console.log("📋 Using extracted base64 data");
         success = downloadFileFromBase64(
           downloadableFile.base64Data,
           downloadableFile.filename,
           "application/pdf"
         );
-      } else if (downloadableFile.url) {
-        // Use direct download URL if available
-        console.log("Using direct download URL");
+      } 
+      // PRIORITY 4: If we have pdfData with direct_download_url
+      else if (message.pdfData && message.pdfData.direct_download_url) {
+        console.log("🔗 Using pdfData direct_download_url:", message.pdfData.direct_download_url);
         success = await downloadFile(
-          downloadableFile.url,
+          message.pdfData.direct_download_url,
           downloadableFile.filename
         );
-      } else if (downloadableFile.content) {
-        // Fallback to generating PDF from text content
-        console.log("Using fallback PDF generation");
+      }
+      // FALLBACK: Generate PDF from text content
+      else if (downloadableFile.content) {
+        console.log("📝 Using fallback PDF generation from content");
         const pdfUrl = generateReportPDF(
           downloadableFile.content,
           userId,
@@ -126,13 +185,30 @@ const MessageBubble: React.FC<{
         success = await downloadFile(pdfUrl, downloadableFile.filename);
         window.URL.revokeObjectURL(pdfUrl);
       }
+      // No valid download option found
+      else {
+        console.error("❌ No valid download option found:", {
+          hasDownloadableFile: !!downloadableFile,
+          hasUrl: !!downloadableFile.url,
+          hasPdfData: !!message.pdfData,
+          hasMessageData: !!message.data,
+          downloadableFile: downloadableFile,
+          messagePdfData: message.pdfData,
+          messageData: message.data
+        });
+        throw new Error("No valid download source available");
+      }
 
       if (success) {
+        console.log("✅ Download completed successfully");
         setDownloadSuccess(true);
         setTimeout(() => setDownloadSuccess(false), 3000);
+      } else {
+        throw new Error("Download operation returned false");
       }
     } catch (error) {
-      console.error("Download failed:", error);
+      console.error("❌ Download failed:", error);
+      // You could add a toast notification here to inform the user
     } finally {
       setIsDownloading(false);
     }
@@ -176,6 +252,9 @@ const MessageBubble: React.FC<{
                         {formatFileSize(downloadableFile.size)}
                       </div>
                     )}
+                    <div className="pdf-preview-text">
+                      📄 PDF Report ready for download
+                    </div>
                   </div>
                 </div>
                 <IonButton
@@ -200,7 +279,7 @@ const MessageBubble: React.FC<{
                   ) : (
                     <>
                       <IonIcon icon={downloadOutline} />
-                      Download
+                      Download PDF
                     </>
                   )}
                 </IonButton>
@@ -341,7 +420,9 @@ const Chat: React.FC = () => {
 
         // If we have a session but no messages, or if we have no session at all
         if (allMessages.length === 0) {
-          console.log("🆕 No existing messages found - showing welcome message");
+          console.log(
+            "🆕 No existing messages found - showing welcome message"
+          );
           setShowWelcomeMessage(true);
         } else {
           console.log(`✅ Found ${allMessages.length} existing messages`);
@@ -385,7 +466,8 @@ const Chat: React.FC = () => {
         pdf_base64: string;
         pdf_size: number;
         direct_download_url: string;
-      }
+      },
+      data?: Record<string, unknown>
     ) => {
       // Create a more unique ID to prevent duplicate keys
       const timestamp = performance.now(); // More precise than Date.now()
@@ -403,7 +485,30 @@ const Chat: React.FC = () => {
         timestamp: new Date(),
         messageOrder: 1, // Will be updated when saved
         ...(pdfData && { pdfData }), // Add PDF data if available
+        ...(data && { data }), // Add full data object if available
       };
+
+      console.log("📝 addMessage: Creating new message with data:", {
+        messageText: text.substring(0, 50) + "...",
+        isBot: isBot,
+        hasPdfData: !!newChatMessage.pdfData,
+        hasData: !!newChatMessage.data,
+        pdfDataPreview: newChatMessage.pdfData,
+        dataPreview: newChatMessage.data,
+        inputData: data,
+        inputPdfData: pdfData
+      });
+
+      // CRITICAL DEBUG: Verify the data is correctly set in newChatMessage
+      console.log("🔥 ADD MESSAGE - Data verification:", {
+        inputDataParam: data,
+        newMessageHasData: !!newChatMessage.data,
+        newMessageDataContent: newChatMessage.data,
+        newMessageDataKeys: newChatMessage.data ? Object.keys(newChatMessage.data) : [],
+        dataSpreadWorked: data === newChatMessage.data,
+        inputDataStringified: data ? JSON.stringify(data) : "NO INPUT DATA",
+        newMessageDataStringified: newChatMessage.data ? JSON.stringify(newChatMessage.data) : "NO MESSAGE DATA"
+      });
 
       // Update the message groups by adding the new message to today's group
       setMessageGroups((prevGroups) => {
@@ -452,7 +557,13 @@ const Chat: React.FC = () => {
             ...newChatMessage,
             messageOrder: totalMessages,
           });
-          console.log("Message saved to Firestore");
+          console.log("✅ Message saved to Firestore successfully:", {
+            hasData: !!newChatMessage.data,
+            dataKeys: newChatMessage.data ? Object.keys(newChatMessage.data) : [],
+            hasPdfData: !!newChatMessage.pdfData,
+            messageText: newChatMessage.text.substring(0, 50) + "...",
+            savedMessageData: newChatMessage
+          });
         } catch (error) {
           console.error("Error saving message to Firestore:", error);
         }
@@ -643,6 +754,13 @@ const Chat: React.FC = () => {
       setChatLoading(false);
 
       if (botResponse) {
+        console.log("🤖 Raw bot response received from askAiAssistant:", {
+          type: typeof botResponse,
+          isArray: Array.isArray(botResponse),
+          keys: typeof botResponse === 'object' && botResponse !== null ? Object.keys(botResponse) : [],
+          fullResponse: botResponse
+        });
+
         let responseText: string = "";
         let pdfData:
           | {
@@ -651,8 +769,9 @@ const Chat: React.FC = () => {
               direct_download_url: string;
             }
           | undefined;
+        let responseData: Record<string, unknown> | undefined;
 
-        // Handle backend response format: {status, message, data, pdf_data}
+        // NEW: Handle the updated askAiAssistant response format: {message, pdfData, data}
         if (
           typeof botResponse === "object" &&
           botResponse !== null &&
@@ -664,41 +783,47 @@ const Chat: React.FC = () => {
               pdf_base64: string;
               pdf_size: number;
               direct_download_url: string;
-            };
-            pdf_data?: {
-              pdf_base64: string;
-              pdf_size: number;
-              direct_download_url: string;
-            };
-            data?: unknown;
+            } | null;
+            data?: Record<string, unknown> | null;
           };
+          
           responseText = response.message;
-          // PDF data can be in either 'pdfData' or 'pdf_data' field
-          pdfData = response.pdfData || response.pdf_data;
+          pdfData = response.pdfData || undefined;
+          responseData = response.data || undefined;
+
+          console.log("🔍 askAiAssistant response analysis:", {
+            hasMessage: !!response.message,
+            hasPdfData: !!response.pdfData,
+            hasData: !!response.data,
+            responseKeys: Object.keys(response),
+            dataContent: response.data,
+            fullResponse: response
+          });
         } else if (typeof botResponse === "string") {
           responseText = botResponse;
-        } else if (typeof botResponse === "object" && botResponse !== null) {
-          const response = botResponse as Record<string, unknown>;
-          responseText =
-            String(response.message || "") ||
-            String(response.response || "") ||
-            String(response.text || "") ||
-            String(response.data || "") ||
-            JSON.stringify(botResponse);
-          // Also check for pdf_data in general object response
-          if (response.pdf_data && typeof response.pdf_data === "object") {
-            pdfData = response.pdf_data as {
-              pdf_base64: string;
-              pdf_size: number;
-              direct_download_url: string;
-            };
-          }
         } else {
           responseText = "I received an unexpected response format.";
         }
 
         if (responseText.trim()) {
-          await addMessage(responseText, true, pdfData);
+          console.log("🔗 Saving message with data:", {
+            hasResponseData: !!responseData,
+            responseDataKeys: responseData ? Object.keys(responseData) : [],
+            hasPdfData: !!pdfData,
+            responseDataPreview: responseData,
+            messageText: responseText.substring(0, 100) + "...",
+            fullResponseData: responseData
+          });
+          
+          // Debug: Let's verify what we're actually passing to addMessage
+          console.log("📝 About to call addMessage with:", {
+            text: responseText.substring(0, 50) + "...",
+            isBot: true,
+            pdfData: pdfData,
+            data: responseData
+          });
+          
+          await addMessage(responseText, true, pdfData, responseData);
         } else {
           await addMessage(
             "I apologize, but I couldn't process your request at the moment. Please try again.",
@@ -902,22 +1027,38 @@ What would you like to do today?`,
               {(messageGroups.length > 1 || group.dateLabel !== "Today") && (
                 <DateSeparator dateLabel={group.dateLabel} />
               )}
-              {group.messages.map((msg) => (
-                <MessageBubble
-                  key={msg.id}
-                  message={{
-                    id: msg.id || Date.now().toString(),
-                    text: msg.text,
-                    isBot: msg.isBot,
-                    timestamp:
-                      msg.id === "typing-indicator"
-                        ? "typing"
-                        : getTimeString(msg.timestamp),
-                  }}
-                  userId={user?.id || undefined}
-                  sessionId={currentSessionId || undefined}
-                />
-              ))}
+              {group.messages.map((msg) => {
+                // Debug logging for each message being rendered
+                if (msg.isBot && (msg.pdfData || msg.data)) {
+                  console.log("🖼️ Rendering bot message with data:", {
+                    messageId: msg.id,
+                    hasData: !!msg.data,
+                    hasPdfData: !!msg.pdfData,
+                    dataKeys: msg.data ? Object.keys(msg.data) : [],
+                    pdfDataPreview: msg.pdfData,
+                    dataPreview: msg.data
+                  });
+                }
+                
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    message={{
+                      id: msg.id || Date.now().toString(),
+                      text: msg.text,
+                      isBot: msg.isBot,
+                      timestamp:
+                        msg.id === "typing-indicator"
+                          ? "typing"
+                          : getTimeString(msg.timestamp),
+                      pdfData: msg.pdfData, // Pass through the PDF data
+                      data: msg.data, // Pass through the full data object
+                    }}
+                    userId={user?.id || undefined}
+                    sessionId={currentSessionId || undefined}
+                  />
+                );
+              })}
             </React.Fragment>
           ))}
 

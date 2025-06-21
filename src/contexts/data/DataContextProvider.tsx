@@ -443,66 +443,80 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]
   );
 
-  const getAllProducts = useCallback(async (forceRefresh: boolean = false) => {
-    try {
-      setIsProductsLoading(true);
+  const getAllProducts = useCallback(
+    async (forceRefresh: boolean = false) => {
+      try {
+        setIsProductsLoading(true);
 
-      if (!user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      console.log(`🔄 ${forceRefresh ? 'Force refreshing' : 'Loading'} products for user:`, user.id);
-
-      // Query products by Firebase user ID first (primary method)
-      let docs_ref = await queryUserProductsByUserId(user.id);
-
-      // If no results found with userId, fallback to profile-based query for backward compatibility
-      if (docs_ref.empty) {
-        console.log(
-          "No products found with userId, trying profile-based query..."
-        );
-        const userProfile = await getUserProfile();
-        if (userProfile) {
-          docs_ref = await queryUserProducts(userProfile.id);
+        if (!user?.id) {
+          throw new Error("User not authenticated");
         }
-      }
 
-      const products: Partial<StockItem>[] = [];
-      docs_ref.forEach((product) => {
-        const productData = product.data();
-        // Use standardized stock_quantity field first, fallback to legacy quantity field
-        const currentQuantity = productData.stock_quantity || productData.quantity || 0;
-        
-        console.log(`📊 Product data for ${productData.product_name || productData.name}:`, {
-          id: product.id,
-          stock_quantity: productData.stock_quantity,
-          quantity: productData.quantity,
-          finalQuantity: currentQuantity,
-          status: productData.status
+        console.log(
+          `🔄 ${
+            forceRefresh ? "Force refreshing" : "Loading"
+          } products for user:`,
+          user.id
+        );
+
+        // Query products by Firebase user ID first (primary method)
+        let docs_ref = await queryUserProductsByUserId(user.id);
+
+        // If no results found with userId, fallback to profile-based query for backward compatibility
+        if (docs_ref.empty) {
+          console.log(
+            "No products found with userId, trying profile-based query..."
+          );
+          const userProfile = await getUserProfile();
+          if (userProfile) {
+            docs_ref = await queryUserProducts(userProfile.id);
+          }
+        }
+
+        const products: Partial<StockItem>[] = [];
+        docs_ref.forEach((product) => {
+          const productData = product.data();
+          // Use standardized stock_quantity field first, fallback to legacy quantity field
+          const currentQuantity =
+            productData.stock_quantity || productData.quantity || 0;
+
+          console.log(
+            `📊 Product data for ${
+              productData.product_name || productData.name
+            }:`,
+            {
+              id: product.id,
+              stock_quantity: productData.stock_quantity,
+              quantity: productData.quantity,
+              finalQuantity: currentQuantity,
+              status: productData.status,
+            }
+          );
+
+          const updatedProd: Partial<StockItem> = {
+            id: product.id,
+            ...productData,
+            // Ensure quantity field is consistent for StockItem interface
+            quantity: currentQuantity,
+            // Recalculate status based on current quantity
+            status: calculateStockStatus(currentQuantity),
+          };
+          products.push(updatedProd);
         });
-        
-        const updatedProd: Partial<StockItem> = {
-          id: product.id,
-          ...productData,
-          // Ensure quantity field is consistent for StockItem interface
-          quantity: currentQuantity,
-          // Recalculate status based on current quantity
-          status: calculateStockStatus(currentQuantity),
-        };
-        products.push(updatedProd);
-      });
-      setInventory(products);
-      setIsProductsLoading(false);
-      setError(null);
+        setInventory(products);
+        setIsProductsLoading(false);
+        setError(null);
 
-      return products;
-    } catch (error) {
-      console.error(error);
-      setError(error);
-      setIsProductsLoading(false);
-      return null;
-    }
-  }, [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]);
+        return products;
+      } catch (error) {
+        console.error(error);
+        setError(error);
+        setIsProductsLoading(false);
+        return null;
+      }
+    },
+    [user?.id, queryUserProductsByUserId, getUserProfile, queryUserProducts]
+  );
 
   // Convenience method to refresh inventory (force refresh)
   const refreshInventory = useCallback(async () => {
@@ -744,6 +758,15 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           pdf_size: number;
           direct_download_url: string;
         } | null = null;
+        let responseData: Record<string, unknown> | null = null;
+
+        console.log("🔍 askAiAssistant - Raw backend response:", {
+          type: typeof botResponse,
+          keys: typeof botResponse === 'object' && botResponse !== null ? Object.keys(botResponse) : [],
+          hasData: botResponse && typeof botResponse === 'object' && 'data' in botResponse,
+          dataContent: botResponse && typeof botResponse === 'object' ? botResponse.data : undefined,
+          fullResponse: botResponse
+        });
 
         if (typeof botResponse === "string") {
           responseText = botResponse;
@@ -752,6 +775,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           if (botResponse.status === "success" && botResponse.message) {
             responseText = botResponse.message;
             pdfData = botResponse.pdf_data || null;
+            responseData = botResponse.data || null; // FIXED: Extract the data object
           } else {
             // Fallback to other possible response structures
             responseText =
@@ -761,15 +785,24 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
               botResponse?.content ||
               JSON.stringify(botResponse);
             pdfData = botResponse?.pdf_data || null;
+            responseData = botResponse?.data || null; // FIXED: Extract the data object
           }
         } else {
           responseText = "I received an unexpected response format.";
         }
 
-        // Return both message and PDF data if available
+        console.log("🔍 askAiAssistant - Extracted data:", {
+          hasResponseData: !!responseData,
+          responseDataKeys: responseData ? Object.keys(responseData) : [],
+          responseDataContent: responseData,
+          hasPdfData: !!pdfData
+        });
+
+        // Return message, PDF data, AND data object
         return {
           message: responseText,
           pdfData: pdfData,
+          data: responseData, // FIXED: Include the data object in the return
         };
       } catch (error) {
         setError(error);
@@ -866,6 +899,21 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           timestamp: messageData.timestamp.toISOString(),
           messageOrder: messageData.messageOrder,
           isBot: messageData.isBot,
+          hasData: !!messageData.data,
+          dataKeys: messageData.data ? Object.keys(messageData.data) : [],
+          hasPdfData: !!messageData.pdfData,
+          fullMessageData: messageData
+        });
+
+        // CRITICAL DEBUG: Log the exact data being sent to Firestore
+        console.log("🔥 FIRESTORE SAVE - Exact data being saved:", {
+          messageText: messageData.text.substring(0, 100),
+          hasDataField: 'data' in messageData,
+          dataFieldValue: messageData.data,
+          dataFieldType: typeof messageData.data,
+          dataIsNull: messageData.data === null,
+          dataIsUndefined: messageData.data === undefined,
+          dataStringified: messageData.data ? JSON.stringify(messageData.data) : "NO DATA"
         });
 
         const messageDocRef = await addDoc(
@@ -916,6 +964,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
             updatedAt: data.updatedAt.toDate(),
             isReceipt: data.isReceipt || false, // Include receipt flag
             transactionId: data.transactionId || undefined, // Include transaction ID
+            pdfData: data.pdfData || undefined, // Include PDF data
           });
         });
 
@@ -977,7 +1026,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        allMessages.push({
+        const message = {
           id: doc.id,
           profileId: data.profileId,
           sessionId: data.sessionId,
@@ -987,7 +1036,22 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           messageOrder: data.messageOrder,
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
-        });
+          pdfData: data.pdfData || undefined, // Include PDF data
+          data: data.data || undefined, // Include full data object
+        };
+        
+        // Debug logging for messages with data
+        if (data.data) {
+          console.log("📥 Loading message with data from Firestore:", {
+            messageId: doc.id,
+            hasData: !!data.data,
+            dataKeys: Object.keys(data.data),
+            dataPreview: data.data,
+            messageText: data.text.substring(0, 50) + "..."
+          });
+        }
+        
+        allMessages.push(message);
       });
 
       setError(null);
@@ -1147,6 +1211,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           messageOrder: data.messageOrder,
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
+          pdfData: data.pdfData || undefined, // Include PDF data
         });
       });
 
@@ -1331,21 +1396,25 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
               if (productDoc.exists()) {
                 const currentData = productDoc.data();
                 // Check both standardized and legacy quantity fields
-                const currentQuantity = currentData.stock_quantity || currentData.quantity || 0;
+                const currentQuantity =
+                  currentData.stock_quantity || currentData.quantity || 0;
                 const newQuantity = Math.max(
                   0,
                   currentQuantity - item.quantity
                 );
 
-                console.log(`📊 Stock update details for ${item.productName}:`, {
-                  productId: item.productId,
-                  currentStockQuantity: currentData.stock_quantity,
-                  currentQuantity: currentData.quantity,
-                  finalCurrentQuantity: currentQuantity,
-                  soldQuantity: item.quantity,
-                  newQuantity: newQuantity,
-                  reduction: currentQuantity - newQuantity
-                });
+                console.log(
+                  `📊 Stock update details for ${item.productName}:`,
+                  {
+                    productId: item.productId,
+                    currentStockQuantity: currentData.stock_quantity,
+                    currentQuantity: currentData.quantity,
+                    finalCurrentQuantity: currentQuantity,
+                    soldQuantity: item.quantity,
+                    newQuantity: newQuantity,
+                    reduction: currentQuantity - newQuantity,
+                  }
+                );
 
                 // Update both standardized and legacy fields for consistency
                 await updateDoc(productRef, {
@@ -1360,7 +1429,9 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
                   `📦 Updated stock for ${item.productName}: ${currentQuantity} -> ${newQuantity} (reduced by ${item.quantity} items)`
                 );
               } else {
-                console.error(`Product with ID ${item.productId} not found in Firestore`);
+                console.error(
+                  `Product with ID ${item.productId} not found in Firestore`
+                );
               }
             } catch (stockError) {
               console.error(

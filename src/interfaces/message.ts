@@ -21,6 +21,7 @@ export interface ChatMessage {
         pdf_size: number;
         direct_download_url: string;
     };
+    data?: Record<string, unknown>; // Store the full backend response data object
 }
 
 export interface MessageData {
@@ -34,6 +35,12 @@ export interface MessageData {
     updatedAt: Date;
     isReceipt?: boolean; // Add this field
     transactionId?: string; // Add this field
+    pdfData?: {
+        pdf_base64: string;
+        pdf_size: number;
+        direct_download_url: string;
+    };
+    data?: Record<string, unknown>; // Store the full backend response data object
 }
 
 export interface MessageGroup {
