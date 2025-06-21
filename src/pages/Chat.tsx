@@ -89,7 +89,7 @@ const MessageBubble: React.FC<{
       hasDownloadButton: !!downloadableFile,
       isTypingIndicator: message.id === "typing-indicator",
     });
-    
+
     // Additional debug for download URL detection
     if (message.data) {
       console.log("🔍 DOWNLOAD DEBUG - Message data analysis:", {
@@ -100,7 +100,13 @@ const MessageBubble: React.FC<{
         serverUrl: message.data.server_url,
         pdfUrl: message.data.pdf_url,
         url: message.data.url,
-        hasAnyUrl: !!(message.data.download_url || message.data.firebase_url || message.data.server_url || message.data.pdf_url || message.data.url)
+        hasAnyUrl: !!(
+          message.data.download_url ||
+          message.data.firebase_url ||
+          message.data.server_url ||
+          message.data.pdf_url ||
+          message.data.url
+        ),
       });
     }
   }
@@ -120,7 +126,9 @@ const MessageBubble: React.FC<{
         messageData: message.data,
         hasBase64Data: !!downloadableFile.base64Data,
         hasUrl: !!downloadableFile.url,
-        urlPreview: downloadableFile.url ? downloadableFile.url.substring(0, 100) + "..." : "No URL"
+        urlPreview: downloadableFile.url
+          ? downloadableFile.url.substring(0, 100) + "..."
+          : "No URL",
       });
 
       // PRIORITY 1: If we have a direct download URL from data object (Firebase Storage)
@@ -128,20 +136,27 @@ const MessageBubble: React.FC<{
         console.log("🔥 Using direct download URL from data object:", {
           url: downloadableFile.url,
           filename: downloadableFile.filename,
-          isFirebaseStorage: downloadableFile.url.includes('storage.googleapis.com') || downloadableFile.url.includes('firebasestorage.app')
+          isFirebaseStorage:
+            downloadableFile.url.includes("storage.googleapis.com") ||
+            downloadableFile.url.includes("firebasestorage.app"),
         });
-        
+
         // For Firebase Storage URLs, test accessibility first
-        if (downloadableFile.url.includes('storage.googleapis.com') || downloadableFile.url.includes('firebasestorage.app')) {
+        if (
+          downloadableFile.url.includes("storage.googleapis.com") ||
+          downloadableFile.url.includes("firebasestorage.app")
+        ) {
           console.log("🧪 Testing Firebase Storage URL accessibility first...");
           const testResult = await testFirebaseStorageUrl(downloadableFile.url);
           console.log("🧪 Firebase URL test result:", testResult);
-          
+
           if (!testResult.accessible) {
-            console.warn("⚠️ Firebase URL test failed, but proceeding with download attempt anyway");
+            console.warn(
+              "⚠️ Firebase URL test failed, but proceeding with download attempt anyway"
+            );
           }
         }
-        
+
         success = await downloadFile(
           downloadableFile.url,
           downloadableFile.filename
@@ -164,10 +179,13 @@ const MessageBubble: React.FC<{
           downloadableFile.filename,
           "application/pdf"
         );
-      } 
+      }
       // PRIORITY 4: If we have pdfData with direct_download_url
       else if (message.pdfData && message.pdfData.direct_download_url) {
-        console.log("🔗 Using pdfData direct_download_url:", message.pdfData.direct_download_url);
+        console.log(
+          "🔗 Using pdfData direct_download_url:",
+          message.pdfData.direct_download_url
+        );
         success = await downloadFile(
           message.pdfData.direct_download_url,
           downloadableFile.filename
@@ -194,7 +212,7 @@ const MessageBubble: React.FC<{
           hasMessageData: !!message.data,
           downloadableFile: downloadableFile,
           messagePdfData: message.pdfData,
-          messageData: message.data
+          messageData: message.data,
         });
         throw new Error("No valid download source available");
       }
@@ -496,7 +514,7 @@ const Chat: React.FC = () => {
         pdfDataPreview: newChatMessage.pdfData,
         dataPreview: newChatMessage.data,
         inputData: data,
-        inputPdfData: pdfData
+        inputPdfData: pdfData,
       });
 
       // CRITICAL DEBUG: Verify the data is correctly set in newChatMessage
@@ -504,10 +522,14 @@ const Chat: React.FC = () => {
         inputDataParam: data,
         newMessageHasData: !!newChatMessage.data,
         newMessageDataContent: newChatMessage.data,
-        newMessageDataKeys: newChatMessage.data ? Object.keys(newChatMessage.data) : [],
+        newMessageDataKeys: newChatMessage.data
+          ? Object.keys(newChatMessage.data)
+          : [],
         dataSpreadWorked: data === newChatMessage.data,
         inputDataStringified: data ? JSON.stringify(data) : "NO INPUT DATA",
-        newMessageDataStringified: newChatMessage.data ? JSON.stringify(newChatMessage.data) : "NO MESSAGE DATA"
+        newMessageDataStringified: newChatMessage.data
+          ? JSON.stringify(newChatMessage.data)
+          : "NO MESSAGE DATA",
       });
 
       // Update the message groups by adding the new message to today's group
@@ -559,10 +581,12 @@ const Chat: React.FC = () => {
           });
           console.log("✅ Message saved to Firestore successfully:", {
             hasData: !!newChatMessage.data,
-            dataKeys: newChatMessage.data ? Object.keys(newChatMessage.data) : [],
+            dataKeys: newChatMessage.data
+              ? Object.keys(newChatMessage.data)
+              : [],
             hasPdfData: !!newChatMessage.pdfData,
             messageText: newChatMessage.text.substring(0, 50) + "...",
-            savedMessageData: newChatMessage
+            savedMessageData: newChatMessage,
           });
         } catch (error) {
           console.error("Error saving message to Firestore:", error);
@@ -757,8 +781,11 @@ const Chat: React.FC = () => {
         console.log("🤖 Raw bot response received from askAiAssistant:", {
           type: typeof botResponse,
           isArray: Array.isArray(botResponse),
-          keys: typeof botResponse === 'object' && botResponse !== null ? Object.keys(botResponse) : [],
-          fullResponse: botResponse
+          keys:
+            typeof botResponse === "object" && botResponse !== null
+              ? Object.keys(botResponse)
+              : [],
+          fullResponse: botResponse,
         });
 
         let responseText: string = "";
@@ -786,7 +813,7 @@ const Chat: React.FC = () => {
             } | null;
             data?: Record<string, unknown> | null;
           };
-          
+
           responseText = response.message;
           pdfData = response.pdfData || undefined;
           responseData = response.data || undefined;
@@ -797,7 +824,7 @@ const Chat: React.FC = () => {
             hasData: !!response.data,
             responseKeys: Object.keys(response),
             dataContent: response.data,
-            fullResponse: response
+            fullResponse: response,
           });
         } else if (typeof botResponse === "string") {
           responseText = botResponse;
@@ -812,17 +839,17 @@ const Chat: React.FC = () => {
             hasPdfData: !!pdfData,
             responseDataPreview: responseData,
             messageText: responseText.substring(0, 100) + "...",
-            fullResponseData: responseData
+            fullResponseData: responseData,
           });
-          
+
           // Debug: Let's verify what we're actually passing to addMessage
           console.log("📝 About to call addMessage with:", {
             text: responseText.substring(0, 50) + "...",
             isBot: true,
             pdfData: pdfData,
-            data: responseData
+            data: responseData,
           });
-          
+
           await addMessage(responseText, true, pdfData, responseData);
         } else {
           await addMessage(
@@ -1036,10 +1063,10 @@ What would you like to do today?`,
                     hasPdfData: !!msg.pdfData,
                     dataKeys: msg.data ? Object.keys(msg.data) : [],
                     pdfDataPreview: msg.pdfData,
-                    dataPreview: msg.data
+                    dataPreview: msg.data,
                   });
                 }
-                
+
                 return (
                   <MessageBubble
                     key={msg.id}

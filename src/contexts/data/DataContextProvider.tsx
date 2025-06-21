@@ -762,10 +762,19 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         console.log("🔍 askAiAssistant - Raw backend response:", {
           type: typeof botResponse,
-          keys: typeof botResponse === 'object' && botResponse !== null ? Object.keys(botResponse) : [],
-          hasData: botResponse && typeof botResponse === 'object' && 'data' in botResponse,
-          dataContent: botResponse && typeof botResponse === 'object' ? botResponse.data : undefined,
-          fullResponse: botResponse
+          keys:
+            typeof botResponse === "object" && botResponse !== null
+              ? Object.keys(botResponse)
+              : [],
+          hasData:
+            botResponse &&
+            typeof botResponse === "object" &&
+            "data" in botResponse,
+          dataContent:
+            botResponse && typeof botResponse === "object"
+              ? botResponse.data
+              : undefined,
+          fullResponse: botResponse,
         });
 
         if (typeof botResponse === "string") {
@@ -795,7 +804,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           hasResponseData: !!responseData,
           responseDataKeys: responseData ? Object.keys(responseData) : [],
           responseDataContent: responseData,
-          hasPdfData: !!pdfData
+          hasPdfData: !!pdfData,
         });
 
         // Return message, PDF data, AND data object
@@ -902,18 +911,20 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           hasData: !!messageData.data,
           dataKeys: messageData.data ? Object.keys(messageData.data) : [],
           hasPdfData: !!messageData.pdfData,
-          fullMessageData: messageData
+          fullMessageData: messageData,
         });
 
         // CRITICAL DEBUG: Log the exact data being sent to Firestore
         console.log("🔥 FIRESTORE SAVE - Exact data being saved:", {
           messageText: messageData.text.substring(0, 100),
-          hasDataField: 'data' in messageData,
+          hasDataField: "data" in messageData,
           dataFieldValue: messageData.data,
           dataFieldType: typeof messageData.data,
           dataIsNull: messageData.data === null,
           dataIsUndefined: messageData.data === undefined,
-          dataStringified: messageData.data ? JSON.stringify(messageData.data) : "NO DATA"
+          dataStringified: messageData.data
+            ? JSON.stringify(messageData.data)
+            : "NO DATA",
         });
 
         const messageDocRef = await addDoc(
@@ -1039,7 +1050,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           pdfData: data.pdfData || undefined, // Include PDF data
           data: data.data || undefined, // Include full data object
         };
-        
+
         // Debug logging for messages with data
         if (data.data) {
           console.log("📥 Loading message with data from Firestore:", {
@@ -1047,10 +1058,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
             hasData: !!data.data,
             dataKeys: Object.keys(data.data),
             dataPreview: data.data,
-            messageText: data.text.substring(0, 50) + "..."
+            messageText: data.text.substring(0, 50) + "...",
           });
         }
-        
+
         allMessages.push(message);
       });
 
