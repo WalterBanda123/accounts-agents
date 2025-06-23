@@ -49,6 +49,7 @@ export interface DataContextInterface {
     saveMessage: (message: Omit<ChatMessage, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>,
     loadMessages: (sessionId: string) => Promise<ChatMessage[]>,
     loadAllUserMessages: () => Promise<ChatMessage[]>,
+    loadAllUserTransactionMessages: () => Promise<ChatMessage[]>,
     deleteMessage: (messageId: string) => Promise<void>,
     // Transaction management functions
     createTransaction: (
@@ -67,6 +68,7 @@ export interface DataContextInterface {
     // Transaction chat functions
     getTransactionChat: (transactionId: string) => Promise<ChatMessage[]>,
     getTransactionChatSummary: (transactionId: string) => Promise<TransactionChatSummary | null>,
+    saveTransactionChatMessages: (transactionId: string, messages: ChatMessage[]) => Promise<void>,
     // Notification management functions
     createNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>,
     createTransactionNotification: (transaction: Transaction) => Promise<string | null>,
@@ -116,6 +118,7 @@ const DataContext = React.createContext<DataContextInterface>({
     saveMessage: async () => Promise.resolve(''),
     loadMessages: async () => Promise.resolve([]),
     loadAllUserMessages: async () => Promise.resolve([]),
+    loadAllUserTransactionMessages: async () => Promise.resolve([]),
     deleteMessage: async () => Promise.resolve(),
     // Transaction management function defaults
     createTransaction: async () => Promise.resolve({ success: false, error: 'Not implemented' }),
@@ -127,6 +130,7 @@ const DataContext = React.createContext<DataContextInterface>({
     // Transaction chat function defaults
     getTransactionChat: async () => Promise.resolve([]),
     getTransactionChatSummary: async () => Promise.resolve(null),
+    saveTransactionChatMessages: async () => Promise.resolve(),
     // Notification management function defaults
     createNotification: async () => Promise.resolve(null),
     createTransactionNotification: async () => Promise.resolve(null),

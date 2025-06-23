@@ -62,9 +62,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
   );
 
   // Independent session ID for miscellaneous activities
-  const [miscActivitiesSessionId, setMiscActivitiesSessionId] = useState<
-    string | null
-  >(() => {
+  const [miscActivitiesSessionId] = useState<string | null>(() => {
     // Initialize from sessionStorage if available and not expired
     return sessionStorageUtils.getMiscActivitiesSession();
   });
@@ -373,11 +371,25 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           return {} as Partial<StockItem>;
         }
 
-        const product = {
+        const currentQuantity = productData.stock_quantity || productData.quantity || 0;
+        const product: Partial<StockItem> = {
           id: doc_ref.id,
-          ...productData,
-          // Recalculate status based on current quantity
-          status: calculateStockStatus(productData.quantity || 0),
+          // Map standardized fields back to StockItem interface
+          name: productData.product_name || productData.name,
+          description: productData.description || "",
+          category: productData.category || "",
+          subcategory: productData.subcategory || "",
+          brand: productData.brand || "",
+          unitPrice: productData.unit_price || productData.unitPrice || 0,
+          quantity: currentQuantity,
+          unit: productData.unit_of_measure || productData.unit || "pcs",
+          size: productData.size ? productData.size.toString() : "",
+          status: calculateStockStatus(currentQuantity),
+          lastRestocked: productData.lastRestocked || productData.updated_at?.split('T')[0] || productData.created_at?.split('T')[0] || "Unknown",
+          supplier: productData.supplier || "",
+          barcode: productData.barcode || productData.sku || "",
+          image: productData.image || "",
+          store_id: productData.store_id,
         };
         setIsProductsLoading(false);
         setError(null);
@@ -413,9 +425,27 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         const allProducts: Partial<StockItem>[] = [];
         docs_ref.forEach((product) => {
+          const productData = product.data();
+          const currentQuantity = productData.stock_quantity || productData.quantity || 0;
+          
           const updatedProd: Partial<StockItem> = {
             id: product.id,
-            ...product.data(),
+            // Map standardized fields back to StockItem interface
+            name: productData.product_name || productData.name,
+            description: productData.description || "",
+            category: productData.category || "",
+            subcategory: productData.subcategory || "",
+            brand: productData.brand || "",
+            unitPrice: productData.unit_price || productData.unitPrice || 0,
+            quantity: currentQuantity,
+            unit: productData.unit_of_measure || productData.unit || "pcs",
+            size: productData.size ? productData.size.toString() : "",
+            status: calculateStockStatus(currentQuantity),
+            lastRestocked: productData.lastRestocked || productData.updated_at?.split('T')[0] || productData.created_at?.split('T')[0] || "Unknown",
+            supplier: productData.supplier || "",
+            barcode: productData.barcode || productData.sku || "",
+            image: productData.image || "",
+            store_id: productData.store_id,
           };
           allProducts.push(updatedProd);
         });
@@ -495,11 +525,22 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
           const updatedProd: Partial<StockItem> = {
             id: product.id,
-            ...productData,
-            // Ensure quantity field is consistent for StockItem interface
+            // Map standardized fields back to StockItem interface
+            name: productData.product_name || productData.name,
+            description: productData.description || "",
+            category: productData.category || "",
+            subcategory: productData.subcategory || "",
+            brand: productData.brand || "",
+            unitPrice: productData.unit_price || productData.unitPrice || 0,
             quantity: currentQuantity,
-            // Recalculate status based on current quantity
+            unit: productData.unit_of_measure || productData.unit || "pcs", // Use standardized field first, fallback to legacy
+            size: productData.size ? productData.size.toString() : "",
             status: calculateStockStatus(currentQuantity),
+            lastRestocked: productData.lastRestocked || productData.updated_at?.split('T')[0] || productData.created_at?.split('T')[0] || "Unknown",
+            supplier: productData.supplier || "",
+            barcode: productData.barcode || productData.sku || "",
+            image: productData.image || "",
+            store_id: productData.store_id,
           };
           products.push(updatedProd);
         });
@@ -1077,142 +1118,31 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [user?.id]);
 
-  // Miscellaneous Activities Session Management Functions
-  const getMiscActivitiesSession = useCallback(async () => {
-    try {
-      setIsLoading(true);
-
-      if (!user?.id) {
-        setIsLoading(false);
-        return null;
-      }
-
-      const sessionsRef = collection(fStore, "sessions");
-      const q = query(
-        sessionsRef,
-        where("profileId", "==", user.id),
-        where("appName", "==", "misc_activities") // Only get misc activities sessions
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      setIsLoading(false);
-      setError(null);
-
-      if (querySnapshot.empty) {
-        return null;
-      }
-
-      // Sort sessions by createdAt in JavaScript to get the most recent
-      const sessions = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        data: doc.data(),
-        ref: doc.ref,
-      }));
-
-      // Sort by createdAt descending (most recent first)
-      sessions.sort((a, b) => {
-        const aTime = a.data.createdAt?.toDate?.()?.getTime() || 0;
-        const bTime = b.data.createdAt?.toDate?.()?.getTime() || 0;
-        return bTime - aTime;
-      });
-
-      // Get the most recent session (first document) - we'll reuse it regardless of active status
-      const sessionDoc = sessions[0];
-      const sessionDocData = sessionDoc.data;
-      const sessionData = { sessionId: sessionDoc.id, ...sessionDocData };
-
-      // Reactivate the session if it's not active
-      if (!sessionDocData.isActive) {
-        await updateDoc(sessionDoc.ref, {
-          isActive: true,
-          updatedAt: new Date(),
-        });
-      }
-
-      // Update misc activities session ID
-      setMiscActivitiesSessionId(sessionDoc.id);
-
-      return sessionData;
-    } catch (error) {
-      console.error("Error getting misc activities session:", error);
-      setError(error);
-      setIsLoading(false);
-      return null;
-    }
-  }, [user?.id]);
-
-  const createMiscActivitiesSession = useCallback(async (): Promise<string> => {
-    try {
-      setIsChatLoading(true);
-
-      const userId = user?.id;
-
-      if (!userId) {
-        throw new Error("User not authenticated");
-      }
-
-      // Always check for existing session first
-      const existingSession = await getMiscActivitiesSession();
-      if (existingSession && existingSession.sessionId) {
-        setIsChatLoading(false);
-        return existingSession.sessionId;
-      }
-
-      // Only create a new session if no session exists at all
-      const sessionData = {
-        profileId: userId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        appName: "misc_activities",
-        isActive: true,
-      };
-
-      const sessionDocRef = await addDoc(
-        collection(fStore, "sessions"),
-        sessionData
-      );
-
-      const sessionId = sessionDocRef.id;
-
-      setMiscActivitiesSessionId(sessionId);
-      setError(null);
-      setIsChatLoading(false);
-
-      return sessionId;
-    } catch (error) {
-      setError(error);
-      setIsChatLoading(false);
-      console.error("Error creating misc activities session:", error);
-      throw error;
-    }
-  }, [user?.id, getMiscActivitiesSession]);
-
-  const loadMiscActivitiesMessages = useCallback(async (): Promise<
+  // Load all transaction messages for the user (simplified approach)
+  const loadAllUserTransactionMessages = useCallback(async (): Promise<
     ChatMessage[]
   > => {
     try {
-      setIsChatLoading(true);
-
-      if (!user?.id || !miscActivitiesSessionId) {
-        setIsChatLoading(false);
-        return [];
+      if (!user?.id) {
+        throw new Error("User not authenticated");
       }
 
-      // Only load messages for the specific misc activities session
+      setIsChatLoading(true);
+
+      // Query messages directly by profileId (user ID)
       const messagesRef = collection(fStore, "messages");
       const q = query(
         messagesRef,
         where("profileId", "==", user.id),
-        where("sessionId", "==", miscActivitiesSessionId)
+        orderBy("timestamp", "asc") // Order by timestamp for chronological display
       );
 
       const querySnapshot = await getDocs(q);
-
       const allMessages: ChatMessage[] = [];
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        allMessages.push({
+        const message = {
           id: doc.id,
           profileId: data.profileId,
           sessionId: data.sessionId,
@@ -1223,11 +1153,13 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
           pdfData: data.pdfData || undefined, // Include PDF data
-        });
-      });
+          data: data.data || undefined, // Include full data object
+          isReceipt: data.isReceipt || false, // Include receipt flag for transaction messages
+          transactionId: data.transactionId || undefined, // Include transaction ID
+        };
 
-      // Sort messages by timestamp
-      allMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+        allMessages.push(message);
+      });
 
       setError(null);
       setIsChatLoading(false);
@@ -1236,52 +1168,10 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
     } catch (error) {
       setError(error);
       setIsChatLoading(false);
-      console.error("Error loading misc activities messages:", error);
+      console.error("Error loading all user transaction messages:", error);
       throw error;
     }
-  }, [user?.id, miscActivitiesSessionId]);
-
-  // Save transaction chat messages for better tracking and history
-  const saveTransactionChatMessages = useCallback(
-    async (
-      transactionId: string,
-      chatMessages: ChatMessage[]
-    ): Promise<void> => {
-      try {
-        if (!transactionId || !chatMessages.length) return;
-
-        console.log(
-          `💬 Saving ${chatMessages.length} chat messages for transaction ${transactionId}`
-        );
-
-        // Save each message with transaction reference
-        const savePromises = chatMessages.map(async (message, index) => {
-          const messageData = {
-            ...message,
-            transactionId,
-            messageIndex: index,
-            type: "transaction_chat",
-            createdAt: message.createdAt || message.timestamp,
-            updatedAt: new Date(),
-          };
-
-          return addDoc(
-            collection(fStore, COLLECTION_NAMES.messages),
-            messageData
-          );
-        });
-
-        await Promise.all(savePromises);
-        console.log(
-          `✅ Successfully saved ${chatMessages.length} chat messages for transaction ${transactionId}`
-        );
-      } catch (error) {
-        console.error("❌ Error saving transaction chat messages:", error);
-        // Don't throw - this shouldn't fail the transaction
-      }
-    },
-    [COLLECTION_NAMES.messages]
-  );
+  }, [user?.id]);
 
   // Transaction Management Functions
   const createTransaction = useCallback(
@@ -1457,7 +1347,11 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
 
         // Save chat messages separately for better tracking
         if (chatMessages && chatMessages.length > 0) {
-          await saveTransactionChatMessages(docRef.id, chatMessages);
+          // TODO: Implement saveTransactionChatMessages function
+          console.log(
+            "Chat messages would be saved here:",
+            chatMessages.length
+          );
         }
 
         // Refresh inventory to reflect updated stock levels
@@ -1484,7 +1378,6 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       getUserProfile,
       COLLECTION_NAMES.transactions,
       COLLECTION_NAMES.products,
-      saveTransactionChatMessages,
       getAllProducts,
     ]
   );
@@ -1668,6 +1561,34 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       }
     },
     [COLLECTION_NAMES.transactions]
+  );
+
+  // TODO: Placeholder functions for miscellaneous activities (to be implemented)
+  const getMiscActivitiesSession = useCallback(async () => {
+    console.warn("getMiscActivitiesSession not yet implemented");
+    return null;
+  }, []);
+
+  const createMiscActivitiesSession = useCallback(async () => {
+    console.warn("createMiscActivitiesSession not yet implemented");
+    return "";
+  }, []);
+
+  const loadMiscActivitiesMessages = useCallback(async (): Promise<
+    ChatMessage[]
+  > => {
+    console.warn("loadMiscActivitiesMessages not yet implemented");
+    return [];
+  }, []);
+
+  const saveTransactionChatMessages = useCallback(
+    async (transactionId: string, messages: ChatMessage[]) => {
+      console.warn("saveTransactionChatMessages not yet implemented", {
+        transactionId,
+        messageCount: messages.length,
+      });
+    },
+    []
   );
 
   // Transaction Chat Functions
@@ -2181,7 +2102,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       currentSessionId,
       deactivateSession,
       deactivateAllUserSessions,
-      // Miscellaneous Activities Session Management
+      // Miscellaneous Activities Session Management (functions not implemented yet)
       getMiscActivitiesSession,
       createMiscActivitiesSession,
       miscActivitiesSessionId,
@@ -2192,6 +2113,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       loadMessages,
       deleteMessage,
       loadAllUserMessages,
+      loadAllUserTransactionMessages,
       // Transaction management
       createTransaction,
       getTransactionHistory,
@@ -2240,6 +2162,7 @@ const DataContextProvider: React.FC<{ children: React.ReactNode }> = (
       loadMessages,
       deleteMessage,
       loadAllUserMessages,
+      loadAllUserTransactionMessages,
       createTransaction,
       getTransactionHistory,
       getTransactionById,

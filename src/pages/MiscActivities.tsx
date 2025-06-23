@@ -55,11 +55,11 @@ const MiscActivities: React.FC = () => {
   const {
     askAiAssistant,
     error,
-    getMiscActivitiesSession,
-    createMiscActivitiesSession,
+    // getMiscActivitiesSession, // Temporarily disabled
+    // createMiscActivitiesSession, // Temporarily disabled
     miscActivitiesSessionId,
     saveMessage,
-    loadMiscActivitiesMessages,
+    // loadMiscActivitiesMessages, // Temporarily disabled
   } = useDataContext();
   const { user } = useAuthContext();
   const [message, setMessage] = useState<string>("");
@@ -77,120 +77,32 @@ const MiscActivities: React.FC = () => {
   const hasError = error !== null && error !== undefined;
 
   useEffect(() => {
-    const fetchMiscActivitiesSession = async () => {
-      try {
-        // Use the miscellaneous activities session
-        const response = await getMiscActivitiesSession();
-        if (!response) {
-          console.log(
-            "No misc activities session found - this is normal for new users"
-          );
-          return;
-        }
-        const sessionData = response as { sessionId?: string };
-        if (sessionData.sessionId) {
-          console.log(
-            "Found existing misc activities session:",
-            sessionData.sessionId
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching misc activities session:", error);
-      }
-    };
-
-    if (user?.id) {
-      fetchMiscActivitiesSession();
-    } else {
-      setSessionInitialized(false);
+    // For now, just mark session as initialized since the functions are not implemented
+    if (user?.id && !sessionInitialized) {
+      console.log("Initializing misc activities for user:", user.id);
+      setSessionInitialized(true);
     }
-  }, [getMiscActivitiesSession, user?.id]);
+  }, [user?.id, sessionInitialized]);
 
-  // Initialize chat session
+  // Initialize chat session (simplified - no actual session creation since functions are not implemented)
   useEffect(() => {
-    const initializeSession = async () => {
-      if (user?.id && !sessionInitialized) {
-        try {
-          console.log(
-            "Initializing misc activities session for user:",
-            user.id
-          );
-
-          // Try to get existing session or create new one
-          const existingSession = await getMiscActivitiesSession();
-          if (
-            existingSession &&
-            typeof existingSession === "object" &&
-            "sessionId" in existingSession &&
-            existingSession.sessionId
-          ) {
-            console.log(
-              "Using existing misc activities session:",
-              existingSession.sessionId
-            );
-            setSessionInitialized(true);
-          } else {
-            console.log("Creating new misc activities session...");
-            const newSessionId = await createMiscActivitiesSession();
-            if (newSessionId) {
-              console.log(
-                "New misc activities session created successfully:",
-                newSessionId
-              );
-              setSessionInitialized(true);
-            } else {
-              console.error("Failed to create misc activities session");
-            }
-          }
-        } catch (error) {
-          console.error("Failed to initialize misc activities session:", error);
-          setSessionInitialized(false);
-        }
-      }
-    };
-
-    if (user?.id) {
-      initializeSession();
+    if (user?.id && !sessionInitialized) {
+      console.log("Setting up misc activities for user:", user.id);
+      setSessionInitialized(true);
     }
-  }, [
-    user?.id,
-    sessionInitialized,
-    createMiscActivitiesSession,
-    getMiscActivitiesSession,
-  ]);
+  }, [user?.id, sessionInitialized]);
 
-  // Load messages with initial helper message
+  // Load messages with initial helper message (simplified since loadMiscActivitiesMessages is not implemented)
   useEffect(() => {
-    const loadMessages = async () => {
-      if (
-        user?.id &&
-        !messagesLoadedRef.current
-      ) {
-        try {
-          let loadedMessages: ChatMessage[] = [];
-          
-          if (miscActivitiesSessionId) {
-            console.log(
-              "Loading misc activities messages for session:",
-              miscActivitiesSessionId
-            );
-            loadedMessages = await loadMiscActivitiesMessages();
-          } else {
-            console.log("No misc activities session yet, will show welcome message");
-            loadedMessages = [];
-          }
-          
-          messagesLoadedRef.current = true;
-          const allMessages = loadedMessages || [];
-
-          // Add initial helper message if no messages exist
-          if (allMessages.length === 0) {
-            // Initial helpful message for miscellaneous activities
-            const initialMessage: ChatMessage = {
-              id: "initial-helper",
-              profileId: user?.id || "system",
-              sessionId: miscActivitiesSessionId || "initial",
-              text: `👋 **Welcome to Miscellaneous Activities!**
+    if (user?.id && !messagesLoadedRef.current) {
+      messagesLoadedRef.current = true;
+      
+      // Show initial helper message since we don't have message loading implemented yet
+      const initialMessage: ChatMessage = {
+        id: "initial-helper",
+        profileId: user?.id || "system",
+        sessionId: miscActivitiesSessionId || "initial",
+        text: `👋 **Welcome to Miscellaneous Activities!**
 
 I'm here to help you record various business activities like:
 • **Cash withdrawals** from the register
@@ -205,32 +117,19 @@ Just tell me what activity you want to record! For example:
 - "Cash withdrawal of $100 for business expenses"
 
 I'll help you log it properly and update your registry. What would you like to record today?`,
-              isBot: true,
-              timestamp: new Date(),
-              messageOrder: 0,
-            };
+        isBot: true,
+        timestamp: new Date(),
+        messageOrder: 0,
+      };
 
-            allMessages.unshift(initialMessage);
-          }
+      const grouped = groupMessagesByDate([initialMessage]);
+      setMessageGroups(grouped);
 
-          const grouped = groupMessagesByDate(allMessages);
-          setMessageGroups(grouped);
-
-          setTimeout(() => {
-            contentRef.current?.scrollToBottom(300);
-          }, 100);
-        } catch (error) {
-          console.error("Error loading misc messages:", error);
-        }
-      }
-    };
-
-    loadMessages();
-  }, [
-    user?.id,
-    miscActivitiesSessionId,
-    loadMiscActivitiesMessages,
-  ]);
+      setTimeout(() => {
+        contentRef.current?.scrollToBottom(300);
+      }, 100);
+    }
+  }, [user?.id, miscActivitiesSessionId]);
 
   const sendMessage = useCallback(async () => {
     if (

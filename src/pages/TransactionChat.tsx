@@ -28,7 +28,7 @@ import { debugSessionUtils } from "../utils/debugSessionUtils";
 import { ChatMessage } from "../interfaces/message";
 import { ALL_STOCK_ITEMS } from "../mock/stocks";
 import "./TransactionChat.css";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { fStore } from "../../firebase.config";
 
 interface TransactionMessage {
@@ -96,6 +96,7 @@ const TransactionChat: React.FC = () => {
     createTransactionNotification,
     getTransactionById,
     saveMessage,
+    loadAllUserTransactionMessages,
   } = useDataContext();
   const { user } = useAuthContext();
   const contentRef = useRef<HTMLIonContentElement>(null);
@@ -111,90 +112,8 @@ const TransactionChat: React.FC = () => {
     }>
   >([]);
   const [messageOrder, setMessageOrder] = useState<number>(0);
-
-  // Load transaction-specific messages with proper filtering
-  const loadTransactionMessages = useCallback(
-    async (sessionId: string): Promise<TransactionMessage[]> => {
-      try {
-        console.log(
-          "📥 Loading transaction chat messages for session:",
-          sessionId
-        );
-
-        const messagesRef = collection(fStore, "messages");
-
-        // Try the query with index first, fall back if index doesn't exist
-        let querySnapshot;
-        try {
-          // Primary query - requires index (sessionId + timestamp)
-          const q = query(
-            messagesRef,
-            where("sessionId", "==", sessionId),
-            orderBy("timestamp", "asc")
-          );
-          querySnapshot = await getDocs(q);
-          console.log("✅ Used indexed query for message loading");
-        } catch (indexError) {
-          console.warn("⚠️ Indexed query failed, using fallback:", indexError);
-          // Fallback query - get all messages for session without ordering
-          const fallbackQuery = query(
-            messagesRef,
-            where("sessionId", "==", sessionId)
-          );
-          querySnapshot = await getDocs(fallbackQuery);
-          console.log(
-            "📋 Used fallback query - messages will be sorted client-side"
-          );
-        }
-
-        const messages: TransactionMessage[] = [];
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-
-          // Detect if this is a receipt based on content or metadata
-          const isReceiptMessage =
-            data.isReceipt ||
-            data.text.includes("Transaction Receipt") ||
-            data.text.includes("Transaction ID:") ||
-            data.text.includes("Total:") ||
-            data.transactionId;
-
-          messages.push({
-            id: doc.id,
-            text: data.text,
-            isBot: data.isBot,
-            timestamp: data.timestamp.toDate(),
-            isReceipt: isReceiptMessage,
-            transactionId: data.transactionId,
-            messageOrder: data.messageOrder || 0,
-          });
-        });
-
-        // Always sort by timestamp to ensure correct order (especially important for fallback)
-        messages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-        console.log(
-          `✅ Loaded ${messages.length} transaction messages from Firestore`
-        );
-        console.log(
-          "📊 Message timestamps:",
-          messages.map((m) => ({
-            text: m.text.substring(0, 30) + "...",
-            timestamp: m.timestamp.toISOString(),
-            isBot: m.isBot,
-            isReceipt: m.isReceipt,
-          }))
-        );
-
-        return messages;
-      } catch (error) {
-        console.error("❌ Error loading transaction messages:", error);
-        return [];
-      }
-    },
-    []
-  );
+  const [hasLoadedMessages, setHasLoadedMessages] = useState<boolean>(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState<boolean>(false);
 
   // Debug function to check message order in Firestore
   const debugMessageOrder = useCallback(async () => {
@@ -246,7 +165,7 @@ const TransactionChat: React.FC = () => {
     }
   }, [currentSessionId]);
 
-  // Load previous messages when component mounts - try regardless of session state
+  // Load previous messages when component mounts - load all user messages regardless of session
   useEffect(() => {
     const loadPreviousMessages = async () => {
       if (!user?.id) {
@@ -257,23 +176,31 @@ const TransactionChat: React.FC = () => {
       }
 
       try {
-        // Try to load messages even without a session
-        let transactionMessages: TransactionMessage[] = [];
-        
-        if (currentSessionId) {
-          console.log(
-            "📥 Loading previous transaction chat messages for session:",
-            currentSessionId
-          );
-          transactionMessages = await loadTransactionMessages(currentSessionId);
-        } else {
-          console.log("📥 No session yet, will show welcome message for new user");
-          // No session yet, assume no messages
-          transactionMessages = [];
-        }
+        console.log("📥 Loading all user transaction chat messages");
+
+        // Load all messages for the user regardless of session
+        const allUserMessages = await loadAllUserTransactionMessages();
+
+        // Convert to TransactionMessage format and filter for transaction-related messages
+        const transactionMessages: TransactionMessage[] = allUserMessages
+          .filter((msg) => msg.id) // Ensure we have valid IDs
+          .map((msg) => ({
+            id: msg.id!,
+            text: msg.text,
+            isBot: msg.isBot,
+            timestamp: msg.timestamp,
+            isReceipt:
+              msg.isReceipt ||
+              msg.text.includes("Transaction Receipt") ||
+              msg.text.includes("Transaction ID:") ||
+              msg.text.includes("Total:"),
+            transactionId: msg.transactionId,
+            messageOrder: msg.messageOrder || 0,
+          }))
+          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()); // Ensure chronological order
 
         console.log(
-          `📨 Found ${transactionMessages.length} existing messages in Firestore`
+          `📨 Found ${transactionMessages.length} existing transaction messages`
         );
 
         // Check if welcome message already exists
@@ -353,7 +280,7 @@ const TransactionChat: React.FC = () => {
     };
 
     loadPreviousMessages();
-  }, [user?.id, currentSessionId, loadTransactionMessages, debugMessageOrder]);
+  }, [user?.id, loadAllUserTransactionMessages, debugMessageOrder]);
 
   // Sales examples for quick input
   const salesExamples = [
@@ -702,10 +629,6 @@ const TransactionChat: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Welcome message - only for truly new sessions
-  const [hasLoadedMessages, setHasLoadedMessages] = useState<boolean>(false);
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState<boolean>(false);
 
   useEffect(() => {
     // Show welcome message after we've attempted to load messages and found none OR if we have no session

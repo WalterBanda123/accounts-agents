@@ -102,7 +102,7 @@ const StockCard: React.FC<StockCardProps> = React.memo(
             <div className="stock-unit-price">
               {formatPrice(stock.unitPrice)}
               <span className="price-label">
-                per {stock.unit?.slice(0, -1)}
+                per {stock.unit}
               </span>
             </div>
             <div className="stock-total-value">
